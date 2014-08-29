@@ -46,9 +46,11 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 import networkx as nx
 import pylab as pl
-import interdependency_analysis_v5_0_1 as res 
+#import interdependency_analysis_v5_0_1 as res 
+import interdependency_analysis_v5_2_4 as res 
 import inhouse_algorithms as customnets
 import visalgorithms_v10_1 as vis
+import metric_calcs_v_1_0 as mc
 
 class DbConnect(QDialog):    
     '''Class for the database parameters connection window.'''
@@ -170,7 +172,523 @@ class DbConnect(QDialog):
             self.txtinput5.setText(self.PASSWORD)         
             self.txtinput6.setText(self.NETNAME)
 
-class OptionsWindow(QWidget): # not sure if I will need this after all
+class MetricsWindow(QWidget): # not sure if I will need this after all
+    def __init__(self, parent = None):  
+        QWidget.__init__(self, parent)
+        self.initUI()
+        
+    def initUI(self):
+        self.lblnetA = QLabel("Network", self)        
+        self.lblnetA.adjustSize()
+        self.lblnetA.move(12,10)
+        
+        self.lblnetA = QLabel("A", self)        
+        self.lblnetA.adjustSize()
+        self.lblnetA.move(181,10)
+        
+        self.lblnetB = QLabel("B", self)        
+        self.lblnetB.adjustSize()
+        self.lblnetB.move(201,10)
+        
+        self.lblbasicA = QLabel("Basic metrics", self)
+        self.lblbasicA.adjustSize()
+        self.lblbasicA.move(12,25)
+        
+        self.height = 25
+        
+        networkAbasicgroup = QButtonGroup(self)
+        networkAbasicgroup.setExclusive(False)
+        networkBbasicgroup = QButtonGroup(self)
+        networkBbasicgroup.setExclusive(False)
+        networkAoptionalgroup = QButtonGroup(self)
+        networkAoptionalgroup.setExclusive(False)
+        networkBoptionalgroup = QButtonGroup(self)  
+        networkBoptionalgroup.setExclusive(False)
+        
+        '''basic metrics'''
+        self.height += 20        
+        self.lblnodesremoved_A = QLabel("nodes removed", self)
+        self.lblnodesremoved_A.adjustSize()
+        self.lblnodesremoved_A.move(12,self.height)       
+        self.ckbnodesremoved_A = QCheckBox(self)
+        self.ckbnodesremoved_A.move(180,self.height)
+        networkAbasicgroup.addButton(self.ckbnodesremoved_A) 
+        self.ckbnodesremoved_B = QCheckBox(self)
+        self.ckbnodesremoved_B.move(200,self.height)
+        networkBbasicgroup.addButton(self.ckbnodesremoved_B)
+        self.ckbnodesremoved_A.setChecked(True)                
+        self.ckbnodesremoved_A.setEnabled(False)
+        self.ckbnodesremoved_B.setChecked(True)
+        self.ckbnodesremoved_B.setEnabled(False)
+        
+        self.height += 20
+        self.lblnodecountremoved_A = QLabel("node count removed", self)
+        self.lblnodecountremoved_A.adjustSize()
+        self.lblnodecountremoved_A.move(12,self.height)       
+        self.ckbnodecountremoved_A = QCheckBox(self)
+        self.ckbnodecountremoved_A.move(180,self.height)
+        networkAbasicgroup.addButton(self.ckbnodecountremoved_A)
+        self.ckbnodecountremoved_B = QCheckBox(self)
+        self.ckbnodecountremoved_B.move(200,self.height)
+        networkBbasicgroup.addButton(self.ckbnodecountremoved_B)
+        self.ckbnodecountremoved_A.setChecked(True)                
+        self.ckbnodecountremoved_A.setEnabled(False)
+        self.ckbnodecountremoved_B.setChecked(True)
+        self.ckbnodecountremoved_B.setEnabled(False)
+                
+        self.height += 20       
+        self.lblcountnodesleft_A = QLabel("count nodes left", self)
+        self.lblcountnodesleft_A.adjustSize()
+        self.lblcountnodesleft_A.move(12,self.height)       
+        self.ckbcountnodesleft_A = QCheckBox(self)
+        self.ckbcountnodesleft_A.move(180,self.height)
+        networkAbasicgroup.addButton(self.ckbcountnodesleft_A)
+        self.ckbcountnodesleft_B = QCheckBox(self)
+        self.ckbcountnodesleft_B.move(200,self.height)
+        networkBbasicgroup.addButton(self.ckbcountnodesleft_B)
+        self.ckbcountnodesleft_A.setChecked(True)  
+        self.ckbcountnodesleft_A.setEnabled(False)              
+        self.ckbcountnodesleft_B.setChecked(True)
+        self.ckbcountnodesleft_B.setEnabled(False)
+        
+        self.height += 20
+        self.lblnumberofedges_A = QLabel("number of edges", self)
+        self.lblnumberofedges_A.adjustSize()
+        self.lblnumberofedges_A.move(12,self.height)       
+        self.ckbnumberofedges_A = QCheckBox(self)
+        self.ckbnumberofedges_A.move(180,self.height)
+        networkAbasicgroup.addButton(self.ckbnumberofedges_A)
+        self.ckbnumberofedges_B = QCheckBox(self)
+        self.ckbnumberofedges_B.move(200,self.height)
+        networkBbasicgroup.addButton(self.ckbnumberofedges_B)
+        self.ckbnumberofedges_A.setChecked(True) 
+        self.ckbnumberofedges_A.setEnabled(False)               
+        self.ckbnumberofedges_B.setChecked(True)
+        self.ckbnumberofedges_B.setEnabled(False)
+        
+        self.height += 20
+        self.lblnumberofcomponents_A = QLabel("number of components", self)
+        self.lblnumberofcomponents_A.adjustSize()
+        self.lblnumberofcomponents_A.move(12,self.height)       
+        self.ckbnumberofcomponents_A = QCheckBox(self)
+        self.ckbnumberofcomponents_A.move(180,self.height)    
+        networkAbasicgroup.addButton(self.ckbnumberofedges_A)
+        self.ckbnumberofcomponents_B = QCheckBox(self)
+        self.ckbnumberofcomponents_B.move(200,self.height)
+        networkBbasicgroup.addButton(self.ckbnumberofedges_B)
+        self.ckbnumberofcomponents_A.setChecked(True)
+        self.ckbnumberofcomponents_A.setEnabled(False)
+        self.ckbnumberofcomponents_B.setChecked(True)
+        self.ckbnumberofcomponents_B.setEnabled(False)
+        
+        self.height += 20
+        self.lblmetrics = QLabel("Optional Metrics", self)
+        self.lblmetrics.adjustSize()
+        self.lblmetrics.move(12,self.height) 
+  
+        ''''optional metrics'''
+        self.height += 20
+        self.lblavpathlength_A = QLabel("average path length", self)
+        self.lblavpathlength_A.adjustSize()
+        self.lblavpathlength_A.move(12,self.height)
+        self.ckbavpathlength_A = QCheckBox(self)
+        self.ckbavpathlength_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbavpathlength_A)
+        self.ckbavpathlength_B = QCheckBox(self)
+        self.ckbavpathlength_B.move(200,self.height)
+        networkBoptionalgroup.addButton(self.ckbavpathlength_B)  
+        
+        self.height += 20
+        self.lblsizeofcomponents_A = QLabel("size of components", self)
+        self.lblsizeofcomponents_A.adjustSize()
+        self.lblsizeofcomponents_A.move(12,self.height)
+        self.ckbsizeofcomponents_A = QCheckBox(self)
+        self.ckbsizeofcomponents_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbsizeofcomponents_A)                
+        self.ckbsizeofcomponents_B = QCheckBox(self)
+        self.ckbsizeofcomponents_B.move(200,self.height)        
+        networkBoptionalgroup.addButton(self.ckbsizeofcomponents_B) 
+
+        self.height += 20
+        self.lblgiantcomponentsize_A = QLabel("giant component size", self)
+        self.lblgiantcomponentsize_A.adjustSize()
+        self.lblgiantcomponentsize_A.move(12,self.height)
+        self.ckbgiantcomponentsize_A = QCheckBox(self)
+        self.ckbgiantcomponentsize_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbgiantcomponentsize_A)
+        self.ckbgiantcomponentsize_B = QCheckBox(self)
+        self.ckbgiantcomponentsize_B.move(200,self.height)        
+        networkBoptionalgroup.addButton(self.ckbgiantcomponentsize_B)
+        
+        self.height += 20
+        self.lblavnodesincomponents_A = QLabel("average nodes in components", self)
+        self.lblavnodesincomponents_A.adjustSize()
+        self.lblavnodesincomponents_A.move(12,self.height)
+        self.ckbavnodesincomponents_A = QCheckBox(self)
+        self.ckbavnodesincomponents_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbavnodesincomponents_A)
+        self.ckbavnodesincomponents_B = QCheckBox(self)
+        self.ckbavnodesincomponents_B.move(200,self.height)  
+        networkBoptionalgroup.addButton(self.ckbavnodesincomponents_B)
+        
+        self.height += 20
+        self.lblisolatednodes_A = QLabel("isolated nodes", self)
+        self.lblisolatednodes_A.adjustSize()
+        self.lblisolatednodes_A.move(12,self.height)
+        self.ckbisolatednodes_A = QCheckBox(self)
+        self.ckbisolatednodes_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbisolatednodes_A)
+        self.ckbisolatednodes_B = QCheckBox(self)
+        self.ckbisolatednodes_B.move(200,self.height)  
+        networkBoptionalgroup.addButton(self.ckbisolatednodes_B)
+        
+        self.height += 20
+        self.lblisolatedncount_A = QLabel("isolated nodes", self)
+        self.lblisolatedncount_A.adjustSize()
+        self.lblisolatedncount_A.move(12,self.height)
+        self.ckbisolatedncount_A = QCheckBox(self)
+        self.ckbisolatedncount_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbisolatedncount_A)
+        self.ckbisolatedncount_B = QCheckBox(self)
+        self.ckbisolatedncount_B.move(200,self.height) 
+        networkBoptionalgroup.addButton(self.ckbisolatedncount_B)
+        
+        self.height += 20
+        self.lblisolatedncountremoved_A = QLabel("isolated node count removed", self)
+        self.lblisolatedncountremoved_A.adjustSize()
+        self.lblisolatedncountremoved_A.move(12,self.height)
+        self.ckbisolatedncountremoved_A = QCheckBox(self)
+        self.ckbisolatedncountremoved_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbisolatedncountremoved_A)
+        self.ckbisolatedncountremoved_B = QCheckBox(self)
+        self.ckbisolatedncountremoved_B.move(200,self.height) 
+        networkBoptionalgroup.addButton(self.ckbisolatedncountremoved_B)
+
+        self.height += 20
+        self.lblsubnodes_A = QLabel("subnodes", self)
+        self.lblsubnodes_A.adjustSize()
+        self.lblsubnodes_A.move(12,self.height)
+        self.ckbsubnodes_A = QCheckBox(self)
+        self.ckbsubnodes_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbsubnodes_A)
+        self.ckbsubnodes_B = QCheckBox(self)
+        self.ckbsubnodes_B.move(200,self.height) 
+        networkBoptionalgroup.addButton(self.ckbsubnodes_B)
+
+        self.height += 20        
+        self.lblsubnodescount_A = QLabel("subnodes count", self)
+        self.lblsubnodescount_A.adjustSize()
+        self.lblsubnodescount_A.move(12,self.height)
+        self.ckbsubnodescount_A = QCheckBox(self)
+        self.ckbsubnodescount_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbsubnodescount_A)
+        self.ckbsubnodescount_B = QCheckBox(self)
+        self.ckbsubnodescount_B.move(200,self.height)
+        networkBoptionalgroup.addButton(self.ckbsubnodescount_B)
+
+        self.height += 20
+        self.lblavpathlengthcomp_A = QLabel("av path length components", self)
+        self.lblavpathlengthcomp_A.adjustSize()
+        self.lblavpathlengthcomp_A.move(12,self.height)
+        self.ckbavpathlengthcomp_A = QCheckBox(self)
+        self.ckbavpathlengthcomp_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbavpathlengthcomp_A)
+        self.ckbavpathlengthcomp_B = QCheckBox(self)
+        self.ckbavpathlengthcomp_B.move(200,self.height)
+        networkBoptionalgroup.addButton(self.ckbavpathlengthcomp_B)
+
+        self.height += 20
+        self.lblavpathlengthgeo_A = QLabel("av path length geo", self)
+        self.lblavpathlengthgeo_A.adjustSize()
+        self.lblavpathlengthgeo_A.move(12,self.height)
+        self.ckbavpathlengthgeo_A = QCheckBox(self)
+        self.ckbavpathlengthgeo_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbavpathlengthgeo_A)
+        self.ckbavpathlengthgeo_B = QCheckBox(self)
+        self.ckbavpathlengthgeo_B.move(200,self.height) 
+        networkBoptionalgroup.addButton(self.ckbavpathlengthgeo_B)
+
+        self.height += 20        
+        self.lblgiantcompavpathlength_A = QLabel("giant component av path length", self)
+        self.lblgiantcompavpathlength_A.adjustSize()
+        self.lblgiantcompavpathlength_A.move(12,self.height)
+        self.ckbgiantcompavpathlength_A = QCheckBox(self)
+        self.ckbgiantcompavpathlength_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbgiantcompavpathlength_A)
+        self.ckbgiantcompavpathlength_B = QCheckBox(self)
+        self.ckbgiantcompavpathlength_B.move(200,self.height)
+        networkBoptionalgroup.addButton(self.ckbgiantcompavpathlength_B)
+
+        self.height += 20
+        self.lblavdegree_A = QLabel("average degree", self)
+        self.lblavdegree_A.adjustSize()
+        self.lblavdegree_A.move(12,self.height)
+        self.ckbavdegree_A = QCheckBox(self)
+        self.ckbavdegree_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbavdegree_A)
+        self.ckbavdegree_B = QCheckBox(self)
+        self.ckbavdegree_B.move(200,self.height)
+        networkBoptionalgroup.addButton(self.ckbavdegree_B) 
+
+        self.height += 20
+        self.lblinterremovedcount_A = QLabel("inter removed count", self)
+        self.lblinterremovedcount_A.adjustSize()
+        self.lblinterremovedcount_A.move(12,self.height)
+        self.ckbinterremovedcount_A = QCheckBox(self)
+        self.ckbinterremovedcount_A.move(180,self.height)
+        networkAoptionalgroup.addButton(self.ckbinterremovedcount_A)        
+        self.ckbinterremovedcount_B = QCheckBox(self)
+        self.ckbinterremovedcount_B.move(200,self.height)
+        networkBoptionalgroup.addButton(self.ckbinterremovedcount_B)       
+        
+        self.metrics = window.update_metrics_window()
+        #self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
+        self.update_ckbs(self.metrics) #updates check boxes
+        
+        self.height += 20
+        self.apply = QPushButton("Apply", self)
+        self.apply.adjustSize()
+        self.apply.move(145,self.height)
+        self.apply.clicked.connect(self.applyandclose)
+        self.apply.setToolTip("Apply any changes and close the window.")
+        self.closebtn = QPushButton("Close", self)
+        self.closebtn.adjustSize()
+        self.closebtn.move(70,self.height)
+        self.closebtn.clicked.connect(self.closeclick)
+        self.closebtn.setToolTip("Close the window without saving any changes.")
+        
+        self.setGeometry(300,150,230,self.height+30) #vertical place on screen, hoz place on screen, width of window, height of window
+        self.setWindowTitle('Metrics Window') #title of window  
+        self.show()
+
+    def update_ckbs(self, metrics):
+        '''updates check boxs on startup based on previuos selections'''
+        self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
+        self.size_of_components_A,self.giant_component_size_A,self.av_nodes_in_components_A,self.isolated_nodes_A,self.isolated_n_count_A,self.isolated_n_count_removed_A,self.subnodes_A,self.subnodes_count_A,self.path_length_A,self.av_path_length_components_A,self.av_path_length_geo_A,self.giant_component_av_path_length_A,self.average_degree_A,self.inter_removed_count_A = self.option_metrics_A
+        if self.option_metrics_B == None:
+            pass
+        else:        
+            self.size_of_components_B,self.giant_component_size_B,self.av_nodes_in_components_B,self.isolated_nodes_B,self.isolated_n_count_B,self.isolated_n_count_removed_B,self.subnodes_B,self.subnodes_count_B,self.path_length_B,self.av_path_length_components_B,self.av_path_length_geo_B,self.giant_component_av_path_length_B,self.average_degree_B,self.inter_removed_count_B = self.option_metrics_B
+            
+        if self.size_of_components_A == False:
+            self.ckbsizeofcomponents_A.setChecked(False)
+        else: self.ckbsizeofcomponents_A.setChecked(True)
+        if self.giant_component_size_A == False:
+            self.ckbgiantcomponentsize_A.setChecked(False)
+        else: self.ckbgiantcomponentsize_A.setChecked(True)
+        if self.av_nodes_in_components_A == False:
+            self.ckbavnodesincomponents_A.setChecked(False)
+        else: self.ckbavnodesincomponents_A.setChecked(True)
+        if self.isolated_nodes_A == False:
+            self.ckbisolatednodes_A.setChecked(False)
+        else: self.ckbisolatednodes_A.setChecked(True)
+        if self.isolated_n_count_A == False:
+            self.ckbisolatedncount_A.setChecked(False)
+        else: self.ckbisolatedncount_A.setChecked(True)
+        if self.isolated_n_count_removed_A== False:
+            self.ckbisolatedncountremoved_A.setChecked(False)
+        else: self.ckbisolatedncountremoved_A.setChecked(True)
+        if self.subnodes_A== False:
+            self.ckbsubnodes_A.setChecked(False)
+        else: self.ckbsubnodes_A.setChecked(True)
+        if self.subnodes_count_A== False:
+            self.ckbsubnodescount_A.setChecked(False)
+        else: self.ckbsubnodescount_A.setChecked(True)
+        if self.path_length_A== False:
+            self.ckbavpathlength_A.setChecked(False)
+        else: self.ckbavpathlength_A.setChecked(True)
+        if self.av_path_length_components_A== False:
+            self.ckbavpathlengthcomp_A.setChecked(False)
+        else: self.ckbavpathlengthcomp_A.setChecked(True)
+        if self.av_path_length_geo_A== False:
+            self.ckbavpathlengthgeo_A.setChecked(False)
+        else: self.ckbavpathlengthgeo_A.setChecked(True)
+        if self.giant_component_av_path_length_A== False:
+            self.ckbgiantcompavpathlength_A.setChecked(False)
+        else: self.ckbgiantcompavpathlength_A.setChecked(True)
+        if self.average_degree_A== False:
+            self.ckbavdegree_A.setChecked(False)
+        else: self.ckbavdegree_A.setChecked(True)
+        if self.inter_removed_count_A == False:
+            self.ckbinterremovedcount_A.setChecked(False)
+        else: self.ckbinterremovedcount_A.setChecked(True)
+        if self.option_metrics_B <> None:
+            if self.size_of_components_B == False:
+                self.ckbsizeofcomponents_B.setChecked(False)
+            else: self.ckbsizeofcomponents_B.setChecked(True)
+            if self.giant_component_size_B== False:
+                self.ckbgiantcomponentsiz_B.setChecked(False)
+            else: self.ckbgiantcomponentsize_B.setChecked(True)
+            if self.av_nodes_in_components_B== False:
+                self.ckbavnodesincomponents_B.setChecked(False)
+            else: self.ckbavnodesincomponents_B.setChecked(True)
+            if self.isolated_nodes_B == False:
+                self.ckbisolatednodes_B.setChecked(False)
+            else: self.ckbisolatednodes_B.setChecked(True)
+            if self.isolated_n_count_B == False:
+                self.ckbisolatedncount_B.setChecked(False)
+            else: self.ckbisolatedncount_B.setChecked(True)
+            if self.isolated_n_count_removed_B== False:
+                self.ckbisolatedncountremoved_B.setChecked(False)
+            else: self.ckbisolatedncountremoved_B.setChecked(True)
+            if self.subnodes_B== False:
+                self.ckbsubnodes_B.setChecked(False)
+            else: self.ckbsubnodes_B.setChecked(True)
+            if self.subnodes_count_B== False:
+                self.ckbsubnodescount_B.setChecked(False)
+            else: self.ckbsubnodescount_B.setChecked(True)
+            if self.path_length_B== False:
+                self.ckbavpathlength_B.setChecked(False)
+            else: self.ckbavpathlength_B.setChecked(True)
+            if self.av_path_length_components_B== False:
+                self.ckbavpathlengthcomp_B.setChecked(False)
+            else: self.ckbavpathlengthcomp_B.setChecked(True)
+            if self.av_path_length_geo_B== False:
+                self.ckbavpathlengthgeo_B.setChecked(False)
+            else: self.ckbavpathlengthgeo_B.setChecked(True)
+            if self.giant_component_av_path_length_B== False:
+                self.ckbgiantcompavpathlength_B.setChecked(False)
+            else: self.ckbgiantcompavpathlength_B.setChecked(True)
+            if self.average_degree_B== False:
+                self.ckbavdegree_B.setChecked(False)
+            else: self.ckbavdegree_B.setChecked(True)
+            if self.inter_removed_count_B == False:
+                self.ckbinterremovedcount_B.setChecked(False)
+            else: self.ckbinterremovedcount_B.setChecked(True)
+        elif self.option_metrics_B == None:
+            #uncheck the tick boxes for the basic metrics
+            self.ckbnodesremoved_B.setChecked(False)              
+            self.ckbnodecountremoved_B.setChecked(False)
+            self.ckbcountnodesleft_B.setChecked(False)
+            self.ckbnumberofedges_B.setChecked(False)
+            self.ckbnumberofcomponents_B.setChecked(False)
+            #disable the rest of the tick boxes
+            self.ckbsizeofcomponents_B.setEnabled(False)
+            self.ckbgiantcomponentsize_B.setEnabled(False)
+            self.ckbavnodesincomponents_B.setEnabled(False)
+            self.ckbisolatednodes_B.setEnabled(False)
+            self.ckbisolatedncount_B.setEnabled(False)
+            self.ckbisolatedncountremoved_B.setEnabled(False)
+            self.ckbsubnodes_B.setEnabled(False)
+            self.ckbsubnodescount_B.setEnabled(False)
+            self.ckbavpathlength_B.setEnabled(False)
+            self.ckbavpathlengthcomp_B.setEnabled(False)
+            self.ckbavpathlengthgeo_B.setEnabled(False)
+            self.ckbgiantcompavpathlength_B.setEnabled(False)
+            self.ckbavdegree_B.setEnabled(False)
+            self.ckbinterremovedcount_B.setEnabled(False)
+
+    def check_checkbxs(self, metrics):
+        self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = metrics
+                
+        if self.ckbsizeofcomponents_A.isChecked():
+            self.size_of_components_A = True 
+        else: self.size_of_components_A = False
+        if self.ckbgiantcomponentsize_A.isChecked():
+            self.giant_component_size_A = True
+        else: self.giant_component_size_A = False
+        if self.ckbavnodesincomponents_A.isChecked():            
+            self.av_nodes_in_components_A = True
+        else: self.av_nodes_in_components_A = False
+        if self.ckbisolatednodes_A.isChecked():
+            self.isolated_nodes_A = True #THIS NEEDS TO BE IN THE BASIC SET
+        else: self.isolated_nodes_A = False
+        if self.ckbisolatedncount_A.isChecked():
+            self.isolated_n_count_A = True #THIS NEEDS TO BE IN THE BASIC SET
+        else: self.isolated_n_count_A = False
+        if self.ckbisolatedncountremoved_A.isChecked():
+            self.isolated_n_count_removed_A = True
+        else: self.isolated_n_count_removed_A = False
+        if self.ckbsubnodes_A.isChecked():
+            self.subnodes_A = True
+        else: self.subnodes_A = False
+        if self.ckbsubnodescount_A.isChecked():
+            self.subnodes_count_A = True
+        else: self.subnodes_count_A = False
+        if self.ckbavpathlength_A.isChecked():
+            self.path_length_A = True
+        else: self.path_length_A = False
+        if self.ckbavpathlengthcomp_A.isChecked():
+            self.av_path_length_components_A = True
+        else: self.av_path_length_components_A = False
+        if self.ckbavpathlengthgeo_A.isChecked():
+            self.av_path_length_geo_A = True
+        else: self.av_path_length_geo_A = False
+        if self.ckbgiantcompavpathlength_A.isChecked():     
+            self.giant_component_av_path_length_A = True
+        else: self.giant_component_av_path_length_A = False
+        if self.ckbavdegree_A.isChecked():      
+            self.average_degree_A = True
+        else: self.average_degree_A = False
+        if self.ckbinterremovedcount_A.isChecked():
+            self.inter_removed_count_A = True #THIS IS ONLY NEEDED IF INTERDEPENDENCY    
+        else: self.inter_removed_count_A = False
+        
+        self.option_metrics_A = self.size_of_components_A,self.giant_component_size_A,self.av_nodes_in_components_A,self.isolated_nodes_A,self.isolated_n_count_A,self.isolated_n_count_removed_A,self.subnodes_A,self.subnodes_count_A,self.path_length_A,self.av_path_length_components_A,self.av_path_length_geo_A,self.giant_component_av_path_length_A,self.average_degree_A,self.inter_removed_count_A
+        
+        if self.option_metrics_B <> None:
+            if self.ckbsizeofcomponents_B.isChecked():        
+                self.size_of_components_B = True 
+            else: self.size_of_components_B = False #need to put these everywhere
+            if self.ckbgiantcomponentsize_B.isChecked():
+                self.giant_component_size_B = True
+            else: self.giant_component_size_B = False
+            if self.ckbavnodesincomponents_B.isChecked():            
+                self.av_nodes_in_components_B = True
+            else: self.av_nodes_in_components_B = False
+            if self.ckbisolatednodes_B.isChecked():
+                self.isolated_nodes_B = True #THIS NEEDS TO BE IN THE BASIC SET
+            else: self.isolated_nodes_B = False
+            if self.ckbisolatedncount_B.isChecked():
+                self.isolated_n_count_B = True #THIS NEEDS TO BE IN THE BASIC SET
+            else: self.isolated_n_count_B = False
+            if self.ckbisolatedncountremoved_B.isChecked():
+                self.isolated_n_count_removed_B = True
+            else: self.isolated_n_count_removed_B = False
+            if self.ckbsubnodes_B.isChecked():
+                self.subnodes_B = True
+            else: self.subnodes_B = False
+            if self.ckbsubnodescount_B.isChecked():
+                self.subnodes_count_B = True
+            else: self.subnodes_count_B = False
+            if self.ckbavpathlength_B.isChecked():
+                self.path_length_B = True
+            else: self.path_length_B = False
+            if self.ckbavpathlengthcomp_B.isChecked():
+                self.av_path_length_components_B = True
+            else: self.av_path_length_components_B = False
+            if self.ckbavpathlengthgeo_B.isChecked():
+                self.av_path_length_geo_B = True
+            else: self.av_path_length_geo_B = False
+            if self.ckbgiantcompavpathlength_B.isChecked():     
+                self.giant_component_av_path_length_B = True
+            else: self.giant_component_av_path_length_B = False
+            if self.ckbavdegree_B.isChecked():            
+                self.average_degree_B = True
+            else: self.average_degree_B = False
+            if self.ckbinterremovedcount_B.isChecked():
+                self.inter_removed_count_B = True #THIS IS ONLY NEEDED IF INTERDEPENDENCY
+            else: self.inter_removed_count_B = False
+            self.option_metrics_B = self.size_of_components_B,self.giant_component_size_B,self.av_nodes_in_components_B,self.isolated_nodes_B,self.isolated_n_count_B,self.isolated_n_count_removed_B,self.subnodes_B,self.subnodes_count_B,self.path_length_B,self.av_path_length_components_B,self.av_path_length_geo_B,self.giant_component_av_path_length_B,self.average_degree_B,self.inter_removed_count_B = self.option_metrics_B
+
+        print 'after checking the boxs ',self.option_metrics_B
+        self.metrics = self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B
+        return self.metrics
+    def applyandclose(self):
+        self.metrics = self.check_checkbxs(self.metrics)
+        self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
+        print 'on close: ', self.option_metrics_B 
+        window.updatemetrics(self.metrics)
+        self.close() 
+    def closeclick(self):
+        self.close()
+    def get_metrics(self, metrics):
+        print 'using get metrics'
+        self.metrics = metrics
+        basic_metrics_A, basic_metrics_B, option_metrics_A, option_metrics_B
+               
+   
+class OptionsWindow(QWidget):
     def __init__(self, parent = None):  
         QWidget.__init__(self, parent)
         self.initUI()
@@ -218,26 +736,27 @@ class OptionsWindow(QWidget): # not sure if I will need this after all
             index += 1
         self.cmbxcolor1.activated[str].connect(self.getcoloractive)        
         self.cmbxcolor2.activated[str].connect(self.getcolorinactive)
-        
+
         self.apply = QPushButton("Apply", self)
         self.apply.adjustSize()
-        self.apply.move(145,150)
+        self.apply.move(145,170)
         self.apply.clicked.connect(self.applyandclose)
         self.apply.setToolTip("Apply any changes and close the window.")
         self.closebtn = QPushButton("Close", self)
         self.closebtn.adjustSize()
-        self.closebtn.move(70,150)
+        self.closebtn.move(70,170)
         self.closebtn.clicked.connect(self.closeclick)
         self.closebtn.setToolTip("Close the window without saving any changes.")
                 
-        self.setGeometry(300,500,230,180) #above; vertical place on screen, hoz place on screen, width of window, height of window
-        self.setWindowTitle('Parameter Window') #title of window  
+        self.setGeometry(300,300,230,250) #vertical place on screen, hoz place on screen, width of window, height of window
+        self.setWindowTitle('Options Window') #title of window  
         self.show()
     def getcoloractive(self, text):
         self.colactive = text
     def getcolorinactive(self, text):
         self.colinactive = text
     def updatetimedelay(self, timedelay):
+        print 'updating time delay'
         self.timedelay = timedelay
         self.txttimedelay.setText(str(self.timedelay))
     def applyandclose(self):
@@ -248,9 +767,11 @@ class OptionsWindow(QWidget): # not sure if I will need this after all
         self.timedelay = int(self.txttimedelay.text())
         window.updatetimedelay(self.timedelay)
         window.updatecolors(self.colactive, self.colinactive)
+        window.updatemetrics(self.option_metrics_A)
         self.close() 
     def closeclick(self):
         self.close()
+        
 class ViewGraphs(QDialog):   
     "Class for the window which allows the viewing of the results in terms of the graph metrics."
     def __init__(self, parent=None):
@@ -453,8 +974,7 @@ class Window(QMainWindow):
         self.timedelay = 2
         self.coloractive = 'green'
         self.colorinactive = 'red'       
-        self.dosingle = True
-        self.G1 = None
+        self.metrics = self.create_metrics(self.parameters)        
         
         #create actions for file menu
         RunAction = QAction('&Run',self)
@@ -468,11 +988,16 @@ class Window(QMainWindow):
         exitAction.triggered.connect(qApp.quit)
         exitAction.triggered.connect(self.closeall)
 
-        extraAction = QAction('&Options', self)
-        extraAction.setShortcut('Ctrl+P')
-        extraAction.setStatusTip('Open options window')
-        extraAction.triggered.connect(self.showoptionswindow)
+        optionsAction = QAction('&Options', self)
+        optionsAction.setShortcut('Ctrl+P')
+        optionsAction.setStatusTip('Open options window')
+        optionsAction.triggered.connect(self.showoptionswindow)
 
+        metricsAction = QAction('&Metrics', self)
+        metricsAction.setShortcut('Ctrl+M')
+        metricsAction.setStatusTip('Open metrics window')
+        metricsAction.triggered.connect(self.showmetricswindow)
+    
         dbAction = QAction('&DB Connection', self)
         dbAction.setShortcut('Ctrl+B')
         dbAction.setStatusTip('Open db connection properties')
@@ -490,35 +1015,78 @@ class Window(QMainWindow):
         clearAction = QAction('&Clear inputs', self)
         clearAction.setShortcut('Ctrl+E')
         clearAction.setStatusTip('Clear the input text boxes')
-        clearAction.triggered.connect(self.clear)
+        clearAction.triggered.connect(self.clearAll)
         
         viewnetAction = QAction('&View Network', self)
         viewnetAction.setShortcut('Ctrl+D')
         viewnetAction.setStatusTip('View the network')
         viewnetAction.triggered.connect(self.drawview)               
-    
+
+        getDegreeDistAction = QAction('&Degree Distribution',self)
+        getDegreeDistAction.triggered.connect(self.calcDegreeDist)
+        
+        massCalcAction = QAction('&Many Metrics',self)
+        massCalcAction.triggered.connect(self.massCalc)        
+        
+        metricsExportAction = QAction('&Export Metrics',self)
+        metricsExportAction.triggered.connect(self.export)
+
+        metricsGraphAction = QAction('&Plot Graph',self)
+        metricsGraphAction.triggered.connect(self.plotGraph)
+        
+        calcClusteringAction = QAction('&Clustering(Tri)',self)
+        calcClusteringAction.setStatusTip('Calcualte the clustering coefficient')
+        calcClusteringAction.triggered.connect(self.calcClustering)
+
+        calcClusteringSqAction = QAction('&Clustering(Sq)',self)
+        calcClusteringSqAction.triggered.connect(self.calcClusteringSq)
+        
+        calcAssortativityAction = QAction('&Assortativity',self)
+        calcAssortativityAction.triggered.connect(self.calcAssortativity)
+        
+        calcBetweennessAction = QAction('&Betweenness Centrality',self)
+        self.G = nx.gnm_random_graph(12,45)
+        calcBetweennessAction.triggered.connect(self.calcBetweenness)
+        
+        calcAvPathLengthAction = QAction('&Av Pathn Length',self)
+        calcAvPathLengthAction.triggered.connect(self.calcAvPathLength)
+        
         self.statusBar() #create status bar 
         menubar=self.menuBar() #create menu bar
         fileMenu = menubar.addMenu('&File') #add file menu
-        editMenu = menubar.addMenu('&Edit') #add edit menu
+        editMenu = menubar.addMenu('&Failure Options') #add edit menu
+        calcMenu = menubar.addMenu('&Metrics') #add metric calculation menu
         
         #add actions to file and edit menu's
         editMenu.addAction(RunAction)
         editMenu.addAction(viewnetAction)
         editMenu.addAction(resetAction)
-        editMenu.addAction(extraAction) #not need for the moment 
-        #editMenu.addAction(dbAction)
+        editMenu.addAction(optionsAction) 
+        editMenu.addAction(metricsAction)
         editMenu.addAction(clearAction)
+        
         fileMenu.addAction(openAction)
         fileMenu.addAction(exitAction)
+        
+        calcMenu.addAction(getDegreeDistAction) 
+        sub_menu = calcMenu.addMenu('Calculate')
+        calcMenu.addAction(massCalcAction)
+        calcMenu.addAction(metricsGraphAction)
+        calcMenu.addAction(metricsExportAction)
+        sub_menu.addAction(calcClusteringAction)
+        sub_menu.addAction(calcClusteringSqAction)
+        sub_menu.addAction(calcAssortativityAction)
+        sub_menu.addAction(calcBetweennessAction)
+        sub_menu.addAction(calcAvPathLengthAction)
+        
         #create and set some lables
         self.lbl4 = QLabel("Ready", self)
-        self.lbl4.move(68,153)
+        self.lbl4.move(68,206)
         self.lbl4.adjustSize() 
         fontbold = QFont("Calibri", 10, QFont.Bold)      
 
         self.lbl6 = QLabel("STATE: ", self)
-        self.lbl6.move(25,152)
+        self.lbl6.move(25,205)
         self.lbl6.setFont(fontbold)
         self.lbl6.adjustSize() 
         #set and create GUI features for the analysis type
@@ -580,65 +1148,92 @@ class Window(QMainWindow):
         self.lbl1.adjustSize()
         self.lbl1.move(275, 25)
         
+        #for network A
         self.graph = 'GNM' #means this is the default, so if menu option not changed/used, will persume GNM graph
         inputs = ('GNM','Erdos Renyi','Watts Strogatz','Barabasi Albert',
                   'Hierarchical Random','Hierarchical Random +',
                   'Hierarchical Communities','Tree','Database','Lists')
-        self.cmbox = QComboBox(self)
-        self.cmbox.move(275,40)
-        self.cmbox.addItems(inputs)
-        self.cmbox.setToolTip("Select the graph type or graph input method")
-        self.cmbox.activated[str].connect(self.networkselection)           
-        #combo box for second network   
-        inputs = ('None','GNM','Erdos Renyi','Watts Strogatz','Barabasi Albert',
-                  'Hierarchical Random','Hierarchical Random +',
-                  'Hierarchical Communities','Tree','Database','Lists')
-        self.cmboxb = QComboBox(self)
-        self.cmboxb.move(275,70)
-        self.cmboxb.addItems(inputs)
-        self.cmboxb.setToolTip("Select the graph type or graph input method")
-        self.cmboxb.activated[str].connect(self.networkselectionb)  
-
+        self.cmboxA = QComboBox(self)
+        self.cmboxA.move(275,44)
+        self.cmboxA.addItems(inputs)
+        self.cmboxA.setToolTip("Select the graph type or graph input method")
+        self.cmboxA.activated[str].connect(self.networkselectionA)           
         #set and create GUI features for the input text boxes
         self.lbl10 = QLabel("Graph Inputs", self)
         self.lbl10.setFont(fontbold)
         self.lbl10.adjustSize()
         self.lbl10.move(400, 25)
-        self.txtparam1 = QLineEdit(self)        
-        self.txtparam1.move(400, 40)
-        self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178') #set the start up states for that top of the list, GNM        
-        self.txtparam2 = QLineEdit(self)
-        self.txtparam2.move(500, 40)
-        self.txtparam2.setToolTip(
+        self.txtparamA1 = QLineEdit(self)        
+        self.txtparamA1.move(400, 45)
+        self.txtparamA1.setToolTip('The number of nodes. eg., 34 or 178') #set the start up states for that top of the list, GNM        
+        self.txtparamA2 = QLineEdit(self)
+        self.txtparamA2.move(500, 45)
+        self.txtparamA2.setToolTip(
         'The number of edges. eg.,twice the no. of edges, 124 or 389')
-        self.txtparam3 = QLineEdit(self)
-        self.txtparam3.move(600, 40)
-        self.txtparam3.setEnabled(False)              
-        self.validator = QIntValidator(1,2000,self.txtparam1)       
-        self.txtparam1.setValidator(self.validator)
-        self.validator = QIntValidator(1,6000,self.txtparam2)       
-        self.txtparam2.setValidator(self.validator)
+        self.txtparamA3 = QLineEdit(self)
+        self.txtparamA3.move(600, 45)
+        self.txtparamA3.setEnabled(False)              
+        self.validator = QIntValidator(1,2000,self.txtparamA1)       
+        self.txtparamA1.setValidator(self.validator)
+        self.validator = QIntValidator(1,60000,self.txtparamA2)       
+        self.txtparamA2.setValidator(self.validator)
+                
+        #for network B
+        self.graphB = 'None' #means this is the default, so if menu option not changed/used, will persume GNM graph
+        inputs = ('None','GNM','Erdos Renyi','Watts Strogatz','Barabasi Albert',
+                  'Hierarchical Random','Hierarchical Random +',
+                  'Hierarchical Communities','Tree','Database','Lists')
+        self.cmboxB = QComboBox(self)
+        self.cmboxB.move(275,90)
+        self.cmboxB.addItems(inputs)
+        self.cmboxB.setToolTip("Select the graph type or graph input method")
+        self.cmboxB.activated[str].connect(self.networkselectionB) 
+        #set and create GUI features for the input text boxes
+        self.txtparamB1 = QLineEdit(self)        
+        self.txtparamB1.move(400, 90)
+        self.txtparamB1.setEnabled(False)
+        self.txtparamB1.setToolTip('The number of nodes. eg., 34 or 178') #set the start up states for that top of the list, GNM        
+        self.txtparamB2 = QLineEdit(self)
+        self.txtparamB2.move(500, 90)
+        self.txtparamB2.setEnabled(False)
+        self.txtparamB2.setToolTip(
+        'The number of edges. eg.,twice the no. of edges, 124 or 389')
+        self.txtparamB3 = QLineEdit(self)
+        self.txtparamB3.move(600, 90)
+        self.txtparamB3.setEnabled(False)              
+        self.validator = QIntValidator(1,2000,self.txtparamB1)       
+        self.txtparamB1.setValidator(self.validator)
+        self.validator = QIntValidator(1,60000,self.txtparamB2)       
+        self.txtparamB2.setValidator(self.validator)  
         
-        #setb of inputs for dependency and interdependency
-        self.txtparam1b = QLineEdit(self)        
-        self.txtparam1b.move(400, 72)
-        self.txtparam1b.setToolTip('The number of nodes. eg., 34 or 178') #set the start up states for that top of the list, GNM        
-        self.txtparam2b = QLineEdit(self)
-        self.txtparam2b.move(500, 72)
-        self.txtparam2b.setToolTip(
-        'The number of edges. eg.,twice the no. of edges, 124 or 389')
-        self.txtparam3b = QLineEdit(self)
-        self.txtparam3b.move(600, 72)
-        self.txtparam3b.setEnabled(False)              
-        self.validator = QIntValidator(1,2000,self.txtparam1)       
-        self.txtparam1b.setValidator(self.validator)
-        self.validator = QIntValidator(1,6000,self.txtparam2)       
-        self.txtparam2b.setValidator(self.validator)        
-
-        #set default staes for parameter boxes b
-        self.txtparam1b.setDisabled(True)
-        self.txtparam2b.setDisabled(True)
-        self.txtparam3b.setDisabled(True)
+        #analysis options
+        #single, dependency, interdependency
+        self.lbltype = QLabel("Analysis Type", self)
+        self.lbltype.setFont(fontbold)
+        self.lbltype.adjustSize()
+        self.lbltype.move(275, 135)
+        self.graph_analysis = 'Single' #means this is the default, so if menu option not changed/used, will persume GNM graph
+        inputs = ('Single','Dependency','Interdependency')
+        self.cmboxtype = QComboBox(self)
+        self.cmboxtype.move(275,155)
+        self.cmboxtype.addItems(inputs)
+        self.cmboxtype.setToolTip("Select the graph analysis type")
+        self.cmboxtype.activated[str].connect(self.selectAnalysisType) 
+        #set and create GUI features for the input text boxes
+        self.lblfromA = QLabel("From A to B", self)
+        self.lblfromA.adjustSize()
+        self.lblfromA.move(400, 135)
+        self.txtparamt1 = QLineEdit(self)        
+        self.txtparamt1.move(400, 155)
+        self.txtparamt1.setEnabled(False)
+        self.txtparamt1.setToolTip('List of dependency edges from network A to B') #set the start up states for that top of the list, GNM        
+        self.lblfromB = QLabel("From B to A", self)
+        self.lblfromB.adjustSize()
+        self.lblfromB.move(500, 135)
+        self.txtparamt2 = QLineEdit(self)
+        self.txtparamt2.move(500, 155)
+        self.txtparamt2.setEnabled(False)
+        self.txtparamt2.setToolTip('List if dependency edges from network B to A')        
         
         #set and create the extra options features on GUI    
         self.lbl5 = QLabel("Remove subgraphs/isolated nodes", self)
@@ -657,41 +1252,159 @@ class Window(QMainWindow):
         "Select if nodes are to be removed when they become isolated")
         self.ckbxnoisolates = QCheckBox("Exclude isolates", self)
         self.ckbxnoisolates.adjustSize()
-        self.ckbxnoisolates.move(235, 120)
+        self.ckbxnoisolates.move(130, 140)
         self.ckbxnoisolates.setToolTip("Tick if nodes, one isolated, should not be selected for removal when running resilience analysis")
         self.ckbxisolates.stateChanged.connect(self.limitoptions)
         
         self.ckbxviewnet = QCheckBox("View net failure", self)
         self.ckbxviewnet.adjustSize()
-        self.ckbxviewnet.move(275, 100)
+        self.ckbxviewnet.move(130, 175)
         self.ckbxviewnet.setToolTip("View the network failure as nodes are removed")
+        
         #set and create button for the GUI
         self.btndraw = QPushButton('Draw', self)
-        self.btndraw.move(275, 150)
+        self.btndraw.move(470, 200)
         self.btndraw.setToolTip('Draw the network')
         self.btndraw.adjustSize()
         self.built = self.btndraw.clicked.connect(self.drawview) #view the network and set built as true 
         self.btnstart = QPushButton('Start', self)
         self.btnstart.setToolTip('Run the analysis')
-        self.btnstart.move(425, 150)
+        self.btnstart.move(630, 200)
         self.btnstart.adjustSize()
         self.btnstart.clicked.connect(self.startorpause)        
         self.btnstep = QPushButton('Step', self)
         self.btnstep.setToolTip('Run the first step of the analysis')
-        self.btnstep.move(350, 150)
+        self.btnstep.move(550, 200)
         self.btnstep.adjustSize()
         self.btnstep.clicked.connect(self.step_analysis)
         self.btnreset = QPushButton('Reset/Cancel', self)
         self.btnreset.setToolTip('Cancel and/or reset the analysis')
-        self.btnreset.move(200, 150)
+        self.btnreset.move(390, 200)
         self.btnreset.adjustSize()
         self.btnreset.clicked.connect(self.reset)        
         
-        self.setGeometry(300,300,715,195)#above; vertical place on screen, hoz place on screen, width of window, height of window
-        self.setWindowTitle('Network Tool v2.0') #title of window 
+        self.setGeometry(300,300,720,235)#above; vertical place on screen, hoz place on screen, width of window, height of window
+        self.setWindowTitle('Network Tool v1.8') #title of window 
         self.show() #show window
         #finished signal to follow on from the work thread
+        print 'it goes wrong here'
         self.connect(self.thread, SIGNAL("finished()"), self.updateUi)
+    
+    
+    def calcClustering(self):
+        #calc the normal clustering coefficient
+        #will return the average value
+        #will also return the value per node
+        #return other stats
+        
+        #send calc to code in another script
+        return
+    def calcClusteringSq(self):
+        #calc the square clustering coefficient
+        #will return the average value
+        #will also return the value per node   
+        #return other stats
+        #send calc to code in another script
+        return
+    def calcAssortativity(self):
+        #calc the assortativty coefficient
+        #will return the average value
+        #will also return the value per node   
+        #return other stats
+        #send calc to code in another script
+        return
+    def calcBetweenness(self, G):
+        #calc the betweenness centrality
+        #send calc to code in another script
+        maxBetweenness, minBetweenness, averageBetweenness, nodeBetweenness = mc.Betweenness_Calc(self.G)
+        #present results to user
+        
+        #need to output these in some way which allow te user to copy and past them        
+        
+        QMessageBox.information(self, "My message box", 'max betweenness is: \t%s \nmin betweenness is: \t%s \naverage bewteenness is: \t%s \nbetweenness per node is: \t%s' %(maxBetweenness, minBetweenness, averageBetweenness, nodeBetweenness), QMessageBox.Ok)
+        
+        #QMessageBox.question(self,  'Message',  'Are you sure to quit?',  QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+
+    def calcAvPathLength(self):
+        #calc the average path length
+        #send calc to code in another script
+        return
+    def calcDegreeDist(self):
+        #calc the degree distribution
+        #send calc to code in another script
+        return
+    def massCalc(self):
+        #will open a new window where user can select the metrics they want to calculate
+        #send calc to code in another script
+        return
+    def plotGraph(self):
+        #will allow the user to plot a graph with any of the metrics
+        #send calc to code in another script
+        return
+    def export(self):
+        #will allow the user to export something - prbs gping to be an option within some of the menus
+        return
+    def create_metrics(self, parameters):
+        '''creates metrics'''
+        
+        if parameters == None:
+            STAND_ALONE = True
+        
+        #basic metrics A
+        self.nodes_removed_A = True
+        self.node_count_removed_A = True
+        self.count_nodes_left_A = True
+        self.number_of_edges_A = True
+        self.number_of_components_A = True
+        self.basic_metrics_A = self.nodes_removed_A,self.node_count_removed_A,self.count_nodes_left_A,self.number_of_edges_A,self.number_of_components_A    
+        
+        #optional metrics A
+        self.size_of_components_A = False 
+        self.giant_component_size_A = False
+        self.av_nodes_in_components_A = False
+        self.isolated_nodes_A = True #THIS NEEDS TO BE IN THE BASIC SET
+        self.isolated_n_count_A = True #THIS NEEDS TO BE IN THE BASIC SET
+        self.isolated_n_count_removed_A = False
+        self.subnodes_A = False
+        self.subnodes_count_A = False   
+        self.path_length_A = False
+        self.av_path_length_components_A = False
+        self.av_path_length_geo_A = False
+        self.giant_component_av_path_length_A = False
+        self.average_degree_A = False
+        self.inter_removed_count_A = False #THIS IS ONLY NEEDED IF INTERDEPENDENCY     
+        self.option_metrics_A = self.size_of_components_A,self.giant_component_size_A,self.av_nodes_in_components_A,self.isolated_nodes_A,self.isolated_n_count_A,self.isolated_n_count_removed_A,self.subnodes_A,self.subnodes_count_A,self.path_length_A,self.av_path_length_components_A,self.av_path_length_geo_A,self.giant_component_av_path_length_A,self.average_degree_A,self.inter_removed_count_A
+        
+        if STAND_ALONE == False:
+            #basic metrics B
+            self.nodes_removed_B = False
+            self.node_count_removed_B = False
+            self.count_nodes_left_B = False
+            self.number_of_edges_B = False
+            self.number_of_components_B = False
+            self.basic_metrics_B =self.nodes_removed_B,self.node_count_removed_B,self.count_nodes_left_B,self.number_of_edges_B,self.number_of_components_B    
+                
+            #optional metrics B
+            self.size_of_components_B = False 
+            self.giant_component_size_B = False
+            self.av_nodes_in_components_B = False
+            self.isolated_nodes_B = True #THIS NEEDS TO BE IN THE BASIC SET
+            self.isolated_n_count_B = True #THIS NEEDS TO BE IN THE BASIC SET
+            self.isolated_n_count_removed_B = False
+            self.subnodes_B = False
+            self.subnodes_count_B = False   
+            self.path_length_B = False
+            self.av_path_length_components_B = False
+            self.av_path_length_geo_B = False
+            self.giant_component_av_path_length_B = False
+            self.average_degree_B = False
+            self.inter_removed_count_B = False #THIS IS ONLY NEEDED IF INTERDEPENDENCY    
+            self.option_metrics_B = self.size_of_components_B,self.giant_component_size_B,self.av_nodes_in_components_B,self.isolated_nodes_B,self.isolated_n_count_B,self.isolated_n_count_removed_B,self.subnodes_B,self.subnodes_count_B,self.path_length_B,self.av_path_length_components_B,self.av_path_length_geo_B,self.giant_component_av_path_length_B,self.average_degree_B,self.inter_removed_count_B
+        else:
+            self.basic_metrics_B = None
+            self.option_metrics_B = None
+        self.metrics = self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B
+        return self.metrics        
 
     def startorpause(self):
         if self.running == True:
@@ -700,13 +1413,30 @@ class Window(QMainWindow):
             self.running = True
             self.pause= False            
             self.full_analysis()
-            
+
     def updatecolors(self, coloractive, colorinactive):
         self.coloractive = coloractive
         self.colorinactive = colorinactive
-        
+
     def updatetimedelay(self,timedelay):
         self.timedelay = timedelay
+
+    def selectAnalysisType(self, text):
+        '''change which input tect boxes are activiated based on the selection'''
+        self.analysistype = text
+        if self.analysistype == 'Single':
+            self.txtparamt1.setEnabled(False)
+            self.txtparamt2.setEnabled(False)
+        elif self.analysistype == 'Dependency':
+            self.txtparamt1.setEnabled(True)
+            self.txtparamt2.setEnabled(False)
+            self.cmboxB.setCurrentIndex(1)
+            self.networkselectionB('GNM')
+        elif self.analysistype == 'Interdependency':
+            self.txtparamt1.setEnabled(True)
+            self.txtparamt2.setEnabled(True)
+            self.cmboxB.setCurrentIndex(1)
+            self.networkselectionB('GNM')
         
     def limitoptions(self):
         '''Change the state of the option checkboxes when the isolates check 
@@ -784,17 +1514,31 @@ class Window(QMainWindow):
         self.pause = False       
         self.parameters = None
         self.graphparameters = None
+        self.option_metrics_A = None
         self.enableallckbx()
         self.btndraw.setEnabled(True) #draw button
         self.btnstep.setEnabled(True) #allow the button to be pressed again
         self.btnstart.setEnabled(True)
         self.ckbxviewnet.setEnabled(True) #view graph checkbox  
-        
-    def clear(self):
+    def clearAll(self):
         '''Clear the three QLinEdit/input text boxes.'''
-        self.txtparam1.setText('')
-        self.txtparam2.setText('')
-        self.txtparam3.setText('')
+        self.txtparamA1.setText('')
+        self.txtparamA2.setText('')
+        self.txtparamA3.setText('')
+        self.txtparamB1.setText('')
+        self.txtparamB2.setText('')
+        self.txtparamB3.setText('')
+    def clearA(self):
+        '''Clear the three QLinEdit/input text boxes.'''
+        self.txtparamA1.setText('')
+        self.txtparamA2.setText('')
+        self.txtparamA3.setText('')
+    def clearB(self):
+        '''Clear the three QLinEdit/input text boxes.'''
+        self.txtparamB1.setText('')
+        self.txtparamB2.setText('')
+        self.txtparamB3.setText('')
+    
     def closeall(self):
         '''Closes the other windows if they are open when Exit chosen from 
         File menu.'''
@@ -804,16 +1548,30 @@ class Window(QMainWindow):
         self.w = OptionsWindow()
         self.w.updatetimedelay(self.timedelay)
     def updateoptions(self):
+        '''called by the options window to get recent variable values'''
         return self.timedelay, self.coloractive, self.colorinactive 
+    def showmetricswindow(self):
+        '''Open the metrics window.'''
+        self.w = MetricsWindow()
+        #self.w.updatetimedelay(self.timedelay)
+    def update_metrics_window(self):
+        '''called by the metrics window when opened to get the up-to-date variables'''
+        return self.metrics 
     
     def showdbwindow(self):
         '''Open the database connection window.'''
         inputDlg = DbConnect()
         inputDlg.updateparameters(self.dbconnect)
         
+    def updatemetrics(self, metrics):
+        '''called when metrics window is closed to update the variables'''
+        self.metrics = metrics
+        self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
+        print self.option_metrics_A
+        
     def updatedb(self, dbconnect):
         ''''''
-        print 'this is: ',dbconnect
+        #print 'this is: ',dbconnect
         self.dbconnect = dbconnect
     def getdbparameters(self):
         '''Open the GUI for the user to input the database connection 
@@ -847,24 +1605,32 @@ class Window(QMainWindow):
                 self.PASSWORD = str(self.PASSWORD)
                 self.NETNAME = str(self.NETNAME)              
                 
-                """ paramers for a safe conenction that should always work
-                self.DBNAME = 'inter_london'
+                # paramers for a safe conenction that should always work
+                self.DBNAME = 'air'
                 self.HOST = 'localhost'
                 self.PORT = '5433'
                 self.USER = 'postgres'
                 self.PASSWORD = 'aaSD2011'
-                self.NETNAME = 'power_lines'
-                """            
+                self.NETNAME = 'uk_internal_routes'
+                #connection = 'PG:dbname = air host = localhost port = 5433 user = postgres password = aaSD2011'
+                
+                host = 'localhost'
+                dbname = 'roads'
+                user = 'postgres'
+                password = 'aaSD2011'
+                port = '5433'
+                conn = ogr.Open("PG: host='%s' dbname='%s' user='%s' password='%s' port='%s'" % (host, dbname, user, password, port))
                 #connection = str('PG:dbname = ')+str(self.DBNAME)+str(" host='")+str(self.HOST)+str("' port='")+str(self.PORT)+str("' user='")+str(self.USER)+str("' password='")+str(self.PASSWORD)+str("'")   
-                connection = str('PG: host= ' )+self.HOST+str(" dbname = '")+self.DBNAME+str("' user= '")+self.USER+str("' password= '")+self.PASSWORD+str("'")
-                print 'connection: ', connection               
-                conn = ogr.Open(connection)
+                #connection = str('PG: host= ' )+self.HOST+str(" dbname = '")+self.DBNAME+str("' user= '")+self.USER+str("' password= '")+self.PASSWORD+str("'")
+                print 'connection: ', conn
+                #conn = ogr.Open(connection)
                 print 'connection open'
                 self.G = nx_pgnet.read(conn, 'poewer_line_Edges', 'Power_line_NODES')#load in network from database and create networkx instance
                 print 'G = ', self.G                
                 return self.G
             except:
-                QMessageBox.warning(self, 'Error!', "Could not connect to database and find the data. Please check your inputs and try again. The parameters were: \ndbname: "+self.DBNAME+"\nhost: "+self.HOST+"\nuser: "+self.USER+"\nport: " +self.PORT+"\npassword: "+self.PASSWORD+"\nnetwork: "+self.NETNAME,'&OK')
+                #QMessageBox.warning(self, 'Error!', "Could not connect to database and find the data. Please check your inputs and try again. The parameters were: \ndbname: "+self.DBNAME+"\nhost: "+self.HOST+"\nuser: "+self.USER+"\nport: " +self.PORT+"\npassword: "+self.PASSWORD+"\nnetwork: "+self.NETNAME,'&OK')
+                QMessageBox.warning(self, 'Error!', "Could not connect to database and find the data. Please check your inputs and try again. The parameters were: \ndbname: "+dbname+"\nhost: "+host+"\nuser: "+user+"\nport: " +port+"\npassword: "+password+"\nnetwork: ",'&OK')                
                 self.G = None           
         else:
             self.cancel = True
@@ -888,11 +1654,15 @@ class Window(QMainWindow):
         print 'THE THREAD HAS FINSIHED'
 
         if self.timestep>0:
+            print 'here'
             forthread = self.thread.update()
             self.graphparameters, self.parameters, self.iterate = forthread
         else:
             self.graphparameters, self.parameters, self.iterate = self.forthread
-        i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
+        print len(self.graphparameters)
+        #i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
+        networks,i,node_list, to_b_nodes, from_a_nodes, basic_metrics_A,basic_metrics_B,option_metrics_A, option_metrics_B,interdependency_metrics,cascading_metrics = self.graphparameters
+        GtempA, GtempB, GA, GB = networks
         self.G = GtempA  
         if self.ckbxviewnet.isChecked():
             self.lbl4.setText('Drawing')
@@ -946,10 +1716,7 @@ class Window(QMainWindow):
         '''Draws the network without running any anlysis. Initiated by the Draw button and option in the edit menu.'''
         print 'drawing the network'
         if self.G == None:
-            param1 = self.txtparam1.text()
-            param2 = self.txtparam2.text()
-            param3 = self.txtparam3.text()
-            self.buildnetwork(param1, param2, param3)
+            self.buildnetwork()
             if self.G == None:
                 return
         self.graphvis = self.G.copy()
@@ -979,11 +1746,7 @@ class Window(QMainWindow):
             self.lbl4.setText('Intialising')
             self.lbl4.adjustSize()
             QApplication.processEvents()
-            
-            param1 = self.txtparam1.text()
-            param2 = self.txtparam2.text()
-            param3 = self.txtparam3.text()
-            self.buildnetwork(param1, param2, param3)
+            self.buildnetwork()
             #create copy for visualisation and set active attribute
             self.graphvis=self.G.copy()
             for node in self.graphvis.nodes_iter():  
@@ -1021,91 +1784,132 @@ class Window(QMainWindow):
             self.lbl4.setText("Paused")
             self.btnstart.setText("Re-Start")
             return
-
         self.fullanalysis = True
         self.btnstep.setEnabled(False)
         self.btndraw.setEnabled(False)
         self.ckbxviewnet.setEnabled(False)
         self.disableallckbx()
-        self.timestep += 1    
-        #identify if just single analsysis or dependent anlysis
-        if self.dosingle == False:
-            print 'either dependent or interdependent analysis'
-            #need to check for two graphs and then build them if they don't exist
-        elif self.dosingle == True:
-            print 'do a single analysis'
-            #run as before
-            
+        self.timestep += 1        
         if self.G == None:
             self.lbl4.setText('Intialising')
             self.lbl4.adjustSize()
             QApplication.processEvents()
-            param1 = self.txtparam1.text()
-            param2 = self.txtparam2.text()
-            param3 = self.txtparam3.text()
-            self.buildnetwork(param1, param2, param3)
+            self.buildnetwork()
             if self.G <> None:
                 #create a copy for the vis and adds attribute state
                 self.graphvis=self.G.copy()
                 for node in self.graphvis.nodes_iter():  
                     self.graphvis.node[node]['state'] = self.active
-                self.parameters = self.getanalysistype()
+                self.parameters = self.get_analysis_type()
             if self.G == None:
                 self.reset()
                 return
-        if self.G1 == None and self.dosingle == False:
-            param1 = self.txtparam1b.text()
-            param2 = self.txtparam2b.text()
-            param3 = self.txtparam3b.text()
-            self.G1 = self.buildnetwork(param1, param2, param3)
-            if self.G1 <> None:
-                #create a copies for the vis and adds attribute state
-                self.graphvis1=self.G1.copy()
-                for node in self.graphvis1.nodes_iter():  
-                    self.graphvis1.node[node]['state'] = self.active
-                self.parameters = self.getanalysistype()
-            if self.G1 == None:
-                self.reset()
-                return
-                
         if self.parameters == None:
             self.parameters = self.getanalysistype()
-            
+        '''get metrics sorted here'''
+        self.metrics = self.sort_metrics()
+        ''''''
         self.lbl4.setText('Processing')
         self.lbl4.adjustSize()
         QApplication.processEvents()
-        if self.ckbxviewnet.isChecked() and self.positions == None:
-            #need to think about how to visualise them - think its got to be as part of a single network-therefore will be slower though
-            if self.dosingle == True:                
-                selected = self.visselection()
-                self.positions = self.getpositions(selected)
-            elif self.dosingle == False:
-                #assign an attribute called 'graph' which will then be numbered one and two
-                for node in self.graphvis1.nodes_iter():  
-                    self.graphvis1.node[node]['graph'] = 1
-                for node in self.graphvis.nodes_iter():  
-                    self.graphvis.node[node]['graph'] = 0
-                self.graphvis.add_nodes_from(self.graphvis1.nodes())
-                print 'number of nodes in graph vis is: ', self.graphvis.number_of_nodes()
-                print 'need to sort visulaisation out for more than one network'                
-        
+        if self.ckbxviewnet.isChecked() and self.positions==None: 
+            selected = self.visselection()
+            self.positions = self.getpositions(selected)
         if self.timestep == 0:
-            if self.dosingle == True:
-                self.graphparameters = res.core_analysis(self.G)
-                self.forthread = self.graphparameters, self.parameters, self.iterate
-                self.updateUi()
-            elif self.dosingle == False:
-                print 'need to sort code for dependent/interdependent analysis and capacity for the links'
-                
-        if self.timestep > 0:
-            if self.dosingle == True:            
-                self.forthread = self.graphparameters, self.parameters, self.iterate               
-                i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
-                self.G = GA     
-                self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
-            elif self.dosingle == False:
-                print 'need to sort code for analysis of dependent/interdependent analysis'
-    
+            '''this is tempory until we built in the ability to do dependency function'''
+            self.Gnet = None
+            print len(self.parameters)
+            
+            STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName =self.parameters
+            a_to_b_edges = None #this needs sorting when dependency option sorted
+            self.parameters = self.metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName,a_to_b_edges
+            ''''''            
+            self.graphparameters = res.core_analysis(self.G, self.Gnet, self.parameters)
+            self.forthread = self.graphparameters, self.parameters, self.iterate
+            print 'length of graph parameters is: ', len(self.graphparameters)
+            self.updateUi()
+        if self.timestep > 0:            
+            self.forthread = self.graphparameters, self.parameters, self.iterate               
+            #i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
+            networks,i,node_list, to_b_nodes, from_a_nodes, basic_metrics_A,basic_metrics_B,option_metrics_A, option_metrics_B,interdependency_metrics,cascading_metrics = self.graphparameters
+            GtempA,GtempB,GA,GB = networks
+            self.G = GA     
+            self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
+        
+    def sort_metrics(self):
+        STAND_ALONE = True
+        nodes_removed_A = True #nodes removed from network A
+        node_count_removed_A = True #count of ndoes removed from network A   
+        count_nodes_left_A = True #the number of nodes left in network A
+        number_of_edges_A = True #number of edges in the network
+        number_of_components_A = True #number of subgraphs/isolated nodes
+        
+        if STAND_ALONE == False:        
+            nodes_removed_B = True #nodes removed from network B
+            node_count_removed_B = True #count of ndoes removed from network B   
+            count_nodes_left_B = True #the number of nodes left in network B
+            number_of_edges_B = True #number of edges in the network
+            number_of_components_B = True #number of subgraphs/isolated nodes
+        else: 
+            nodes_removed_B = False #nodes removed from network B
+            node_count_removed_B = False #count of ndoes removed from network B   
+            count_nodes_left_B = False #the number of nodes left in network B
+            number_of_edges_B = False #number of edges in the network
+            number_of_components_B = False #number of subgraphs/isolated nodes
+            
+        size_of_components_A = False
+        giant_component_size_A = False
+        av_nodes_in_components_A = False
+        isolated_nodes_A = True #THIS NEEDS TO BE IN THE BASIC SET
+        isolated_n_count_A = True #THIS NEEDS TO BE IN THE BASIC SET
+        isolated_n_count_removed_A = False
+        subnodes_A = False
+        subnodes_count_A = False   
+        path_length_A = False
+        av_path_length_components_A = False
+        av_path_length_geo_A = False
+        giant_component_av_path_length_A = False
+        average_degree_A = False
+        inter_removed_count_A = False #THIS IS ONLY NEEDED IF INTERDEPENDENCY
+
+        if STAND_ALONE == False:
+             size_of_components_B = False
+             giant_component_size_B = False
+             av_nodes_in_components_B = False
+             isolated_nodes_B = True #THIS NEEDS TO BE IN THE BASIC SET
+             isolated_n_count_B = True #THIS NEEDS TO BE IN THE BASIC SET
+             isolated_n_count_removed_B = False
+             subnodes_B = False
+             subnodes_count_B = False   
+             path_length_B = False
+             av_path_length_components_B = False
+             av_path_length_geo_B = False
+             giant_component_av_path_length_B = False
+             average_degree_B = False
+             inter_removed_count_B = True #THIS IS NEEDED IF NOT STAND ALONE
+        else:
+             size_of_components_B = False
+             giant_component_size_B = False
+             av_nodes_in_components_B = False
+             isolated_nodes_B = True #THIS NEEDS TO BE IN THE BASIC SET
+             isolated_n_count_B = True #THIS NEEDS TO BE IN THE BASIC SET
+             isolated_n_count_removed_B = False
+             subnodes_B = False
+             subnodes_count_B = False   
+             path_length_B = False
+             av_path_length_components_B = False
+             av_path_length_geo_B = False
+             giant_component_av_path_length_B = False
+             average_degree_B = False
+             inter_removed_count_B = True #THIS IS NEEDED IF NOT STAND ALONE
+     
+        basic_metrics_A = nodes_removed_A,node_count_removed_A,count_nodes_left_A,number_of_edges_A,number_of_components_A
+        basic_metrics_B = nodes_removed_B,node_count_removed_B,count_nodes_left_B,number_of_edges_B,number_of_components_B
+        option_metrics_A = size_of_components_A,giant_component_size_A,av_nodes_in_components_A,isolated_nodes_A,isolated_n_count_A,isolated_n_count_removed_A,subnodes_A,subnodes_count_A,path_length_A,av_path_length_components_A,giant_component_av_path_length_A,av_path_length_geo_A,average_degree_A,inter_removed_count_A
+        option_metrics_B = size_of_components_B,giant_component_size_B,av_nodes_in_components_B,isolated_nodes_B,isolated_n_count_B,isolated_n_count_removed_B,subnodes_B,subnodes_count_B,path_length_B,av_path_length_components_B,giant_component_av_path_length_B,av_path_length_geo_B,average_degree_B,inter_removed_count_B
+        metrics = basic_metrics_A, basic_metrics_B, option_metrics_A, option_metrics_B
+        return metrics
+
     def visselection(self):
         '''Loads a GUI where the use selects the method of positioning the nodes.'''
         if self.graph == 'Database':
@@ -1151,15 +1955,22 @@ class Window(QMainWindow):
             print 'Error in the selection of vis method'
         return self.positions
         
-    def getanalysistype(self):
+    def get_analysis_type(self):
         '''Get the analysis type, the file location and if any of the other 
         options have been selected related to the analysis if the network.'''
+        '''these top three need an interface on the gui'''
+        STAND_ALONE = True
+        DEPENDENCY = False
+        INTERDEPENDENCY = False
+
         SINGLE = False
         SEQUENTIAL = False
         CASCADING = False
+
         RANDOM = False
         DEGREE = False
         BETWEENNESS = False
+        
         REMOVE_SUBGRAPHS = False
         REMOVE_ISOLATES = False
         NO_ISOLATES = False
@@ -1207,243 +2018,252 @@ class Window(QMainWindow):
             if self.ckbxnoisolates.isChecked():
                 NO_ISOLATES = True
                 
-            parameters = SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName
+            parameters = STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName
             return parameters   
     def setfilelocation(self):
         '''Set the file location for the output file.'''
         fileName = QFileDialog.getSaveFileName(self, 'Save File', '.txt')  
         return fileName  
-    def networkselectionb(self,text):
-        self.graphb = text
-        self.dosingle = False
-        print 'do single is: ', self.dosingle
-        if text == 'None':
-            self.txtparam1b.setDisabled(True)
-            self.txtparam2b.setDisabled(True)
-            self.txtparam3b.setDisabled(True)
-            self.dosingle = True
-        elif text == 'GNM':
-            self.clear()
-            self.txtparam1b.setDisabled(False)
-            self.txtparam2b.setDisabled(False)
-            self.txtparam3b.setDisabled(True)
-            self.txtparam1b.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
-            self.txtparam2b.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389. Min = 1, Max = 6000') 
-            self.validator = QIntValidator(1,2000,self.txtparam1b)       
-            self.txtparam1b.setValidator(self.validator)
-            self.validator = QIntValidator(1,6000,self.txtparam2b)       
-            self.txtparam2b.setValidator(self.validator)
-        elif text == 'Erods Renyi':
-            self.txtparam1b.setDiasbled(False)
-            self.txtparam2b.setDisabled(False)
-            self.txtparam3b.setDisabled(True)
-            self.txtparam1b.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
-            self.txtparam2b.setToolTip('Probability of edge creation eg.,0.4 or 0.7')
-            self.validator = QIntValidator(1,2000,self.txtparam1b)       
-            self.txtparam1b.setValidator(self.validator)
-            self.txtparam2b.setInputMask("B.9")
-        elif text == 'Barabasi Albert':
-            self.clear()
-            self.txtparam1b.setDisabled(False)
-            self.txtparam2b.setDisabled(False)
-            self.txtparam3b.setDisabled(True)
-            self.txtparam1b.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
-            self.txtparam2b.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 50')
-            self.validator = QIntValidator(1,2000,self.txtparam1b)       
-            self.txtparam1b.setValidator(self.validator)
-            self.validator = QIntValidator(1,50,self.txtparam2b)       
-            self.txtparam2b.setValidator(self.validator)
-        elif text == 'Watts Strogatz':
-            self.clear()
-            self.txtparam1b.setDisabled(False)
-            self.txtparam2b.setDisabled(False)
-            self.txtparam3b.setDisabled(False)
-            self.txtparam1b.setToolTip('The number of nodes. eg.,34 or 178. Min = 1, Max = 2000')
-            self.txtparam2b.setToolTip('Number of neighbours connected to a node. eg., 2 or 15. Min = 1, Max = 200')
-            self.txtparam3b.setToolTip('Probability of being rewired eg.,0.4 or 0.7')
-            self.validator = QIntValidator(1,2000,self.txtparam1b)       
-            self.txtparam1b.setValidator(self.validator)
-            self.validator = QIntValidator(1,200,self.txtparam2b)       
-            self.txtparam2b.setValidator(self.validator)
-            self.txtparam3b.setInputMask("B.9")
-        elif text =='Hierarchical random':
-            self.clear()
-            self.txtparam1b.setDisabled(False)
-            self.txtparam2b.setDisabled(False)
-            self.txtparam3b.setDisabled(False)
-            self.txtparam1b.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
-            self.txtparam2b.setToolTip('The number of children from each new node. eg., 2 or 6. Min = 1, Max = 10')
-            self.txtparam3b.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
-            self.validator = QIntValidator(1,10,self.txtparam1b)       
-            self.txtparam1b.setValidator(self.validator)
-            self.validator = QIntValidator(1,10,self.txtparam2b)       
-            self.txtparam2b.setValidator(self.validator)
-            self.txtparam3b.setInputMask("B.9")
-        elif text == 'Hierarchical random +':
-            self.clear()
-            self.txtparam1b.setDisabled(False)
-            self.txtparam2b.setDisabled(False)
-            self.txtparam3b.setDisabled(False)
-            self.txtparam1b.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
-            self.txtparam2b.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 10')
-            self.txtparam3b.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
-            self.validator = QIntValidator(1,10,self.txtparam1b)       
-            self.txtparam1b.setValidator(self.validator)
-            self.validator = QIntValidator(1,10,self.txtparam2b)       
-            self.txtparam2b.setValidator(self.validator)
-            self.txtparam3b.setInputMask("B.9")
-        elif text == 'Hierarchcial communities':
-            self.clear()
-            self.txtparam1b.setDisabled(False)
-            self.txtparam2b.setDisabled(False)
-            self.txtparam3b.setDisabled(True)
-            self.txtparam1b.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 4')
-            self.txtparam2b.setToolTip('The number of type of community, 0 for square, 1 for triangle.')
-            self.validator = QIntValidator(1,4,self.txtparam1b)       
-            self.txtparam1b.setValidator(self.validator)
-            self.validator = QIntValidator(0,1,self.txtparam2b)       
-            self.txtparam2b.setValidator(self.validator)
-        elif text == 'Tree':
-            self.clear()            
-            self.txtparam1b.setDisabled(False)
-            self.txtparam2b.setDisabled(False)
-            self.txtparam3b.setDisabled(True)
-            self.txtparam1b.setToolTip('The number of child nodes per parent. eg., 3 or 5. Min = 1, Max = 50')
-            self.txtparam2b.setToolTip('The number of levels in the tree (excluding the source level). eg., 3 or 6. Min = 1, Max = 10')
-            self.validator = QIntValidator(1,50,self.txtparam1b)       
-            self.txtparam1b.setValidator(self.validator)
-            self.validator = QIntValidator(1,10,self.txtparam2b)       
-            self.txtparam2b.setValidator(self.validator)
-        elif text == 'Database':
-            self.clear()
-            self.txtparam1b.setEnabled(False)
-            self.txtparam2b.setEnabled(False)
-            self.txtparam3b.setEnabled(False)
-        elif text == 'Lists':   
-            self.clear()
-            self.txtparam1b.setEnabled(True)
-            self.txtparam2b.setEnabled(True)
-            self.txtparam3b.setEnabled(False)
-            self.txtparam1b.setToolTip('The list if nodes for the network eg., (1,2,3,4)')
-            self.txtparam2b.setToolTip('The list of edges for the network eg., ((1,2),(1,4),(1,3),(2,3),(3,4))')
-            
-    def networkselection(self, text):
+    def networkselectionA(self, text):
         '''Alter the interface depending on what is selected in the combo box 
         for graph type.'''
         self.graph = text
         if text == 'GNM':
-            self.clear()
-            self.txtparam3.setEnabled(False)
-            self.txtparam1.setEnabled(True)
-            self.txtparam2.setEnabled(True)
-            self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
-            self.txtparam2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389. Min = 1, Max = 6000') 
-            self.validator = QIntValidator(1,2000,self.txtparam1)       
-            self.txtparam1.setValidator(self.validator)
-            self.validator = QIntValidator(1,6000,self.txtparam2)       
-            self.txtparam2.setValidator(self.validator)
+            self.clearA()
+            self.txtparamA3.setEnabled(False)
+            self.txtparamA1.setEnabled(True)
+            self.txtparamA2.setEnabled(True)
+            self.txtparamA1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparamA2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389. Min = 1, Max = 6000') 
+            self.validator = QIntValidator(1,2000,self.txtparamA1)       
+            self.txtparamA1.setValidator(self.validator)
+            self.validator = QIntValidator(1,60000,self.txtparamA2)       
+            self.txtparamA2.setValidator(self.validator)
         elif text == 'Erdos Renyi':
-            self.clear()
-            self.txtparam3.setEnabled(False)
-            self.txtparam1.setEnabled(True)
-            self.txtparam2.setEnabled(True)
-            self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
-            self.txtparam2.setToolTip('Probability of edge creation eg.,0.4 or 0.7')
-            self.validator = QIntValidator(1,2000,self.txtparam1)       
-            self.txtparam1.setValidator(self.validator)
-            self.txtparam2.setInputMask("B.9")
+            self.clearA()
+            self.txtparamA3.setEnabled(False)
+            self.txtparamA1.setEnabled(True)
+            self.txtparamA2.setEnabled(True)
+            self.txtparamA1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparamA2.setToolTip('Probability of edge creation eg.,0.4 or 0.7')
+            self.validator = QIntValidator(1,2000,self.txtparamA1)       
+            self.txtparamA1.setValidator(self.validator)
+            self.txtparamA2.setInputMask("B.9")
         elif text == 'Watts Strogatz':
-            self.clear()
-            self.txtparam1.setEnabled(True)
-            self.txtparam2.setEnabled(True)
-            self.txtparam3.setEnabled(True)
-            self.txtparam1.setToolTip('The number of nodes. eg.,34 or 178. Min = 1, Max = 2000')
-            self.txtparam2.setToolTip('Number of neighbours connected to a node. eg., 2 or 15. Min = 1, Max = 200')
-            self.txtparam3.setToolTip('Probability of being rewired eg.,0.4 or 0.7')
-            self.validator = QIntValidator(1,2000,self.txtparam1)       
-            self.txtparam1.setValidator(self.validator)
-            self.validator = QIntValidator(1,200,self.txtparam2)       
-            self.txtparam2.setValidator(self.validator)
-            self.txtparam3.setInputMask("B.9")
+            self.clearA()
+            self.txtparamA1.setEnabled(True)
+            self.txtparamA2.setEnabled(True)
+            self.txtparamA3.setEnabled(True)
+            self.txtparamA1.setToolTip('The number of nodes. eg.,34 or 178. Min = 1, Max = 2000')
+            self.txtparamA2.setToolTip('Number of neighbours connected to a node. eg., 2 or 15. Min = 1, Max = 200')
+            self.txtparamA3.setToolTip('Probability of being rewired eg.,0.4 or 0.7')
+            self.validator = QIntValidator(1,2000,self.txtparamA1)       
+            self.txtparamA1.setValidator(self.validator)
+            self.validator = QIntValidator(1,200,self.txtparamA2)       
+            self.txtparamA2.setValidator(self.validator)
+            self.txtparamA3.setInputMask("B.9")
         elif text == 'Barabasi Albert':
-            self.clear()
-            self.txtparam3.setEnabled(False)
-            self.txtparam1.setEnabled(True)
-            self.txtparam2.setEnabled(True)
-            self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
-            self.txtparam2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 50')
-            self.validator = QIntValidator(1,2000,self.txtparam1)       
-            self.txtparam1.setValidator(self.validator)
-            self.validator = QIntValidator(1,50,self.txtparam2)       
-            self.txtparam2.setValidator(self.validator)
+            self.clearA()
+            self.txtparamA3.setEnabled(False)
+            self.txtparamA1.setEnabled(True)
+            self.txtparamA2.setEnabled(True)
+            self.txtparamA1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparamA2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 50')
+            self.validator = QIntValidator(1,2000,self.txtparamA1)       
+            self.txtparamA1.setValidator(self.validator)
+            self.validator = QIntValidator(1,50,self.txtparamA2)       
+            self.txtparamA2.setValidator(self.validator)
         elif text == 'Hierarchical Random':
-            self.clear()
-            self.txtparam1.setEnabled(True)
-            self.txtparam2.setEnabled(True)
-            self.txtparam3.setEnabled(True)
-            self.txtparam1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
-            self.txtparam2.setToolTip('The number of children from each new node. eg., 2 or 6. Min = 1, Max = 10')
-            self.txtparam3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
-            self.validator = QIntValidator(1,10,self.txtparam1)       
-            self.txtparam1.setValidator(self.validator)
-            self.validator = QIntValidator(1,10,self.txtparam2)       
-            self.txtparam2.setValidator(self.validator)
-            self.txtparam3.setInputMask("B.9")
+            self.clearA()
+            self.txtparamA1.setEnabled(True)
+            self.txtparamA2.setEnabled(True)
+            self.txtparamA3.setEnabled(True)
+            self.txtparamA1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
+            self.txtparamA2.setToolTip('The number of children from each new node. eg., 2 or 6. Min = 1, Max = 10')
+            self.txtparamA3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
+            self.validator = QIntValidator(1,10,self.txtparamA1)       
+            self.txtparamA1.setValidator(self.validator)
+            self.validator = QIntValidator(1,10,self.txtparamA2)       
+            self.txtparamA2.setValidator(self.validator)
+            self.txtparamA3.setInputMask("B.9")
         elif text == 'Hierarchical Random +':
-            self.clear()
-            self.txtparam1.setEnabled(True)
-            self.txtparam2.setEnabled(True)
-            self.txtparam3.setEnabled(True)
-            self.txtparam1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
-            self.txtparam2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 10')
-            self.txtparam3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
-            self.validator = QIntValidator(1,10,self.txtparam1)       
-            self.txtparam1.setValidator(self.validator)
-            self.validator = QIntValidator(1,10,self.txtparam2)       
-            self.txtparam2.setValidator(self.validator)
-            self.txtparam3.setInputMask("B.9")
+            self.clearA()
+            self.txtparamA1.setEnabled(True)
+            self.txtparamA2.setEnabled(True)
+            self.txtparamA3.setEnabled(True)
+            self.txtparamA1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
+            self.txtparamA2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 10')
+            self.txtparamA3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
+            self.validator = QIntValidator(1,10,self.txtparamA1)       
+            self.txtparamA1.setValidator(self.validator)
+            self.validator = QIntValidator(1,10,self.txtparamA2)       
+            self.txtparamA2.setValidator(self.validator)
+            self.txtparamA3.setInputMask("B.9")
         elif text == 'Hierarchical Communities':
-            self.clear()
-            self.txtparam1.setEnabled(True)
-            self.txtparam2.setEnabled(True)
-            self.txtparam3.setEnabled(False)
-            self.txtparam1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 4')
-            self.txtparam2.setToolTip('The number of type of community, 0 for square, 1 for triangle.')
-            self.validator = QIntValidator(1,4,self.txtparam1)       
-            self.txtparam1.setValidator(self.validator)
-            self.validator = QIntValidator(0,1,self.txtparam2)       
-            self.txtparam2.setValidator(self.validator)
+            self.clearA()
+            self.txtparamA1.setEnabled(True)
+            self.txtparamA2.setEnabled(True)
+            self.txtparamA3.setEnabled(False)
+            self.txtparamA1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 4')
+            self.txtparamA2.setToolTip('The number of type of community, 0 for square, 1 for triangle.')
+            self.validator = QIntValidator(1,4,self.txtparamA1)       
+            self.txtparamA1.setValidator(self.validator)
+            self.validator = QIntValidator(0,1,self.txtparamA2)       
+            self.txtparamA2.setValidator(self.validator)
         elif text == 'Tree':
-            self.clear()
-            self.txtparam1.setEnabled(True)
-            self.txtparam2.setEnabled(True)
-            self.txtparam3.setEnabled(False)
-            self.txtparam1.setToolTip('The number of child nodes per parent. eg., 3 or 5. Min = 1, Max = 50')
-            self.txtparam2.setToolTip('The number of levels in the tree (excluding the source level). eg., 3 or 6. Min = 1, Max = 10')
-            self.validator = QIntValidator(1,50,self.txtparam1)       
-            self.txtparam1.setValidator(self.validator)
-            self.validator = QIntValidator(1,10,self.txtparam2)       
-            self.txtparam2.setValidator(self.validator)
+            self.clearA()
+            self.txtparamA1.setEnabled(True)
+            self.txtparamA2.setEnabled(True)
+            self.txtparamA3.setEnabled(False)
+            self.txtparamA1.setToolTip('The number of child nodes per parent. eg., 3 or 5. Min = 1, Max = 50')
+            self.txtparamA2.setToolTip('The number of levels in the tree (excluding the source level). eg., 3 or 6. Min = 1, Max = 10')
+            self.validator = QIntValidator(1,50,self.txtparamA1)       
+            self.txtparamA1.setValidator(self.validator)
+            self.validator = QIntValidator(1,10,self.txtparamA2)       
+            self.txtparamA2.setValidator(self.validator)
         elif text == 'Database':
-            self.clear()
-            self.txtparam1.setEnabled(False)
-            self.txtparam2.setEnabled(False)
-            self.txtparam3.setEnabled(False)
+            self.clearA()
+            self.txtparamA1.setEnabled(False)
+            self.txtparamA2.setEnabled(False)
+            self.txtparamA3.setEnabled(False)
         elif text == 'Lists':   
-            self.clear()
-            self.txtparam1.setEnabled(True)
-            self.txtparam2.setEnabled(True)
-            self.txtparam3.setEnabled(False)
-            self.txtparam1.setToolTip('The list if nodes for the network eg., (1,2,3,4)')
-            self.txtparam2.setToolTip('The list of edges for the network eg., ((1,2),(1,4),(1,3),(2,3),(3,4))')
+            self.clearA()
+            self.txtparamA1.setEnabled(True)
+            self.txtparamA2.setEnabled(True)
+            self.txtparamA3.setEnabled(False)
+            self.txtparamA1.setToolTip('The list if nodes for the network eg., (1,2,3,4)')
+            self.txtparamA2.setToolTip('The list of edges for the network eg., ((1,2),(1,4),(1,3),(2,3),(3,4))')
             ####open textbox for inputs, then display in list box
             ####could replace txtbox with a edit button, which when clicked opens window            
-                        
+            
+    def networkselectionB(self, text):
+        '''Alter the interface depending on what is selected in the combo box 
+        for graph type.'''
+        self.graph = text
+        if self.graph <> 'None':
+            self.cmboxtype.setCurrentIndex(1)
+            self.txtparamt1.setEnabled(True)
+        if text == 'None':
+            self.clearB()
+            self.txtparamB3.setEnabled(False)
+            self.txtparamB1.setEnabled(False)
+            self.txtparamB2.setEnabled(False)
+        elif text == 'GNM':
+            self.clearB()
+            self.txtparamB3.setEnabled(False)
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
+            self.txtparamB1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparamB2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389. Min = 1, Max = 6000') 
+            self.validator = QIntValidator(1,2000,self.txtparamB1)       
+            self.txtparamB1.setValidator(self.validator)
+            self.validator = QIntValidator(1,60000,self.txtparamB2)       
+            self.txtparamB2.setValidator(self.validator)
+        elif text == 'Erdos Renyi':
+            self.clearB()
+            self.txtparamB3.setEnabled(False)
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
+            self.txtparamB1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparamB2.setToolTip('Probability of edge creation eg.,0.4 or 0.7')
+            self.validator = QIntValidator(1,2000,self.txtparamB1)       
+            self.txtparamB1.setValidator(self.validator)
+            self.txtparamB2.setInputMask("B.9")
+        elif text == 'Watts Strogatz':
+            self.clearB()
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
+            self.txtparamB3.setEnabled(True)
+            self.txtparamB1.setToolTip('The number of nodes. eg.,34 or 178. Min = 1, Max = 2000')
+            self.txtparamB2.setToolTip('Number of neighbours connected to a node. eg., 2 or 15. Min = 1, Max = 200')
+            self.txtparamB3.setToolTip('Probability of being rewired eg.,0.4 or 0.7')
+            self.validator = QIntValidator(1,2000,self.txtparamB1)       
+            self.txtparamB1.setValidator(self.validator)
+            self.validator = QIntValidator(1,200,self.txtparamB2)       
+            self.txtparamB2.setValidator(self.validator)
+            self.txtparamB3.setInputMask("B.9")
+        elif text == 'Barabasi Albert':
+            self.clearB()
+            self.txtparamB3.setEnabled(False)
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
+            self.txtparamB1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparamB2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 50')
+            self.validator = QIntValidator(1,2000,self.txtparamB1)       
+            self.txtparamB1.setValidator(self.validator)
+            self.validator = QIntValidator(1,50,self.txtparamB2)       
+            self.txtparamB2.setValidator(self.validator)
+        elif text == 'Hierarchical Random':
+            self.clearB()
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
+            self.txtparamB3.setEnabled(True)
+            self.txtparamB1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
+            self.txtparamB2.setToolTip('The number of children from each new node. eg., 2 or 6. Min = 1, Max = 10')
+            self.txtparamB3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
+            self.validator = QIntValidator(1,10,self.txtparamB1)       
+            self.txtparamB1.setValidator(self.validator)
+            self.validator = QIntValidator(1,10,self.txtparamB2)       
+            self.txtparamB2.setValidator(self.validator)
+            self.txtparamB3.setInputMask("B.9")
+        elif text == 'Hierarchical Random +':
+            self.clearA()
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
+            self.txtparamB3.setEnabled(True)
+            self.txtparamB1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
+            self.txtparamB2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 10')
+            self.txtparamB3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
+            self.validator = QIntValidator(1,10,self.txtparamB1)       
+            self.txtparamB1.setValidator(self.validator)
+            self.validator = QIntValidator(1,10,self.txtparamB2)       
+            self.txtparamB2.setValidator(self.validator)
+            self.txtparamB3.setInputMask("B.9")
+        elif text == 'Hierarchical Communities':
+            self.clearB()
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
+            self.txtparamB3.setEnabled(False)
+            self.txtparamB1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 4')
+            self.txtparamB2.setToolTip('The number of type of community, 0 for square, 1 for triangle.')
+            self.validator = QIntValidator(1,4,self.txtparamB1)       
+            self.txtparamB1.setValidator(self.validator)
+            self.validator = QIntValidator(0,1,self.txtparamB2)       
+            self.txtparamB2.setValidator(self.validator)
+        elif text == 'Tree':
+            self.clearB()
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
+            self.txtparamB3.setEnabled(False)
+            self.txtparamB1.setToolTip('The number of child nodes per parent. eg., 3 or 5. Min = 1, Max = 50')
+            self.txtparamB2.setToolTip('The number of levels in the tree (excluding the source level). eg., 3 or 6. Min = 1, Max = 10')
+            self.validator = QIntValidator(1,50,self.txtparamB1)       
+            self.txtparamB1.setValidator(self.validator)
+            self.validator = QIntValidator(1,10,self.txtparamB2)       
+            self.txtparamB2.setValidator(self.validator)
+        elif text == 'Database':
+            self.clearB()
+            self.txtparamB1.setEnabled(False)
+            self.txtparamB2.setEnabled(False)
+            self.txtparamB3.setEnabled(False)
+        elif text == 'Lists':   
+            self.clearB()
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
+            self.txtparamB3.setEnabled(False)
+            self.txtparamB1.setToolTip('The list if nodes for the network eg., (1,2,3,4)')
+            self.txtparamB2.setToolTip('The list of edges for the network eg., ((1,2),(1,4),(1,3),(2,3),(3,4))')
+            ####open textbox for inputs, then display in list box
+            ####could replace txtbox with a edit button, which when clicked opens window            
+
+            
     #slot to be called when start button is clicekd
-    def buildnetwork(self, param1, param2, param3):
+    def buildnetwork(self):
         '''Builds the network using the user selected option as well as checking for the correct input values. If graph not built, G=None'''
         print 'building network'
-
+        param1 = self.txtparamA1.text()
+        param2 = self.txtparamA2.text()
+        param3 = self.txtparamA3.text()
         self.G = None 
         #build network
         if self.graph == 'Watts Strogatz': #ws 
@@ -1748,11 +2568,19 @@ class Worker(QThread):
         '''Runs the analysis by calling the function in the resilience module.'''
         # Note: This is never called directly. Always use .start to start the workthread.
         print 'running the analysis'
+        print len(self.graphparameters)
         self.graphparameters, self.iterate = res.step(self.graphparameters, self.parameters, self.iterate)
         #self.emit(SIGNAL("finished()"),)
+        print 'not here'
         self.forthread = self.graphparameters, self.parameters, self.iterate
     def update(self):
         ''''''
+        print 'length of forthread is: ', len(self.forthread)
+        #self.graphparameters, self.parameters, self.iterate = self.forthread 
+        print 'gp is: ', self.graphparameters
+        print 'p is: ', self.parameters
+        print 'i is: ', self.iterate
+        self.forthread = self.graphparameters, self.parameters,self.iterate
         return self.forthread
 
 def draw(G, positions, figureModel, timestep, coloractive, colorinactive):
