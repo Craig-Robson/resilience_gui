@@ -36,126 +36,132 @@ def tree_circle(G,bfs,dim=2, scale=2):
         return {}
     if len(G)==1: #if network only has one node, again should very rarely get here
         return {G.nodes()[0]:(1,)*dim}
-    
     pos=np.asarray(np.random.random((len(G),dim)),dtype=np.float32)#creates array from input gragh for coords
-    
-    level_0 = []
-    level_1 = []
-    level_2 = []
-    level_3 = []
-    level_4 = []
-    level_other = []
+    #replaced original technique here in this iteration of the module from v5
+    G, lvl_max = get_stats(G) #find max level
+    levelnodes=[[]]
+    i = 0
+    while i <= lvl_max:#creates a lists of lists, a list for each level
+        levelnodes.append([])
+        i+=1
     s = 0
     while s < len(G.nodes()):         
-        #get node level
-        n_lvl = G.node[s]["level"]   
-        if n_lvl == 0:
-            level_0.append(s)
-        elif n_lvl == 1:  
-            level_1.append(s)
-        elif n_lvl == 2: 
-            level_2.append(s)
-        elif n_lvl == 3:
-            level_3.append(s)
-        elif n_lvl == 4:
-            level_4.append(s)
-        elif n_lvl > 4:
-            level_other.append(s)
-        else:
-            print 'somethings gone wrong, the node level is,', n_lvl
+        n_lvl = G.node[s]["level"] #get node level 
+        levelnodes[n_lvl].append(s)
         s+=1
-    print 'level 0', level_0
-    print 'level 1', level_1
-    print 'level 2', level_2
-    print 'level 3', level_3
-    print 'level 4', level_4
-    print 'level others', level_other
-    print (1.0/(len(level_1)))*2
+    print 'levels: ', levelnodes
+    #assign positions for all nodes
     circleadjustment = 0.0
-    if len(level_1) <> 0:
-        circleadjustment += 0.2
-        pos1=np.asarray(np.random.random((len(level_1),dim)),dtype=np.float32)#creates array from input gragh for coords
-        t=np.arange((1.0/(len(level_1)))*2,2.0*np.pi,2.0*np.pi/(len(level_1)),dtype=np.float32) #set a number of locations on a circle for the points to lie
-        i = 0
-        for node in level_1:
-            pos1[i] = t[i]
-            i +=1
-        pos1=np.transpose(np.array([np.cos(t)*circleadjustment,np.sin(t)*circleadjustment])) #assign nodes to location on circle
-        if len(level_2) <> 0:
-            circleadjustment += 0.2
-            pos2=np.asarray(np.random.random((len(level_2),dim)),dtype=np.float32)#creates array from input gragh for coords
-            t2=np.arange((1.0/(len(level_2)))*0.2 ,2.0*np.pi,2.0*np.pi/len(level_2),dtype=np.float32) #set a number of locations on a circle for the points to lie
+    level = 0
+    poslist=[[]]
+    if level == 0: #assign centre position for central node
+        poslist.append([]) #add list entry for this level
+        poslist[level] = 0, 0 #add position
+        level += 1 #iterate lebel
+    if level<>0: #if level is greater than 0
+        while len(levelnodes[level]) <> 0: #until all nodes have been clasified
+            circleadjustment += 0.2 #adjust circle size
+            poslist.append([])
+            poslist[level]=np.asarray(np.random.random((len(levelnodes[level]),dim)),dtype=np.float32)#creates array from input gragh for coords        
+            t=np.arange((1.0/(len(levelnodes[level])))*2,2.0*np.pi,2.0*np.pi/(len(levelnodes[level])),dtype=np.float32) #set a number of locations on a circle for the points to lie
             i = 0
-            for node in level_2:
-                pos2[i] = t2[i]
+            for node in levelnodes[level]:
+                poslist[level][i] = t[i]
                 i +=1
-            pos2=np.transpose(np.array([np.cos(t2)*circleadjustment,np.sin(t2)*circleadjustment])) #assign nodes to location on circle
-            if len(level_3) <> 0:
-                circleadjustment += 0.2
-                pos3=np.asarray(np.random.random((len(level_3),dim)),dtype=np.float32)#creates array from input gragh for coords
-                t3=np.arange(0,2.0*np.pi,2.0*np.pi/len(level_3),dtype=np.float32) #set a number of locations on a circle for the points to lie
-                i = 0
-                for node in level_3:
-                    pos3[i] = t3[i]
-                    i +=1
-                pos3=np.transpose(np.array([np.cos(t3)*circleadjustment,np.sin(t3)*circleadjustment])) #assign nodes to location on circle
-                if len(level_4) <> 0:
-                    circleadjustment += 0.2
-                    pos4=np.asarray(np.random.random((len(level_4),dim)),dtype=np.float32)#creates array from input gragh for coords
-                    t4=np.arange(0,2.0*np.pi,2.0*np.pi/len(level_4),dtype=np.float32) #set a number of locations on a circle for the points to lie
-                    i = 0
-                    for node in level_4:
-                        pos4[i] = t4[i]
-                        i +=1
-                    pos4=np.transpose(np.array([np.cos(t4)*circleadjustment,np.sin(t4)*circleadjustment])) #assign nodes to location on circle
-                    if len(level_other) <> 0:
-                        circleadjustment += 0.2
-                        pos_other=np.asarray(np.random.random((len(level_other),dim)),dtype=np.float32)#creates array from input gragh for coords
-                        tother=np.arange(0,2.0*np.pi,2.0*np.pi/len(level_other),dtype=np.float32) #set a number of locations on a circle for the points to lie
-                        i = 0
-                        for node in level_other:
-                            pos_other[i] = tother[i]
-                            i +=1
-                        pos_other=np.transpose(np.array([np.cos(tother)*circleadjustment,np.sin(tother)*circleadjustment])) #assign nodes to location on circle
-    #could use a lists of lists
-    #[[pos0],[pos1],[pos2],[pos3]]
-    o=0
-    p=0
-    l=0
-    k=0
-    s=0
-    j=0
-    while s < len(G.nodes()):         
-        #get node level
-        n_lvl = G.node[s]["level"]    
-        if n_lvl == 0:
-            pos[s] = 0,0
-        elif n_lvl == 1:
-            pos[s] = pos1[o]
-            o += 1
-        elif n_lvl == 2:
-            pos[s] = pos2[p]
-            p += 1
-        elif n_lvl == 3:
-            pos[s] = pos3[l]
-            l += 1
-        elif n_lvl == 4:
-            pos[s] = pos4[k]
-            k += 1
-        elif n_lvl > 4:
-            pos[s] = pos_other[j]
-            j += 1
-        else:
-            print 'somethings gone wrong. The node level is: ', n_lvl
-        s+=1  
-    pos=_rescale_layout(pos,scale=scale)
-    """
+            poslist[level]=np.transpose(np.array([np.cos(t)*circleadjustment,np.sin(t)*circleadjustment])) #assign node       
+            level += 1
+    print 'this is pos list level ', poslist
     r = 0
-    while r <len(G.nodes()):
-        n_lvl = G.nodes[s]["level"]
-        pos[s] = levels[n_lvl][]
-    """
+    s = 0
+    while r <(len(G.nodes())): #for all nodes
+        n_lvl = G.node[r]["level"] #get the node level
+        if r <> levelnodes[n_lvl][s]: #if the node number matches that in the level at position s do whatevrer
+            s +=1
+        else: #go onto the next node
+            pos[r]=poslist[n_lvl][s] #assign position   
+            s = 0
+            r += 1
+    pos=_rescale_layout(pos,scale=scale)
     return pos #return positions and network
+
+def tree(G,bfs,dim=2, scale=2):
+    if bfs == True:
+        G = assign_levels_bfs(G)
+    elif bfs == False:
+        G = assign_levels_dfs(G)
+    else:
+        print 'Internal error with visualisation algorithm'
+    try:
+        import numpy as np
+    except ImportError:
+        raise ImportError("Could not import numpy which is required for this visualisation")
+    if len(G)==0: #if network empty, should never get here though
+        return {}
+    if len(G)==1: #if network only has one node, again should very rarely get here
+        return {G.nodes()[0]:(1,)*dim}
+     
+    pos=np.asarray(np.random.random((len(G),dim)),dtype=np.float32)#creates array from input gragh for coords
+    #replaced original technique here in this iteration of the module from v5
+    G, lvl_max = get_stats(G) #find max level
+    levelnodes=[[]]
+    i = 0
+    while i <= lvl_max:#creates a lists of lists, a list for each level
+        levelnodes.append([])
+        i+=1
+    s = 0
+    while s < len(G.nodes()):         
+        n_lvl = G.node[s]["level"] #get node level 
+        levelnodes[n_lvl].append(s)
+        s+=1
+        
+    vertsplit = 1.0/(lvl_max+4)        
+    hozsplit = [0]
+    u = 1   
+    while u <= lvl_max:
+        dist =  1.0/(len(levelnodes[u]))
+        hozsplit.append(dist)
+        print 'this is a new level. the sep dist between nodes is: ', dist
+        u += 1
+
+    print 'levels: ', levelnodes
+    #assign positions for all nodes
+    level = 0
+    poslist=[[]]
+    #This small section is superseeded by a single line further below just before the positions are rescaled
+    if level == 0: #assign centre position for central node
+        poslist.append([]) #add list entry for this level
+        poslist[level] =0.5,1 #1-vertsplit  #add position
+        level += 1 #iterate level
+    if level<>0: #if level is greater than 0
+        while len(levelnodes[level]) <> 0: #until all nodes have been clasified
+            poslist.append([])
+            poslist[level]=np.asarray(np.random.random((len(levelnodes[level]),dim)),dtype=np.float32)#creates array from input gragh for coords        
+            i = 0
+            for node in levelnodes[level]:
+                poslist[level][i] = (hozsplit[level]/2)+hozsplit[level]*(i), 1-vertsplit*level
+                i +=1
+            level += 1
+    #print 'this is pos list level ', poslist
+    r = 0
+    s = 0
+    while r <(len(G.nodes())): #for all nodes
+        n_lvl = G.node[r]["level"] #get the node level
+        if r <> levelnodes[n_lvl][s]: #if the node number matches that in the level at position the required
+            s +=1
+        else: #go onto the next node
+            pos[r]=poslist[n_lvl][s] #assign position   
+            s = 0
+            r += 1
+    n_lvl = -1
+    r = 0
+    while n_lvl <> 0: #for all nodes
+        n_lvl = G.node[r]["level"] #get the node level
+        r += 1
+    pos[r-1]=0.5,1 #assign the origin node the correct position
+    pos=_rescale_layout(pos,scale=scale)
+    #print 'this is the pos list', pos    
+    return pos
+    
 
 def _rescale_layout(pos,scale=1):
     # rescale to (0,pscale) in all axes
@@ -207,7 +213,7 @@ def get_stats(G):
         nodes_per_lvl[lvl-1] = n_p_l + 1
         p += 1
     print G.nodes()
-    return G
+    return G, lvl_max
     
     
 def assign_levels_bfs(G):
@@ -286,14 +292,13 @@ def max_element(alist):
 import pylab as pl    
 import networkx as nx
 
-    
-"""
+'''
 #G = nx.gnm_random_graph(50,123)
-G = nx.balanced_tree(4,4)
+G = nx.balanced_tree(2,2)
 #G = assign_levels_bfs(G)
 #G = assign_levels_dfs(G)
 bfs = True
-pos= tree_circle(G, bfs)
+pos= tree(G, bfs)
 nx.draw(G,pos,node_size=20,alpha=0.5,node_color="blue", with_labels=False)
 pl.show()
-"""
+'''
