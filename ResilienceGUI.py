@@ -1,5 +1,30 @@
 # -*- coding: utf-8 -*-
 """
+Version v2_0_0 - development for dependency analysis
+All changes made to be listed here
+
+
+Plans:
+second combo box with none option -allows for single, dependency and interdependency analysis
+inputing variables/data for two networks
+    -two sets of input boxes, second set disabled until combobox on a graph type
+    -add the open option to both list (instead of having lists when open)
+    -make the input boxes smaller
+    -have a gui open for lists when selected
+        -as also needs to be eddited, need a edit button
+        -would also need this for open option
+        -new class or inbuilt widget? - new class would give greater flexability
+    -how to specify dependency or interdependency analysis
+        -simple checkboxes
+        -simple combobox
+        -could be linked to method where dependencies are specified
+    -how so specify the nodes in the dependency
+        -need to now how the database works
+        -might have a list of edges in it
+        -lists of nodes in a listbox
+    -how to visualise dependency and interdependency
+        -to think about carefully
+
 This code is for the visualising of static networks, as well as for the 
 analysis and visualisation of networks which are under stress through component 
 failure.
@@ -428,6 +453,8 @@ class Window(QMainWindow):
         self.timedelay = 2
         self.coloractive = 'green'
         self.colorinactive = 'red'       
+        self.dosingle = True
+        self.G1 = None
         
         #create actions for file menu
         RunAction = QAction('&Run',self)
@@ -465,7 +492,6 @@ class Window(QMainWindow):
         clearAction.setStatusTip('Clear the input text boxes')
         clearAction.triggered.connect(self.clear)
         
-                      
         viewnetAction = QAction('&View Network', self)
         viewnetAction.setShortcut('Ctrl+D')
         viewnetAction.setStatusTip('View the network')
@@ -557,31 +583,63 @@ class Window(QMainWindow):
         self.graph = 'GNM' #means this is the default, so if menu option not changed/used, will persume GNM graph
         inputs = ('GNM','Erdos Renyi','Watts Strogatz','Barabasi Albert',
                   'Hierarchical Random','Hierarchical Random +',
-                  'Hierarchical Communities','Tree','Database','Lists',)
+                  'Hierarchical Communities','Tree','Database','Lists')
         self.cmbox = QComboBox(self)
         self.cmbox.move(275,40)
         self.cmbox.addItems(inputs)
         self.cmbox.setToolTip("Select the graph type or graph input method")
         self.cmbox.activated[str].connect(self.networkselection)           
+        #combo box for second network   
+        inputs = ('None','GNM','Erdos Renyi','Watts Strogatz','Barabasi Albert',
+                  'Hierarchical Random','Hierarchical Random +',
+                  'Hierarchical Communities','Tree','Database','Lists')
+        self.cmboxb = QComboBox(self)
+        self.cmboxb.move(275,70)
+        self.cmboxb.addItems(inputs)
+        self.cmboxb.setToolTip("Select the graph type or graph input method")
+        self.cmboxb.activated[str].connect(self.networkselectionb)  
+
         #set and create GUI features for the input text boxes
         self.lbl10 = QLabel("Graph Inputs", self)
         self.lbl10.setFont(fontbold)
         self.lbl10.adjustSize()
         self.lbl10.move(400, 25)
         self.txtparam1 = QLineEdit(self)        
-        self.txtparam1.move(400, 45)
+        self.txtparam1.move(400, 40)
         self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178') #set the start up states for that top of the list, GNM        
         self.txtparam2 = QLineEdit(self)
-        self.txtparam2.move(400, 80)
+        self.txtparam2.move(500, 40)
         self.txtparam2.setToolTip(
         'The number of edges. eg.,twice the no. of edges, 124 or 389')
         self.txtparam3 = QLineEdit(self)
-        self.txtparam3.move(400, 115)
+        self.txtparam3.move(600, 40)
         self.txtparam3.setEnabled(False)              
         self.validator = QIntValidator(1,2000,self.txtparam1)       
         self.txtparam1.setValidator(self.validator)
         self.validator = QIntValidator(1,6000,self.txtparam2)       
         self.txtparam2.setValidator(self.validator)
+        
+        #setb of inputs for dependency and interdependency
+        self.txtparam1b = QLineEdit(self)        
+        self.txtparam1b.move(400, 72)
+        self.txtparam1b.setToolTip('The number of nodes. eg., 34 or 178') #set the start up states for that top of the list, GNM        
+        self.txtparam2b = QLineEdit(self)
+        self.txtparam2b.move(500, 72)
+        self.txtparam2b.setToolTip(
+        'The number of edges. eg.,twice the no. of edges, 124 or 389')
+        self.txtparam3b = QLineEdit(self)
+        self.txtparam3b.move(600, 72)
+        self.txtparam3b.setEnabled(False)              
+        self.validator = QIntValidator(1,2000,self.txtparam1)       
+        self.txtparam1b.setValidator(self.validator)
+        self.validator = QIntValidator(1,6000,self.txtparam2)       
+        self.txtparam2b.setValidator(self.validator)        
+
+        #set default staes for parameter boxes b
+        self.txtparam1b.setDisabled(True)
+        self.txtparam2b.setDisabled(True)
+        self.txtparam3b.setDisabled(True)
+        
         #set and create the extra options features on GUI    
         self.lbl5 = QLabel("Remove subgraphs/isolated nodes", self)
         self.lbl5.setFont(fontbold)
@@ -605,7 +663,7 @@ class Window(QMainWindow):
         
         self.ckbxviewnet = QCheckBox("View net failure", self)
         self.ckbxviewnet.adjustSize()
-        self.ckbxviewnet.move(275, 85)
+        self.ckbxviewnet.move(275, 100)
         self.ckbxviewnet.setToolTip("View the network failure as nodes are removed")
         #set and create button for the GUI
         self.btndraw = QPushButton('Draw', self)
@@ -629,8 +687,8 @@ class Window(QMainWindow):
         self.btnreset.adjustSize()
         self.btnreset.clicked.connect(self.reset)        
         
-        self.setGeometry(300,300,515,195)#above; vertical place on screen, hoz place on screen, width of window, height of window
-        self.setWindowTitle('Network Tool v1.8') #title of window 
+        self.setGeometry(300,300,715,195)#above; vertical place on screen, hoz place on screen, width of window, height of window
+        self.setWindowTitle('Network Tool v2.0') #title of window 
         self.show() #show window
         #finished signal to follow on from the work thread
         self.connect(self.thread, SIGNAL("finished()"), self.updateUi)
@@ -642,11 +700,14 @@ class Window(QMainWindow):
             self.running = True
             self.pause= False            
             self.full_analysis()
+            
     def updatecolors(self, coloractive, colorinactive):
         self.coloractive = coloractive
         self.colorinactive = colorinactive
+        
     def updatetimedelay(self,timedelay):
         self.timedelay = timedelay
+        
     def limitoptions(self):
         '''Change the state of the option checkboxes when the isolates check 
         box is selected.'''
@@ -885,7 +946,10 @@ class Window(QMainWindow):
         '''Draws the network without running any anlysis. Initiated by the Draw button and option in the edit menu.'''
         print 'drawing the network'
         if self.G == None:
-            self.buildnetwork()
+            param1 = self.txtparam1.text()
+            param2 = self.txtparam2.text()
+            param3 = self.txtparam3.text()
+            self.buildnetwork(param1, param2, param3)
             if self.G == None:
                 return
         self.graphvis = self.G.copy()
@@ -915,7 +979,11 @@ class Window(QMainWindow):
             self.lbl4.setText('Intialising')
             self.lbl4.adjustSize()
             QApplication.processEvents()
-            self.buildnetwork()
+            
+            param1 = self.txtparam1.text()
+            param2 = self.txtparam2.text()
+            param3 = self.txtparam3.text()
+            self.buildnetwork(param1, param2, param3)
             #create copy for visualisation and set active attribute
             self.graphvis=self.G.copy()
             for node in self.graphvis.nodes_iter():  
@@ -953,17 +1021,29 @@ class Window(QMainWindow):
             self.lbl4.setText("Paused")
             self.btnstart.setText("Re-Start")
             return
+
         self.fullanalysis = True
         self.btnstep.setEnabled(False)
         self.btndraw.setEnabled(False)
         self.ckbxviewnet.setEnabled(False)
         self.disableallckbx()
-        self.timestep += 1        
+        self.timestep += 1    
+        #identify if just single analsysis or dependent anlysis
+        if self.dosingle == False:
+            print 'either dependent or interdependent analysis'
+            #need to check for two graphs and then build them if they don't exist
+        elif self.dosingle == True:
+            print 'do a single analysis'
+            #run as before
+            
         if self.G == None:
             self.lbl4.setText('Intialising')
             self.lbl4.adjustSize()
             QApplication.processEvents()
-            self.buildnetwork()
+            param1 = self.txtparam1.text()
+            param2 = self.txtparam2.text()
+            param3 = self.txtparam3.text()
+            self.buildnetwork(param1, param2, param3)
             if self.G <> None:
                 #create a copy for the vis and adds attribute state
                 self.graphvis=self.G.copy()
@@ -973,24 +1053,59 @@ class Window(QMainWindow):
             if self.G == None:
                 self.reset()
                 return
+        if self.G1 == None and self.dosingle == False:
+            param1 = self.txtparam1b.text()
+            param2 = self.txtparam2b.text()
+            param3 = self.txtparam3b.text()
+            self.G1 = self.buildnetwork(param1, param2, param3)
+            if self.G1 <> None:
+                #create a copies for the vis and adds attribute state
+                self.graphvis1=self.G1.copy()
+                for node in self.graphvis1.nodes_iter():  
+                    self.graphvis1.node[node]['state'] = self.active
+                self.parameters = self.getanalysistype()
+            if self.G1 == None:
+                self.reset()
+                return
+                
         if self.parameters == None:
             self.parameters = self.getanalysistype()
+            
         self.lbl4.setText('Processing')
         self.lbl4.adjustSize()
         QApplication.processEvents()
-        if self.ckbxviewnet.isChecked() and self.positions==None: 
-            selected = self.visselection()
-            self.positions = self.getpositions(selected)
-        if self.timestep == 0:
-            self.graphparameters = res.core_analysis(self.G)
-            self.forthread = self.graphparameters, self.parameters, self.iterate
-            self.updateUi()
-        if self.timestep > 0:            
-            self.forthread = self.graphparameters, self.parameters, self.iterate               
-            i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
-            self.G = GA     
-            self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
+        if self.ckbxviewnet.isChecked() and self.positions == None:
+            #need to think about how to visualise them - think its got to be as part of a single network-therefore will be slower though
+            if self.dosingle == True:                
+                selected = self.visselection()
+                self.positions = self.getpositions(selected)
+            elif self.dosingle == False:
+                #assign an attribute called 'graph' which will then be numbered one and two
+                for node in self.graphvis1.nodes_iter():  
+                    self.graphvis1.node[node]['graph'] = 1
+                for node in self.graphvis.nodes_iter():  
+                    self.graphvis.node[node]['graph'] = 0
+                self.graphvis.add_nodes_from(self.graphvis1.nodes())
+                print 'number of nodes in graph vis is: ', self.graphvis.number_of_nodes()
+                print 'need to sort visulaisation out for more than one network'                
         
+        if self.timestep == 0:
+            if self.dosingle == True:
+                self.graphparameters = res.core_analysis(self.G)
+                self.forthread = self.graphparameters, self.parameters, self.iterate
+                self.updateUi()
+            elif self.dosingle == False:
+                print 'need to sort code for dependent/interdependent analysis and capacity for the links'
+                
+        if self.timestep > 0:
+            if self.dosingle == True:            
+                self.forthread = self.graphparameters, self.parameters, self.iterate               
+                i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
+                self.G = GA     
+                self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
+            elif self.dosingle == False:
+                print 'need to sort code for analysis of dependent/interdependent analysis'
+    
     def visselection(self):
         '''Loads a GUI where the use selects the method of positioning the nodes.'''
         if self.graph == 'Database':
@@ -1098,6 +1213,120 @@ class Window(QMainWindow):
         '''Set the file location for the output file.'''
         fileName = QFileDialog.getSaveFileName(self, 'Save File', '.txt')  
         return fileName  
+    def networkselectionb(self,text):
+        self.graphb = text
+        self.dosingle = False
+        print 'do single is: ', self.dosingle
+        if text == 'None':
+            self.txtparam1b.setDisabled(True)
+            self.txtparam2b.setDisabled(True)
+            self.txtparam3b.setDisabled(True)
+            self.dosingle = True
+        elif text == 'GNM':
+            self.clear()
+            self.txtparam1b.setDisabled(False)
+            self.txtparam2b.setDisabled(False)
+            self.txtparam3b.setDisabled(True)
+            self.txtparam1b.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparam2b.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389. Min = 1, Max = 6000') 
+            self.validator = QIntValidator(1,2000,self.txtparam1b)       
+            self.txtparam1b.setValidator(self.validator)
+            self.validator = QIntValidator(1,6000,self.txtparam2b)       
+            self.txtparam2b.setValidator(self.validator)
+        elif text == 'Erods Renyi':
+            self.txtparam1b.setDiasbled(False)
+            self.txtparam2b.setDisabled(False)
+            self.txtparam3b.setDisabled(True)
+            self.txtparam1b.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparam2b.setToolTip('Probability of edge creation eg.,0.4 or 0.7')
+            self.validator = QIntValidator(1,2000,self.txtparam1b)       
+            self.txtparam1b.setValidator(self.validator)
+            self.txtparam2b.setInputMask("B.9")
+        elif text == 'Barabasi Albert':
+            self.clear()
+            self.txtparam1b.setDisabled(False)
+            self.txtparam2b.setDisabled(False)
+            self.txtparam3b.setDisabled(True)
+            self.txtparam1b.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparam2b.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 50')
+            self.validator = QIntValidator(1,2000,self.txtparam1b)       
+            self.txtparam1b.setValidator(self.validator)
+            self.validator = QIntValidator(1,50,self.txtparam2b)       
+            self.txtparam2b.setValidator(self.validator)
+        elif text == 'Watts Strogatz':
+            self.clear()
+            self.txtparam1b.setDisabled(False)
+            self.txtparam2b.setDisabled(False)
+            self.txtparam3b.setDisabled(False)
+            self.txtparam1b.setToolTip('The number of nodes. eg.,34 or 178. Min = 1, Max = 2000')
+            self.txtparam2b.setToolTip('Number of neighbours connected to a node. eg., 2 or 15. Min = 1, Max = 200')
+            self.txtparam3b.setToolTip('Probability of being rewired eg.,0.4 or 0.7')
+            self.validator = QIntValidator(1,2000,self.txtparam1b)       
+            self.txtparam1b.setValidator(self.validator)
+            self.validator = QIntValidator(1,200,self.txtparam2b)       
+            self.txtparam2b.setValidator(self.validator)
+            self.txtparam3b.setInputMask("B.9")
+        elif text =='Hierarchical random':
+            self.clear()
+            self.txtparam1b.setDisabled(False)
+            self.txtparam2b.setDisabled(False)
+            self.txtparam3b.setDisabled(False)
+            self.txtparam1b.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
+            self.txtparam2b.setToolTip('The number of children from each new node. eg., 2 or 6. Min = 1, Max = 10')
+            self.txtparam3b.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
+            self.validator = QIntValidator(1,10,self.txtparam1b)       
+            self.txtparam1b.setValidator(self.validator)
+            self.validator = QIntValidator(1,10,self.txtparam2b)       
+            self.txtparam2b.setValidator(self.validator)
+            self.txtparam3b.setInputMask("B.9")
+        elif text == 'Hierarchical random +':
+            self.clear()
+            self.txtparam1b.setDisabled(False)
+            self.txtparam2b.setDisabled(False)
+            self.txtparam3b.setDisabled(False)
+            self.txtparam1b.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
+            self.txtparam2b.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 10')
+            self.txtparam3b.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
+            self.validator = QIntValidator(1,10,self.txtparam1b)       
+            self.txtparam1b.setValidator(self.validator)
+            self.validator = QIntValidator(1,10,self.txtparam2b)       
+            self.txtparam2b.setValidator(self.validator)
+            self.txtparam3b.setInputMask("B.9")
+        elif text == 'Hierarchcial communities':
+            self.clear()
+            self.txtparam1b.setDisabled(False)
+            self.txtparam2b.setDisabled(False)
+            self.txtparam3b.setDisabled(True)
+            self.txtparam1b.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 4')
+            self.txtparam2b.setToolTip('The number of type of community, 0 for square, 1 for triangle.')
+            self.validator = QIntValidator(1,4,self.txtparam1b)       
+            self.txtparam1b.setValidator(self.validator)
+            self.validator = QIntValidator(0,1,self.txtparam2b)       
+            self.txtparam2b.setValidator(self.validator)
+        elif text == 'Tree':
+            self.clear()            
+            self.txtparam1b.setDisabled(False)
+            self.txtparam2b.setDisabled(False)
+            self.txtparam3b.setDisabled(True)
+            self.txtparam1b.setToolTip('The number of child nodes per parent. eg., 3 or 5. Min = 1, Max = 50')
+            self.txtparam2b.setToolTip('The number of levels in the tree (excluding the source level). eg., 3 or 6. Min = 1, Max = 10')
+            self.validator = QIntValidator(1,50,self.txtparam1b)       
+            self.txtparam1b.setValidator(self.validator)
+            self.validator = QIntValidator(1,10,self.txtparam2b)       
+            self.txtparam2b.setValidator(self.validator)
+        elif text == 'Database':
+            self.clear()
+            self.txtparam1b.setEnabled(False)
+            self.txtparam2b.setEnabled(False)
+            self.txtparam3b.setEnabled(False)
+        elif text == 'Lists':   
+            self.clear()
+            self.txtparam1b.setEnabled(True)
+            self.txtparam2b.setEnabled(True)
+            self.txtparam3b.setEnabled(False)
+            self.txtparam1b.setToolTip('The list if nodes for the network eg., (1,2,3,4)')
+            self.txtparam2b.setToolTip('The list of edges for the network eg., ((1,2),(1,4),(1,3),(2,3),(3,4))')
+            
     def networkselection(self, text):
         '''Alter the interface depending on what is selected in the combo box 
         for graph type.'''
@@ -1209,16 +1438,12 @@ class Window(QMainWindow):
             self.txtparam2.setToolTip('The list of edges for the network eg., ((1,2),(1,4),(1,3),(2,3),(3,4))')
             ####open textbox for inputs, then display in list box
             ####could replace txtbox with a edit button, which when clicked opens window            
-            
-
-            
+                        
     #slot to be called when start button is clicekd
-    def buildnetwork(self):
+    def buildnetwork(self, param1, param2, param3):
         '''Builds the network using the user selected option as well as checking for the correct input values. If graph not built, G=None'''
         print 'building network'
-        param1 = self.txtparam1.text()
-        param2 = self.txtparam2.text()
-        param3 = self.txtparam3.text()
+
         self.G = None 
         #build network
         if self.graph == 'Watts Strogatz': #ws 
@@ -1570,65 +1795,12 @@ def drawnet(G, positions, timestep, coloractive, colorinactive):
         size = 50
     else:
         size = 30
-    #nx.draw_networkx_nodes(G, positions, node_size= size, node_color = str(coloractive), with_labels=True)
-    #nx.draw_networkx_edges(G, positions, edge_width=6, edge_color = str(coloractive))
+    nx.draw_networkx_nodes(G, positions, node_size= size, node_color = str(coloractive), with_labels=True)
+    nx.draw_networkx_edges(G, positions, edge_width=6, edge_color = str(coloractive))
     if timestep <> -1:
         pl.title('iteration = ' + str(timestep))
     timestep+=1
-    #re-write this main draw loop so creates the lists, then checks active edges for node which are inactive, then draw everything
-    #still use a for loop to do this. appen to lists
-    #how would swapping the ifs in the loop affect things. would that not work?
-    #could have a loop just for active nodes then another different loop for inactive nodes?????
-    edgelist = [] 
-    inactiveedges = []
-    for node in G.nodes_iter():
-        if G.node[node]['state'] == 0:
-            inactivenodes.append(node)
-            '''            
-            edgelist.append(G.edges(node))
-            i=0
-            while i<len(edgelist):
-                edgelist_2 = edgelist[i]
-                j=0
-                while j<len(edgelist_2):
-                    inactiveedges.append(edgelist_2[j])
-                    j+=1
-                i+=1
-            '''
-    activenodes = set(G.nodes())-set(inactivenodes)
-    print 'the active nodes are: ', activenodes
 
-    ####this does not work
-    #activeedges = set(G.edges())-set(inactiveedges)   
-    activeedges = []
-    i=0
-    added = False
-    edgelist = G.edges()
-    while i<len(edgelist):
-        ef,eg=edgelist[i]
-        for node in inactivenodes:
-            if ef == node or eg == node:
-                inactiveedges.append([ef,eg])
-                added = True
-        if added == False:
-            activeedges.append([ef,eg])
-        added = False
-        i += 1    
-    
-    
-    print 'the active edges are: ', activeedges
-    print 'the inactive edges are: ', inactiveedges
-
-
-
-    nx.draw_networkx_edges(G, positions, edge_width=6.1, edgelist = inactiveedges, edge_color = str(colorinactive))
-    nx.draw_networkx_edges(G, positions, edge_width=6.1, edgelist = activeedges, edge_color = str(coloractive))
-    nx.draw_networkx_nodes(G, positions, node_size= size, nodelist= inactivenodes,node_color = str(colorinactive), with_labels=True)
-    nx.draw_networkx_nodes(G, positions, node_size= size, nodelist = activenodes ,node_color = str(coloractive), with_labels=True)
-
-    
-    
-    '''
     for node in G.nodes_iter():
         if G.node[node]['state'] == 0: #inactive
             inactivenodes.append(node)
@@ -1637,7 +1809,6 @@ def drawnet(G, positions, timestep, coloractive, colorinactive):
         elif G.node[node]['state']== 1: #active
             activenodes.append(node)
             edgelist = G.edges(node)
-            ###if statement here to see if either node on edge is inactive. if so....
             #nx.draw_networkx_edges(G, positions, edgelist = edgelist, edge_width = 7,edge_color = 'r')
             #activeedges.append(G.edges(node))
 
@@ -1648,12 +1819,14 @@ def drawnet(G, positions, timestep, coloractive, colorinactive):
     nx.draw_networkx_nodes(G, positions, node_size=size, nodelist = inactivenodes, node_color = str(colorinactive), with_labels=True)   
     #nx.draw_networkx_edges(G, positions, edgelist = inactiveedges, edge_color = 'b')
     #nx.draw_networkx_edges(G, positions, edgelist = activeedges, edge_color = 'r')
-    '''
+    
 def replace_all(text, dic):
+    'Used to modify strings to make them suitable for purpose.'
     for i,j in dic.iteritems():
         text = text.replace(i,j)
-    return text     
+    return text
 
+    
 if __name__ == "__main__":
 
     app = QApplication(sys.argv)
