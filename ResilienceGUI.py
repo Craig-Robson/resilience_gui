@@ -31,8 +31,7 @@ try:
 except:
     print 'ERROR! Cannot find nx_pg functions, thus there will be limited or no data base functionality.'
 
-class pickparameters(QtGui.QDialog):   
-
+class ViewGraphs(QtGui.QDialog):   
     def __init__(self, parent=None):
         global valueset
         QtGui.QDialog.__init__(self, parent)  
@@ -61,12 +60,12 @@ class pickparameters(QtGui.QDialog):
         self.values = valueset #converts global valueset into the self.values, which is the metric values to be displayed
         self.setGeometry(900,500,280,110)#above; vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Graph parameters')  #title of windpw          
-        self.show()#show window  
-        self.figureGraph = pl.figure()
-        self.figureGraph = pl.gcf()
-        self.figureGraph.canvas.set_window_title('Results plot')
-        pl.ion()
-        print 
+        self.show()#show GUI window  
+        
+        self.figureGraph = pl.figure() #create the figure
+        self.figureGraph = pl.gcf() #allow the title to be changed
+        self.figureGraph.canvas.set_window_title('Results plot') #assign a title
+        pl.ion() #make the plot interactive so the update process is easier
         pl.show() #this displays a blank plot which I then want the graph to be displayed in
         
     #may have to use a similar methodology to that used when trying to visualise the networks as they fail
@@ -95,12 +94,12 @@ class pickparameters(QtGui.QDialog):
                 p2=pl.plot(self.values[self.metric2], 'r', linewidth=2, label=valuenames[self.metric2])            
             pl.xlabel('Number of iterations')
             pl.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)                
-            self.fig.canvas.manager.window.update() #refresh the plot
+            self.figureGraph.canvas.manager.window.update() #refresh the plot
             pl.show() #show a window
             
     def drawgraph(self, values):
         #get the two mtrics to display from the combobox window        
-        inputdlg = pickparameters()
+        inputdlg = ViewGraphs()
         if inputdlg.exec_():
             data = inputdlg.getval()
             return
@@ -147,7 +146,7 @@ class pickparameters(QtGui.QDialog):
             print 'Uncategorised'
         return metric
         
-class dbconnect(QtGui.QDialog):    
+class DbConnect(QtGui.QDialog):    
     def __init__(self, parent=None):
         #super(dbconnect, self).__init__(parent)
         QtGui.QDialog.__init__(self, parent)   
@@ -198,18 +197,26 @@ class dbconnect(QtGui.QDialog):
         self.txtinput6.setToolTip('network name in database')
 
         self.applybtn = QtGui.QPushButton('Apply', self)
-        self.applybtn.move(45, 185)
+        self.applybtn.move(170, 185)
+        self.applybtn.adjustSize()
         self.applybtn.clicked.connect(self.savetext)
         
         self.cancelbtn = QtGui.QPushButton('Cancel', self)
-        self.cancelbtn.move(130, 185)
+        self.cancelbtn.move(10, 185)
+        self.cancelbtn.adjustSize()
         self.cancelbtn.clicked.connect(self.cancel)
+
+        self.restore = QtGui.QPushButton('Restore', self)
+        self.restore.move(90, 185)
+        self.restore.adjustSize()
+        self.restore.clicked.connect(self.restoreinputs)
 
         self.setGeometry(300,500,250,220)#above; vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('db Connection Parameters')  #title of windpw          
         self.show()#show window   
      
     def savetext(self):
+        global DBinputs
         self.DBNAME = self.txtinput1.text()
         self.HOST = self.txtinput2.text()
         self.PORT = self.txtinput3.text()
@@ -217,25 +224,42 @@ class dbconnect(QtGui.QDialog):
         self.PASSWORD = self.txtinput5.text()        
         self.NETNAME = self.txtinput6.text()
         self.DBconnect = self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME    
+        DBinputs = self.DBconnect        
         self.close()
     
     def cancel(self):
+        self.DBNAME = ''
+        self.HOST = ''
+        self.PORT = ''
+        self.USER = ''
+        self.PASSWORD = ''
+        self.NETNAME = '' 
         self.close()
         
     def getval(self):
         return self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME
+    
+    def restoreinputs(self):
+        global DBinputs
+        if DBinputs == None:
+            #when no inputs have been used suceesfully yet
+            QtGui.QMessageBox.warning(self, 'Warning', "No inputs to restore. Inputs must have been used already before they can be restored." , '&OK')
+        else:
+            self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME = DBinputs
+            self.txtinput1.setText(self.DBNAME)
+            self.txtinput2.setText(self.HOST)
+            self.txtinput3.setText(self.PORT)
+            self.txtinput4.setText(self.USER)
+            self.txtinput5.setText(self.PASSWORD)         
+            self.txtinput6.setText(self.NETNAME)
 
-    def showDialog(self):     
+    def showdialog(self):     
         text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 
             'Enter your name:')      
         if ok:
             self.le.setText(str(text))
-    def getValues(self):
-        correct = 45
-        return correct
                 
-class extraparamwindow(QtGui.QWidget): # not sure if I will need this after all
-    
+class ExtraParamWindow(QtGui.QWidget): # not sure if I will need this after all
     def __init__(self):  
         QtGui.QWidget.__init__(self)
         self.initUI()
@@ -251,38 +275,48 @@ class MainWindow(QtGui.QMainWindow):
         self.initUI()
 
     def initUI(self):
+        global DBinputs
+        DBinputs = None
+        self.first = True
+        self.figureModel = None
+        self.iterate = True
+        self.timestep = 0
+        self.cancel = False
+        #self.failed = False
+  
         
         #create actions for file menu
         RunAction = QtGui.QAction('&Run',self)
         RunAction.setShortcut('Ctrl+R')
         RunAction.setStatusTip('Run the selected analysis')
-        RunAction.triggered.connect(self.RunAnalysis)       
+        RunAction.triggered.connect(self.runsim)       
         
         exitAction = QtGui.QAction('&Exit',self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(QtGui.qApp.quit)
+        exitAction.triggered.connect(self.closeall)
 
         extraAction = QtGui.QAction('&Extra', self)
         extraAction.setShortcut('Ctrl+P')
         extraAction.setStatusTip('Open extra parameter window')
-        extraAction.triggered.connect(self.showepWindow)
+        extraAction.triggered.connect(self.showepwindow)
 
         dbAction = QtGui.QAction('&DB Connection', self)
         dbAction.setShortcut('Ctrl+B')
         dbAction.setStatusTip('Open db connection properties')
-        dbAction.triggered.connect(self.showdbWindow)
+        dbAction.triggered.connect(self.showdbwindow)
         
         openAction = QtGui.QAction('&Open', self)
         openAction.setShortcut('Ctrl+O')
         openAction.setStatusTip('Load node and edge lists from .txt file')
-        openAction.triggered.connect(self.Open)
+        openAction.triggered.connect(self.openfile)
         
         self.built = False               
         viewnetAction = QtGui.QAction('&View Network', self)
         viewnetAction.setShortcut('Ctrl+D')
         viewnetAction.setStatusTip('View the network')
-        self.built = viewnetAction.triggered.connect(self.View)               
+        self.built = viewnetAction.triggered.connect(self.view)               
     
         self.statusBar() #create status bar 
         menubar=self.menuBar() #create menu bar
@@ -292,18 +326,18 @@ class MainWindow(QtGui.QMainWindow):
         #add actions to file and edit menu's
         editMenu.addAction(RunAction)
         editMenu.addAction(viewnetAction)
-        editMenu.addAction(extraAction)
+        #editMenu.addAction(extraAction) #not need for the moment 
         editMenu.addAction(dbAction)
         fileMenu.addAction(openAction)
         fileMenu.addAction(exitAction)
   
-        self.lbl4 = QtGui.QLabel("", self)
-        self.lbl4.move(25,165)
+        self.lbl4 = QtGui.QLabel("Ready", self)
+        self.lbl4.move(68,153)
         self.lbl4.adjustSize() 
         fontbold = QtGui.QFont("Calibri", 10, QtGui.QFont.Bold)      
 
         self.lbl6 = QtGui.QLabel("STATE: ", self)
-        self.lbl6.move(25,144)
+        self.lbl6.move(25,152)
         self.lbl6.setFont(fontbold)
         self.lbl6.adjustSize() 
                 
@@ -316,17 +350,17 @@ class MainWindow(QtGui.QMainWindow):
         self.ckbx1.move(25,45)
         self.ckbx1.setToolTip("Remove one node and relpace before the next node is removed")
         self.ckbx1.toggle()
-        self.ckbx1.stateChanged.connect(self.labelUpdate)
+        self.ckbx1.stateChanged.connect(self.ckbxoptionlimited)
         self.ckbx2 = QtGui.QCheckBox("Sequential",self)
         self.ckbx2.adjustSize()
         self.ckbx2.move(25,65) 
         self.ckbx2.setToolTip("Remove nodes one after each other until none are left")
-        self.ckbx2.stateChanged.connect(self.labelUpdate)
+        self.ckbx2.stateChanged.connect(self.ckbxoptionall)
         self.ckbx3 = QtGui.QCheckBox("Cascading",self)
         self.ckbx3.adjustSize()
         self.ckbx3.move(25,85)
         self.ckbx3.setToolTip("Remove a node, them all it's neighbours, then all of their neighbours etc,")
-        self.ckbx3.stateChanged.connect(self.labelUpdate)
+        self.ckbx3.stateChanged.connect(self.ckbxoptionall)
         Group1 = QtGui.QButtonGroup(self)
         Group1.addButton(self.ckbx1)
         Group1.addButton(self.ckbx2)
@@ -341,23 +375,27 @@ class MainWindow(QtGui.QMainWindow):
         self.ckbx4.adjustSize()
         self.ckbx4.move(130,45)
         self.ckbx4.setToolTip("Select the node to remove at random")
-        self.ckbx4.stateChanged.connect(self.labelUpdate)
+        #self.ckbx4.stateChanged.connect(self.labelupdate)
         self.ckbx4.toggle()
         self.ckbx5 = QtGui.QCheckBox("Degree", self)
         self.ckbx5.adjustSize()        
         self.ckbx5.move(130,65)
         self.ckbx5.setToolTip("Select the node with the highest degree")
-        self.ckbx5.stateChanged.connect(self.labelUpdate)        
+        #self.ckbx5.stateChanged.connect(self.labelupdate)        
         self.ckbx6 = QtGui.QCheckBox("Betweenness", self)
         self.ckbx6.adjustSize()
         self.ckbx6.move(130,85) 
         self.ckbx6.setToolTip("Select the node with the highest betweenness value")
-        self.ckbx6.stateChanged.connect(self.labelUpdate)
+        #self.ckbx6.stateChanged.connect(self.labelupdate)
         Group2 = QtGui.QButtonGroup(self)     
         Group2.addButton(self.ckbx4)
         Group2.addButton(self.ckbx5)
         Group2.addButton(self.ckbx6)
         Group2.exclusive()
+        #set when initated as not chackable as single is the defualt option
+        self.ckbx5.setCheckable(False)
+        self.ckbx6.setCheckable(False)
+    
     
         self.lbl1 = QtGui.QLabel("Network Type", self)
         self.lbl1.setFont(fontbold)
@@ -403,54 +441,72 @@ class MainWindow(QtGui.QMainWindow):
         self.ckbx19.adjustSize()
         self.ckbx19.move(275, 85)
         self.ckbx19.setToolTip("View the network failure as nodes are removed")
-        #may be don't need a variable here, as can use the function below
-        self.ckbx19.stateChanged.connect(self.viewfailure) #-dont need this here anymore. all action performed in the draw function
+        self.ckbx19.stateChanged.connect(self.viewfailure) #not sure if needed as calls can be based on if the box is checked
         
-        self.stepstate = False
-        self.ckbx20 = QtGui.QCheckBox("Run step by step", self)
-        self.ckbx20.adjustSize()
-        self.ckbx20.move(275, 105)
-        self.ckbx20.stateChanged.connect(self.stepbstepstate)
-
         self.btn2 = QtGui.QPushButton('Draw', self)
-        self.btn2.move(300, 150)
+        self.btn2.move(275, 150)
         self.btn1 = QtGui.QPushButton('Start', self)
-        self.btn1.move(400, 150)
-        self.built = self.btn2.clicked.connect(self.View) #view the network and set built as true
-        self.btn1.clicked.connect(self.RunAnalysis)     
-                
+        self.btn1.move(425, 150)
+        self.built = self.btn2.clicked.connect(self.view) #view the network and set built as true
+        #self.btn1.clicked.connect(self.runanalysis)     
+        self.btn1.clicked.connect(self.runsim)        
+        self.btn3 = QtGui.QPushButton('Step', self)
+        self.btn3.move(350, 150)
+        self.btn3.clicked.connect(self.stepanalysis)
+        self.btn4 = QtGui.QPushButton('Reset/Cancel', self)
+        self.btn4.move(200, 150)
+        self.btn4.clicked.connect(self.reset)        
+        self.btn4.adjustSize()
+        self.btn3.adjustSize()
+        self.btn2.adjustSize()
+        self.btn1.adjustSize()
         self.setGeometry(300,300,515,185)#above; vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Resilience Analysis') #title of window 
         self.show() #show window
-        
-    def showepWindow(self):
-        self.w = extraparamwindow()
+               
+    def showepwindow(self):
+        self.w = ExtraParamWindow()
         self.w.show()
-    def showdbWindow(self):
-        inputDlg = dbconnect(self)
+    def showdbwindow(self):
+        inputDlg = DbConnect(self)
         inputDlg.show() 
+    def ckbxoptionlimited(self):
+        'Set these two options as not checkable as there is only one option for single analysis.'
+        self.ckbx5.setCheckable(False)
+        self.ckbx6.setCheckable(False)
+        self.ckbx5.setChecked(False)
+        self.ckbx6.setChecked(False)
+        self.ckbx4.setChecked(True)
+        QtGui.QApplication.processEvents() #refresh gui
+    def ckbxoptionall(self):
+        'Set all check boxes as checkable.'
+        self.ckbx5.setCheckable(True)
+        self.ckbx6.setCheckable(True)
+    def reset(self):
+        print 'the reset button has been pressed'
+        #this should be used for reseting all values and appropriate varables back to zero, meaning any current analysis is deleted
+        self.first = True
+        self.iterate = True
+        self.built = False
+        self.timestep = 0
+        self.cancel = True
+        
+    def closeall(self):
+        'Closes the other windows if they are open when Exit chosen from File menu.'
+        pl.close() #closes the network visualisation window
+        #need to add some more here
         
     def viewfailure(self):  #function to set state of variable for the visualising the network as it fails
-        #when the eternal module is called, would make sence to send the required varables for the visualisation method to the module        
-        #print 'runnning function'        
-        if self.ckbx19.isChecked():
-            #print 'it is checked'            
+        'Sets the viewfailure varaible based on if the appropraite checkbox is checked.'        
+        #when the eternal module is called, would make sence to send the required variables for the visualisation method to the module        
+        if self.ckbx19.isChecked():         
             self.viewfailures = True
         else:
-            #print 'it is not checked'
             self.viewfailures = False
-        #print 'sucessfully checked state, viewfailures = ', self.viewfailures
-    def stepbstepstate(self):
-        if self.ckbx20.isChecked():
-            #print 'box is checked'
-            self.stepstate = True
-        else:
-            #print 'box is not checked'
-            self.stepstate = False
-        #print 'checked the state successfully, stepstate = ', self.stepstate   
+        
     def cmbxselection(self, text):
+        'Alter the interface depending on what is selected in the combo box for graph type.'
         self.graph = text
-        print self.graph
         if text == 'GNM':
              self.txtinput3.setEnabled(False)
              self.txtinput1.setEnabled(True)
@@ -513,117 +569,29 @@ class MainWindow(QtGui.QMainWindow):
             self.txtinput1.setToolTip('The list if nodes for the network eg., (1,2,3,4)')
             self.txtinput2.setToolTip('The list of edges for the network eg., ((1,2),(1,4),(1,3),(2,3),(3,4))')
 
-    def Open(self):
-        print 'needs finishing'
-        self.ckbx18.toggle()
-        self.lick()
+    def openfile(self):
+        'Function for opening a text file and adding the lists to the input boxes on the GUI.'
+        print 'needs finishing, needs adjusting so the combobox will display the Database entry' #this needs adjusting so the combobox will display the Database entry
+        #need something here which tells the combobox it has been changed to lists option, or add a add file option 
+        #not sure I can actually do this though. could have message box to tell user to select lists
         fname = QtGui.QFileDialog.getOpenFileName(self, 'Open file')
         text=open(fname).read()
         text1, text2 = text.split('\n')
         self.txtinput1.setText(text1)
         self.txtinput2.setText(text2)
         #load in a csv, add lists to text boxes, then select lists for the input                  
-       
-    def labelUpdate(self):
-        self.lbl4.clear()
-    def setLabel(self):
-        self.lbl4.setText('Analysis running')
-        self.lbl4.adjustSize()           
-    def setFileLocation(self):
+        
+    def setfilelocation(self):
+        'Set the file location for the output file.'
         fileName = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.txt')  
         return fileName
-    """
-    def checkconnection(self):
-        dbconnect=False
-        appl1 = self.showDialog1()
-        if appl1 == True:
-            appl2 = self.showDialog2()
-            if appl2 == True:
-                appl3 = self.showDialog3()
-                if appl3==True:
-                    appl4 = self.showDialog4()
-                    if appl4 ==True:
-                        appl5 = self.showDialog5()
-                        if appl5 == True:
-                            appl6 = self.showDialog6()
-                            if appl6==True:
-                                try:
-                                    connection = str('PG:dbname = ')+str(self.dbName)+str(" host='")+str(self.host)+str("' port='")+str(self.port)+str("' user='")+str(self.user)+str("' password='")+str(self.password)+str("'")                  
-                                    conn = ogr.Open(connection)
-                                    G = nx_pgnet.read(conn).pgnet(self.network)   #load in network from database and create networkx instance
-                                    return G
-                                except:
-                                    QtGui.QMessageBox.warning(self, 'Error!', "Could not connect to database and find the data. Please check your inputs and try again. The parameters were: \ndbname: "+self.dbName+"\nhost: "+self.host+"\nuser: "+self.user+"\nport: " +self.port+"\npassword: "+self.password+"\nnetwork: "+self.network,'&OK')
-                                    #QtGui.QMessageBox.warning(self, 'Error!', "Could not connect to database and retireve data. Please check your inputs and try again.",'&OK')
-                                    return dbconnect
-                            else:
-                                QtGui.QMessageBox.information(self, 'Information','Database connection process terminated.','&OK')
-                                return dbconnect
-                        else:
-                            QtGui.QMessageBox.information(self, 'Information','Database connection process terminated.','&OK')
-                            return dbconnect
-                    else:
-                        QtGui.QMessageBox.information(self, 'Information','Database connection process terminated.','&OK')
-                        return dbconnect
-                else:
-                    QtGui.QMessageBox.information(self, 'Information','Database connection process terminated.','&OK')
-                    return dbconnect
-            else:
-                QtGui.QMessageBox.information(self, 'Information','Database connection process terminated.','&OK')
-                return dbconnect
-        else:
-            QtGui.QMessageBox.information(self, 'Information','Database connection process terminated.','&OK')
-            return dbconnect        
-        
-    def showDialog1(self):     
-        text, appl = QtGui.QInputDialog.getText(self, 'Input Dialog', 'dbName:')      
-        if appl == True:
-            self.dbName =(str(text))
-        else:
-            self.dbName = "Canceled"
-        return appl
-    def showDialog2(self):     
-        text, appl = QtGui.QInputDialog.getText(self, 'Input Dialog', 'host:')      
-        if appl==True:
-            self.host =(str(text))
-        else:
-            self.host = "Canceled"
-        return appl
-    def showDialog3(self):     
-        text, appl = QtGui.QInputDialog.getText(self, 'Input Dialog', 'port:')
-        if appl == True:
-            self.port =(str(text)) 
-        else:
-            self.port = "Canceled"
-        return appl
-    def showDialog4(self):     
-        text, appl = QtGui.QInputDialog.getText(self, 'Input Dialog', 'user:') 
-        if appl==True:
-            self.user =(str(text))
-        else:
-            self.user = "Canceled"
-        return appl
-    def showDialog5(self):     
-        text, appl = QtGui.QInputDialog.getText(self, 'Input Dialog', 'password:')
-        if appl==True:
-            self.password =(str(text))    
-        else:
-            self.password = "Canceled"
-        return appl
-    def showDialog6(self):     
-        text, appl = QtGui.QInputDialog.getText(self, 'Input Dialog', 
-                 'network name:')      
-        if appl == True:
-            self.network =(str(text))
-        else:
-            self.network = "Canceled"
-        return appl
-    """    
-    def View(self):
-        param1 = self.txtinput1.text() #size
+
+    def view(self):
+        'Function to view the network using the range of options. Activated through the draw button or the draw menu option.'
+        param1 = self.txtinput1.text() 
         param2 = self.txtinput2.text()
         param3 = self.txtinput3.text() 
-        G, param1, param2, param3 = self.buildNet(param1, param2, param3)
+        G, param1, param2, param3 = self.buildnet(param1, param2, param3)
         if G == None:            
             return
         else:
@@ -652,8 +620,6 @@ class MainWindow(QtGui.QMainWindow):
                 nx.draw(G,pos,node_size=20,alpha=0.5,node_color="blue", with_labels=False)
                 fig.canvas.set_window_title('Circle Tree (bfs) visualisation')
             elif self.method == 'Circle Tree (dfs)':
-                #if param2 > 4:
-                #    QtGui.QMessageBox.information(self, 'Message', "Warning. This visulaisation may not appear as expected due to the high param 2 value.") 
                 pos = vis.tree_circle(G, bfs = False) 
                 nx.draw(G,pos,node_size=20,alpha=0.5,node_color="blue", with_labels=False)
                 fig.canvas.set_window_title('Circle Tree (dfs) visualisation')
@@ -674,18 +640,163 @@ class MainWindow(QtGui.QMainWindow):
         return built
                     
     def showcombo(self):
-        items = 'Default(Random)', 'Circle', 'Spring', 'Shell', 'Spectral', 'Circle Tree (bfs)', 'Circle Tree (dfs)', 'Tree (bfs)', 'Tree (dfs)'
+        'Loads a GUI where the use selects the method of positioning the nodes.'
+        items = 'Default(Random)', 'Circle', 'Spring', 'Shell', 'Spectral','Circle Tree (bfs)', 'Circle Tree (dfs)', 'Tree (bfs)', 'Tree (dfs)'
         method, ok = QtGui.QInputDialog.getItem(self, 'Input Dialog', 
             'Select visualisation method:', items)
         if ok == False:
             method = False
         return method
-                  
-    #this function is for the start button to run the analysis
-    def RunAnalysis(self):
-        global valueset, forthread
-        self.lbl4.clear()
+                      
+    def runsim(self):
+        'Runs the analysis in one go, initiated by the start button. Also allows for the cancel button to work.'
+        self.cancel = False #set as false as this will allow the analysis to run
+        #if self.failed == False:
+        while self.iterate == True:
+            if self.cancel == False:
+                self.stepanalysis()
+            else:
+                self.lbl4.setText("Ready - Analysis Canceled") #changes the text in the GUI   
+                self.lbl4.adjustSize()
+                QtGui.QApplication.processEvents() #refresh gui
+                return
+                self.iterate = False
+                
+    def analysisfinished(self,result, values):        
+        'When the analysis finished, displays the GUI with the next option to view the metric graphs.'        
+        global valueset
+        self.reset()
+        if result == True:
+            self.lbl4.setText("Analysis Completed") #changes the text in the GUI   
+            self.lbl4.adjustSize()
+            QtGui.QApplication.processEvents() #refresh gui
+            ok = QtGui.QMessageBox.information(self, 'Information', "Network resileince analysis successfully completed. Do you want to view the metric graphs?" , '&No','&View Graphs')
+            if ok == 1: #if the view graph option is clicked
+                valueset= self.values
+                inputdlg = ViewGraphs()
+                inputdlg()
+        else:
+            self.lbl4.setText("Analysis failed")            
+        self.lbl4.adjustSize()
+
+    #function which will run the analysis one step at a time
+    def runstep(self, graphparameters, parameters, iterate):
+        'Run the analysis.'
+        graphparameters, iterate = res.step(graphparameters, parameters, iterate)
+        return graphparameters, iterate
+
+    def stepanalysis(self):
+        'Activated by the step button. Runs one step of analysis.'
+        self.lbl4.setText("Processing")
+        self.lbl4.adjustSize()
         QtGui.QApplication.processEvents() #refresh gui
+        self.cancel = False
+        active = 1
+        inactive = 0
+        global forthread
+        #if i can make this step button work, thenI might be able to get some of the visualisations to work at least for this method
+        #need to set this button as in active until the run button has been clicked, or some way of idetifying if the inital core function needs executing
+        #once that is done then the runstep function obe can be exeuted as needed along with the other required code        
+        #easier to create a global variable whoch can be used to store if the run button has been clicked
+        #this is by no means anywhere near perfect but should work
+        #will also need resetting when the analysis finishes ie. when iterate = False
+        if self.first == True:          
+            self.lbl4.setText("Initiating")
+            self.lbl4.adjustSize()
+            QtGui.QApplication.processEvents() #refresh gui
+            param1 = self.txtinput1.text() 
+            param2 = self.txtinput2.text()
+            param3 = self.txtinput3.text() 
+    
+            if self.built == True:
+                print self.G.number_of_nodes()
+            else:
+                self.G, param1, param2, param3 = self.buildnet(param1, param2, param3)
+                if self.G == None:            
+                    return                
+            
+            self.parameters = self.checkanalysistype() #get the type of analysis to be performed
+            if self.nofilename == True:
+                return
+            #network and variables included in graphparameters                      
+            self.graphparameters = res.core_analysis(self.G)    
+            forthread = self.graphparameters, self.parameters, self.iterate
+
+            if self.ckbx19.isChecked():
+                 #this line will also have to change to accomodate the user chosing a layout for the visualisation
+                 selected = self.showcombo() 
+                 #need the relavnt method here to identify the option which is selected and use of in the nx.draw line
+                 self.getpositions(selected)
+                 #self.positions = nx.circular_layout(self.G) #assign the positions for the drawing of the network
+                 #copy the network
+                 self.graphviz = self.G.copy()
+                 #add a new atrribute and set as active            
+                 for node in self.graphviz.nodes_iter():
+                    self.graphviz.node[node]['state'] = active
+                 self.lbl4.setText("Drawing")
+                 self.lbl4.adjustSize()
+                 QtGui.QApplication.processEvents() #refresh gui
+                 self.figureModel, self.timestep = draw(self.graphviz, self.positions, self.figureModel, self.timestep)
+            self.first = False #keep this at the end of the if
+        else:
+            self.graphparameters, self.parameters, self.iterate = forthread
+            forthread = self.graphparameters, self.parameters, self.iterate
+            self.workThread = WorkThread() #name workthread
+
+            if self.iterate == True: #self.iterate used to be part of a global variable
+                self.connect(self.workThread, QtCore.SIGNAL("self.forthread[list]"), self.runstep)
+                self.workThread.start()
+                time.sleep(1) #still need some changes here so can get rid of this sleep bit
+                if self.ckbx19.isChecked(): #would appear that the visualisation is current but I'm not 100% sure this is correct                               
+                    removednodes = set(self.graphviz.nodes()) - set(self.G.nodes()) #need to convert to sets as lists cannot be subtracted
+                    print 'the removed nodes are: ', removednodes
+                    for node in removednodes: #set the state to inactive for relavant nodes 
+                        self.graphviz.node[node]['state'] = inactive 
+                    self.lbl4.setText("Drawing")
+                    self.lbl4.adjustSize()
+                    QtGui.QApplication.processEvents() #refresh gui
+                    self.figureModel, self.timestep = draw(self.graphviz, self.positions, self.figureModel, self.timestep)
+            elif self.iterate == False: #when the iterate variable changes to False, which means the analysis has finished
+                self.values = res.outputresults(self.graphparameters, self.parameters)        
+                path_length_A, node_count_removed_A, isolated_n_count_A, averagedegree, numofcomponents = self.values
+                result = True #This should come from the analysis module at some point to confirm the analysis has been successfull        
+                self.analysisfinished(result, self.values)
+                self.iterate = False
+            else:
+                 print 'Critical error somewhere!' #never seen this so no worries here   
+        self.lbl4.setText("Ready")
+        self.lbl4.adjustSize()
+        QtGui.QApplication.processEvents() #refresh gui
+    
+    def getpositions(self, selected):
+        'Default(Random)', 'Circle', 'Spring', 'Shell', 'Spectral', 'Circle Tree (bfs)', 'Circle Tree (dfs)', 'Tree (bfs)', 'Tree (dfs)'
+        if selected == 'Default(Random)':
+            self.positions=nx.random_layout(self.G)
+        elif selected == 'Circle':
+            self.positions=nx.circular_layout(self.G)
+        elif selected == 'Spring':
+            self.positions=nx.spring_layout(self.G)
+        elif selected == 'Shell':
+            self.positions=nx.shell_layout(self.G)
+        elif selected == 'Spectral':
+            self.positions=nx.spectral_layout(self.G)
+        elif selected == 'Circle Tree (bfs)':
+            bfs = True
+            self.positions=vis.tree_circle(self.G, bfs)
+        elif selected == 'Circle Tree (dfs)':
+            bfs = False
+            self.positions=vis.tree_circle(self.G, bfs)
+        elif selected == 'Tree (dfs)':
+            bfs = False
+            self.positions=vis.tree(self.G, bfs)
+        elif selected == 'Tree (bfs)':
+            bfs = True
+            self.positions=vis.tree(self.G, bfs)
+        else:
+            print 'Error in the selection of vis method'
+
+    def checkanalysistype(self):
+        'Get the analysis type, the file location and if any of the other options have been selected related to the analysis if the network.'
         SINGLE = False
         SEQUENTIAL = False
         CASCADING = False
@@ -694,181 +805,116 @@ class MainWindow(QtGui.QMainWindow):
         BETWEENNESS = False
         REMOVE_SUBGRAPHS = False
         REMOVE_ISOLATES = False
-        param1 = self.txtinput1.text() #size
-        param2 = self.txtinput2.text()
-        param3 = self.txtinput3.text() 
-
-        if self.built == True:
-            print self.G.number_of_nodes()
-        else:
-            G, param1, param2, param3 = self.buildNet(param1, param2, param3)
-            if G == None:            
-                return
-         
-        fileName = self.setFileLocation()
+        
+        fileName = self.setfilelocation()
         if fileName == "": #if user clicks cancel, exits the routine
             QtGui.QMessageBox.information(self, 'Information', "Successfully ended process.")
+            self.nofilename = True            
             return
-        
-        if self.ckbx1.isChecked() and self.ckbx4.isChecked():
-            SINGLE = True
-            RANDOM = True
-            self.lbl4.setText("Running single analysis with random node removal")
-        elif self.ckbx1.isChecked() and self.ckbx5.isChecked():
-            SINGLE = True
-            DEGREE = True     
-            self.lbl4.setText("Running single analysis with degree based node removal")
-        elif self.ckbx1.isChecked() and self.ckbx6.isChecked():
-            SINGLE = True
-            BETWEENNESS = True
-            self.lbl4.setText("Running single analysis with betweenness based node removal")
-        elif self.ckbx2.isChecked() and self.ckbx4.isChecked():
-            SEQUENTIAL = True
-            RANDOM = True            
-            self.lbl4.setText("Running sequential analysis with random node removal")
-        elif self.ckbx2.isChecked() and self.ckbx5.isChecked():
-            SEQUENTIAL = True
-            DEGREE = True            
-            self.lbl4.setText("Running sequential analysis with degree based node removal")
-        elif self.ckbx2.isChecked() and self.ckbx6.isChecked():
-            SEQUENTIAL = True
-            BETWEENNESS = True            
-            self.lbl4.setText("Running sequential analysis with betweenness based node removal")
-        elif self.ckbx3.isChecked() and self.ckbx4.isChecked():
-            CASCADING = True
-            RANDOM = True            
-            self.lbl4.setText("Running cascading analysis with random node removal")
-        elif self.ckbx3.isChecked() and self.ckbx5.isChecked():
-            CASCADING = True
-            DEGREE = True            
-            self.lbl4.setText("Running cascading analysis with degree based node removal")
-        elif self.ckbx3.isChecked() and self.ckbx6.isChecked():
-            CASCADING = True
-            BETWEENNESS = True            
-            self.lbl4.setText("Running cascading analysis with betweenness based node removal")
         else:
-            self.lbl4.setText("Error in checking of check boxes.")
-        
-        self.lbl4.adjustSize()
-        self.lbl4.show()
-        QtGui.QApplication.processEvents() #refresh gui
-        if self.ckbx16.isChecked():
-            REMOVE_SUBGRAPHS = True
-        if self.ckbx17.isChecked():
-            REMOVE_ISOLATES = True
-            
-        parameters = SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, fileName
-        #get a position array to use for the remainder of the analysis
-        self.positions = nx.circular_layout(G)
-        viewfailure = self.viewfailures, self.stepstate, self.positions          
-        
-        #run code here call to external function/module 
-        '''need to make a few amendmants here so can use a run and step button'''        
-        #create a step function in here which can be called when a user clicks a steo button
-        #also needs to be useable for running all the analysis in one go
-        #to make this work, need to aort out how this GUI will work in terms of controlling the analysis process        
-
-        graphparameters = res.core_analysis(G, viewfailure) #sending viewfailure as included in graph parameter packet, but does not need to be really
-        iterate = True #this starts as true until no more itterations are to be done, as decided in the step module
-
-        forthread = graphparameters, parameters, iterate
-        self.workThread = WorkThread() #set the name of the thread
-        graphparameters = res.core_analysis(G, viewfailure) #sending viewfailure as included in graph parameter packet, but does not need to be really
-        while iterate == True:   
-            global valueset, forthread #allows the updated iterate variable to be used from the last iteration
-            graphparameters, parameters, iterate = forthread
-            if iterate == True:            
-                self.connect(self.workThread, QtCore.SIGNAL("self.forthread[list]"), self.runstep)
-                self.workThread.start()
-                time.sleep(10)
+            self.nofilename = False
+            if self.ckbx1.isChecked() and self.ckbx4.isChecked():
+                SINGLE = True
+                RANDOM = True
+                #self.lbl4.setText("Running single analysis with random node removal")
+            elif self.ckbx1.isChecked() and self.ckbx5.isChecked():
+                SINGLE = True
+                DEGREE = True     
+                #self.lbl4.setText("Running single analysis with degree based node removal")
+            elif self.ckbx1.isChecked() and self.ckbx6.isChecked():
+                SINGLE = True
+                BETWEENNESS = True
+                #self.lbl4.setText("Running single analysis with betweenness based node removal")
+            elif self.ckbx2.isChecked() and self.ckbx4.isChecked():
+                SEQUENTIAL = True
+                RANDOM = True            
+                #self.lbl4.setText("Running sequential analysis with random node removal")
+            elif self.ckbx2.isChecked() and self.ckbx5.isChecked():
+                SEQUENTIAL = True
+                DEGREE = True            
+                #self.lbl4.setText("Running sequential analysis with degree based node removal")
+            elif self.ckbx2.isChecked() and self.ckbx6.isChecked():
+                SEQUENTIAL = True
+                BETWEENNESS = True            
+                #self.lbl4.setText("Running sequential analysis with betweenness based node removal")
+            elif self.ckbx3.isChecked() and self.ckbx4.isChecked():
+                CASCADING = True
+                RANDOM = True            
+                #self.lbl4.setText("Running cascading analysis with random node removal")
+            elif self.ckbx3.isChecked() and self.ckbx5.isChecked():
+                CASCADING = True
+                DEGREE = True            
+                #self.lbl4.setText("Running cascading analysis with degree based node removal")
+            elif self.ckbx3.isChecked() and self.ckbx6.isChecked():
+                CASCADING = True
+                BETWEENNESS = True            
+                #self.lbl4.setText("Running cascading analysis with betweenness based node removal")
             else:
-                print 'the analysis process has finished'
-        print 'ITERATE IS ', iterate  
-
-        self.values = res.outputresults(graphparameters, parameters)        
-        path_length_A, node_count_removed_A, isolated_n_count_A, averagedegree, numofcomponents = self.values
-        #change the text in lbl4 here to say completed
-        result = True #This should come from the analysis module at some point to confirm the analysis has been successfull        
-        if result == True:
-            self.lbl4.setText("Analysis Completed")     
-            ok = QtGui.QMessageBox.information(self, 'Information', "Network resileince analysis successfully completed. Do you want to view the metric graphs?" , '&No','&View Graphs')
-            if ok == 1: #if the view graph option is clicked
-                #might need to ammend this bit here so opens up the new gui where all the visualisation goes on                
-                valueset= self.values
-                inputdlg = pickparameters()
-                inputdlg()
-        else:
-            self.lbl4.setText("Analysis failed")            
-        self.lbl4.adjustSize()
-
-    #function which will run the analysis one step at a time
-    def runstep(self, graphparameters, parameters, iterate):
-        graphparameters, iterate = res.step(graphparameters, parameters, iterate)
-        return graphparameters, iterate
-        
-    def drawgraph(self, values): #this is not used. Superseeded by content in the pickparameters class
-        #get the two mtrics to display from the combobox window        
-        inputdlg = pickparameters()
-        if inputdlg.exec_():
-            data = inputdlg.getval()
-            return
-        else:
-             metric1, metric2 = inputdlg.getval()
-        values = list(values)
-        valuenames = 'average path length', 'nodes removed count','isolated nodes count','average degree', 'number of components' #list for the labels, needs updating manually
-        #here add a call to a new window where the items to be displaye on the graph can be specified. Limit to two to make it easier to begin with anyway.
-        fig = pl.gcf()
-        fig.canvas.set_window_title('Results plot')
-        one, two, three, four, five = values
-        p1=pl.plot(values[metric1], 'b', linewidth=2, label=valuenames[metric1])
-        if metric2<>99:
-            p2=pl.plot(values[metric2], 'r', linewidth=2, label=valuenames[metric2])
-        
-        #p3=pl.plot(numofcomponents, 'y', linewidth=2, label='number of components')
-        pl.xlabel('Number of iterations')              
-        #pl.legend(bbox_to_anchor=(1.05, 1), loc=2, mode="expand",borderaxespad=0.)
-        pl.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)                
-        pl.show() #in future have it work dynamically so can pick the results it displays from some check boxes
+                self.lbl4.setText("Error")
+            
+            self.lbl4.adjustSize()
+            self.lbl4.show()
+            QtGui.QApplication.processEvents() #refresh gui
+            if self.ckbx16.isChecked():
+                REMOVE_SUBGRAPHS = True
+            if self.ckbx17.isChecked():
+                REMOVE_ISOLATES = True
                 
+            parameters = SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, fileName
+            return parameters
+              
     def getdbparameters(self):
-        dlg = dbconnect()
+        'Open the GUI for the user to input the database connection parameters. This needs looking at as works, but not as intended. Could thus do with cleaning up.'
+        self.failed = False        
+        dlg = DbConnect()
         if dlg.exec_():
             data =dlg.getval()
         else:
-            print 'this does not work properly yet, but does work'
+            print 'this does not work properly yet, but does work. could replace with the global parameter though.'
             self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME = dlg.getval()
-        return self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME
+        if self.NETNAME == '':
+            self.failed = True
+            return 
+        else:
+            return 
         
     def getdbnetwork(self):
-        self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME = self.getdbparameters()
-        try:
-            print self.DBNAME
-            print self.HOST
-            print self.PORT
-            """
-            self.DBNAME = 'inter_london'
-            self.HOST = 'localhost'
-            self.PORT = '5433'
-            self.USER = 'postgres'
-            self.PASSWORD = 'aaSD2011'
-            self.NETNAME = 'power_lines'
-            """            
-            #connection = str('PG:dbname = ')+str(self.DBNAME)+str(" host='")+str(self.HOST)+str("' port='")+str(self.PORT)+str("' user='")+str(self.USER)+str("' password='")+str(self.PASSWORD)+str("'")   
-            connection = str('PG:dbname = ')+self.DBNAME+str(" host='")+self.HOST+str("' port='")+self.PORT+str("' user='")+self.USER+str("' password='")+self.PASSWORD+str("'")   
-            
-            print 'connection: ', connection               
-            conn = ogr.Open(connection)
-            G = nx_pgnet.read(conn).pgnet(self.NETNAME)   #load in network from database and create networkx instance
-            return G
-        except:
-            QtGui.QMessageBox.warning(self, 'Error!', "Could not connect to database and find the data. Please check your inputs and try again. The parameters were: \ndbname: "+self.DBNAME+"\nhost: "+self.HOST+"\nuser: "+self.USER+"\nport: " +self.PORT+"\npassword: "+self.PASSWORD+"\nnetwork: "+self.NETNAME,'&OK')
-            dbconnect = False            
-            return dbconnect 
-    
-    def buildNet(self, param1, param2, param3):
+        'Connect to the database and pull the network into the system.'
+        self.getdbparameters()
+        if self.failed == False:           
+            try:
+                #needed to convert the items to strings for the connection
+                self.DBNAME = str(self.DBNAME)
+                self.HOST = str(self.HOST)
+                self.PORT = str(self.PORT)
+                self.USER = str(self.USER)
+                self.PASSWORD = str(self.PASSWORD)
+                self.NETNAME = str(self.NETNAME)              
+                
+                """ paramers for a safe conenction that should always work
+                self.DBNAME = 'inter_london'
+                self.HOST = 'localhost'
+                self.PORT = '5433'
+                self.USER = 'postgres'
+                self.PASSWORD = 'aaSD2011'
+                self.NETNAME = 'power_lines'
+                """            
+                #connection = str('PG:dbname = ')+str(self.DBNAME)+str(" host='")+str(self.HOST)+str("' port='")+str(self.PORT)+str("' user='")+str(self.USER)+str("' password='")+str(self.PASSWORD)+str("'")   
+                connection = str('PG:dbname = ')+self.DBNAME+str(" host='")+self.HOST+str("' port='")+self.PORT+str("' user='")+self.USER+str("' password='")+self.PASSWORD+str("'")   
+                print 'connection: ', connection               
+                conn = ogr.Open(connection)
+                G = nx_pgnet.read(conn).pgnet(self.NETNAME)   #load in network from database and create networkx instance
+                return G
+            except:
+                QtGui.QMessageBox.warning(self, 'Error!', "Could not connect to database and find the data. Please check your inputs and try again. The parameters were: \ndbname: "+self.DBNAME+"\nhost: "+self.HOST+"\nuser: "+self.USER+"\nport: " +self.PORT+"\npassword: "+self.PASSWORD+"\nnetwork: "+self.NETNAME,'&OK')
+                dbconnect = False            
+                return dbconnect 
+        else:
+            self.cancel = True
+            return
+    def buildnet(self, param1, param2, param3):
+        'Build the network given the input parametrs.'
         #build network
-        if self.graph == 'Watts Strogatz':
-            print 'It works'
         if self.graph == 'Watts Strogatz': #ws 
             if param1 == '':  
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
@@ -923,15 +969,19 @@ class MainWindow(QtGui.QMainWindow):
             except:
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 2, the nuber of edges, is in an incorrect format.")
                 return
+            '''
             maxno = (param1)*(param1/2)
             if maxno < param2:
                 QtGui.QMessageBox.warning(self, 'Warning!', "Warning. This network may have duplicate edges or edges which begin and end at the same node.")
+                #sys.exitfunc() 
+                return
             else:
-                G = nx.gnm_random_graph(param1, param2)
-                if nx.is_connected(G)==False:
-                    #bring up error message box
-                    QtGui.QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase the number of edges.")
-                    return #exit sub
+            '''
+            G = nx.gnm_random_graph(param1, param2)
+            if nx.is_connected(G)==False:
+                #bring up error message box
+                QtGui.QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase the number of edges.")
+                return #exit sub
         elif self.graph == 'Barabasi Albert': #ba
             if param1 == '':  
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
@@ -979,9 +1029,9 @@ class MainWindow(QtGui.QMainWindow):
                 QtGui.QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase the number of edges.")
                 return #exit sub
         elif self.graph == 'Database': #database connection  -currently only allows a single network
-            #G = self.checkconnection()
             G = self.getdbnetwork()
-            if G == False:
+            if G == None:
+                print 'G = NONE AGAIN'
                 return
         elif self.graph == 'Hierarchical Random': #hr
             if param1 == '':  
@@ -1133,52 +1183,77 @@ class MainWindow(QtGui.QMainWindow):
         else: 
             QtGui.QMessageBox.warning(self, 'Error!', "Error! Please try again.")          
             return #exit sub
-        return G, param1, param2, param3
-    '''
-    #method not working yet
-    #live drawing of the graph
-    figureModel = None
-    def draw(self,G, positions): 
-        if self.figureModel == None or self.figureModel.canvas.manager.window == None:
-            print 'figureModel = ', self.figureModel
-            print 'entered the draw if statement'
-            self.figureModel = pl.figure()
-            print 'figureModel now = ', self.figureModel
-            pl.ion()
-        print 'it is drawing the graph'
-        pl.cla()
-        print 'the number of nodes is ', G.number_of_nodes()
-        nx.draw(G,positions,node_size=20,alpha=0.5,node_color="blue", with_labels=False)
-        self.figureModel.canvas.manager.window.update() 
-        time.sleep(3)#add a delay so can see the visualisation before preceeding
-    '''
-    def stepbystepcontrol(G):
-        print 'step by step control'     
+        self.G = G
+        print G.number_of_nodes()
+        return G, param1, param2, param3   
     
 class WorkThread(QtCore.QThread): #create the worker thread, where the sresilience analysis will be run
     def __init__(self): #initiate the thread
         QtCore.QThread.__init__(self)
         
     def run(self): #run the thread
+        'Run the analysis on a second thread to help stop the GUI freezing.'
         global valueset, forthread
         graphparameters, parameters, iterate = forthread
         print 'this is the work thread'#this is where the code to run the thread should go I think
-        #would appear that this global thing is not being updated        
-        #time.sleep(20)
         #need to put in the method to call the step code here
         graphparameters, iterate = res.step(graphparameters, parameters, iterate) #run one step of the analysis
         print 'the value set in the workthread is', valueset
-        print 'in the work thread graphparameters = ', graphparameters
-        print 'the thread should be finishing now'
         print 'iterate in the work thread is: ', iterate
         forthread = graphparameters, parameters, iterate
         #self.emit( QtCore.SIGNAL('forthread[list]'), "from work thread " + str(forthread) )
+        #them some signal to tranfer messages and data to the main application
 
-        #them some signal shit to tranfer messages and data to the main application
-        #in theory, the step function in the analysis module should be called from here
-        
-        
+#live drawing of the graph
+def draw(G, positions, figureModel, timestep):
+    'Handles the initial setup parameters for drawing the network as well as then calling the function to draw the network'
+    if figureModel == None or figureModel.canvas.manager.window == None:
+        figureModel = pl.figure()
+        pl.ion()
+        pl.show()
+    print 'drawing the graph, figure model = ', figureModel
+    drawnet(G, positions, timestep)
+    timestep+=1
+    figureModel.canvas.manager.window.update()  #gets error here when the window is closed by whatever means
+    return figureModel, timestep
+      
+
+def drawnet(G, positions, timestep):
+    'Draws the network'
+    inactivenodes=[]
+    activenodes=[]
+    inactiveedges=[]
+    activeedges=[]
+    pl.cla()
+    #cheat way of removing the axis and labels in two lines
+    g1 = nx.Graph() 
+    nx.draw(g1)
+    nx.draw_networkx_nodes(G, positions, node_color = 'g')
+    nx.draw_networkx_edges(G, positions, edge_width=6, edge_color = 'g')
+    
+    pl.title('iteration = ' + str(timestep))
+    timestep+=1
+    for node in G.nodes_iter():
+        if G.node[node]['state'] == 0: #inactive
+            inactivenodes.append(node)
+            edgelist = G.edges(node)
+            nx.draw_networkx_edges(G, positions, edge_width=6.1, edgelist = edgelist, edge_color = 'r')
+        elif G.node[node]['state']== 1: #active
+            activenodes.append(node)
+            edgelist = G.edges(node)
+            #nx.draw_networkx_edges(G, positions, edgelist = edgelist, edge_width = 7,edge_color = 'r')
+            #activeedges.append(G.edges(node))
+    
+    #nx.draw(G,positions,node_size=20,alpha=0.5,node_color="blue", with_labels=False) #this is the original method
+    #nx.draw(G, positions, nodelist = activenodes, node_color = 'r')#, with_labels=False)
+    #nx.draw(G, positions, nodelist = inactivenodes, node_color = 'b')#, with_labels=False)
+    #nx.draw_networkx_nodes(G, positions, nodelist = activenodes, node_color = 'g')
+    nx.draw_networkx_nodes(G, positions, nodelist = inactivenodes, node_color = 'r')    
+    #nx.draw_networkx_edges(G, positions, edgelist = inactiveedges, edge_color = 'b')
+    #nx.draw_networkx_edges(G, positions, edgelist = activeedges, edge_color = 'r')
+
 def replace_all(text, dic):
+    'Used to modify strings to make them suitable for purpose.'
     for i,j in dic.iteritems():
         text = text.replace(i,j)
     return text
