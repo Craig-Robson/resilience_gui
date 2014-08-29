@@ -58,6 +58,9 @@ import options_window_v1_0_1 as ow
 class DbConnect(QDialog):  
 #class DbConnect(QMainWindow):
     '''Class for the database parameters connection window.'''
+    
+    
+    
     def __init__(self, parent=None):
         #super(dbconnect, self).__init__(parent)
         QDialog.__init__(self, parent)   
@@ -207,13 +210,24 @@ class DbConnect(QDialog):
    
     def applyclick(self):
         '''Save the text from that was in the text boxes when function called.'''
+        #need to import ogr and nx_pgnet here
+        try:
+            import osgeo.ogr as ogr
+        except:
+            print 'could not import ogr'
+        try: 
+            sys.path.append('C:/a8243587_DATA/GitRepo/nx_pgnet')
+            import nx_pgnet, nx_pg
+        except:
+            print 'could not import nx_pgnet'
+
         self.DBNAME = self.txtinput1.text()
         self.HOST = self.txtinput2.text()
         self.PORT = self.txtinput3.text()
         self.USER = self.txtinput4.text()
         self.PASSWORD = self.txtinput5.text()        
         self.NETNAME = self.txtinput6.text()
-        
+
         try:
             #needed to convert the items to strings for the connection
             self.DBNAME = str(self.DBNAME)
@@ -919,7 +933,7 @@ class OptionsWindow(QWidget):
         
         self.colactive = None
         self.colinactive = None
-        self.timedelay, self.col1, self.col2, self.destlocation,self.pertimestep,self.saveimage,self.analysistype,self.multiiterations, self.numofiterations,self.saveoutputfile, self.imagedpi,self.nxpglocation,self.runallseqmodels= window.updatewindow_options() 
+        self.timedelay, self.col1, self.col2, self.destlocation,self.pertimestep,self.saveimage,self.analysistype,self.multiiterations, self.numofiterations,self.saveoutputfile, self.imagedpi,self.nxpglocation,self.runallseqmodels,self.nodesizemeth,self.edgesizemeth= window.updatewindow_options() 
         self.timedelay = str(self.timedelay)
         
         vpos = 15
@@ -1074,7 +1088,24 @@ class OptionsWindow(QWidget):
             self.lblnumberofiterations.setEnabled(False)
             self.txtnumofiterations.setEnabled(False)
             self.ckbxrunthreeseqtypes.setEnabled(False)
-
+        vpos+=30
+        self.lblnodesizeonmetric = QLabel('Base node size on a metric',self)
+        self.lblnodesizeonmetric.move(12,vpos)
+        self.lblnodesizeonmetric.adjustSize()
+        vpos+=20
+        self.dpdwnmetricfornodesize = QComboBox(self)
+        self.dpdwnmetricfornodesize.move(12,vpos)
+        self.dpdwnmetricfornodesize.addItems(['None','Degree','Betweenness Centrality','Clustering Coefficent'])
+        self.dpdwnmetricfornodesize.setCurrentIndex(self.nodesizemeth)
+        vpos+=30
+        self.lbledgesizeonmetric = QLabel('Base edge size on a metric',self)
+        self.lbledgesizeonmetric.move(12,vpos)
+        self.lbledgesizeonmetric.adjustSize()
+        vpos+=20
+        self.dpdwnmetricforedgesize = QComboBox(self)
+        self.dpdwnmetricforedgesize.move(12,vpos)
+        self.dpdwnmetricforedgesize.addItems(['None','Betweenness Centrality'])
+        self.dpdwnmetricforedgesize.setCurrentIndex(self.edgesizemeth)
         vpos+=30
         self.lblnxpglocation = QLabel('nxpg module location:',self)
         self.lblnxpglocation.move(12,vpos)
@@ -1176,7 +1207,8 @@ class OptionsWindow(QWidget):
         if self.ckbxsaveoutputfile.isChecked() == True:
             self.saveoutputfile = True
         else: self.saveoutputfile = False
-        window.updateGUI_options(self.destlocation, self.pertimestep, self.saveimage,self.multiiterations,self.numofiterations,self.colactive,self.colinactive,self.timedelay,self.saveoutputfile,self.imagedpi,self.nxpglocation,self.runallseqmodels)
+        #if self.dpdwnmetricfornodesize.currentIndex() == 0:
+        window.updateGUI_options(self.destlocation, self.pertimestep, self.saveimage,self.multiiterations,self.numofiterations,self.colactive,self.colinactive,self.timedelay,self.saveoutputfile,self.imagedpi,self.nxpglocation,self.runallseqmodels,self.dpdwnmetricfornodesize.currentIndex(),self.dpdwnmetricforedgesize.currentIndex())
         self.close() 
     def closeclick(self):
         self.close()
@@ -1529,9 +1561,20 @@ class Window(QMainWindow):
         except:
             QMessageBox.warning(self,'Import Error!', "Could not import the osgeo.ogr library. There will be no database connectivity as a result.")
 
+        try:
+            try: 
+                sys.path.append('C:/a8243587_DATA/GitRepo/nx_pgnet')
+                import nx_pgnet #,nx_pg
+            except:
+                pass
+                #sys.path.append('C:/Users/Craig/Documents/GitRepo/nx_pgnet')
+        except:
+            QMessageBox.warning(self, 'Import Error!', 'Could not import the nx_pgnet or nx_pg modules. This will not allow the database conection to work.')
+        
         #set initial location and call the function to import the module        
         self.nxpglocation = 'C:/a8243587_DATA/GitRepo/nx_pgnet'
-        self.try_nxpg_import()
+        #self.try_nxpg_import()
+        can_use_db = True
         #initiate thread
         self.thread = Worker()
         '''
@@ -1583,6 +1626,8 @@ class Window(QMainWindow):
         self.saveoutputfile = True
         self.imagedpi = 100
         self.runallseqmodels = False
+        self.nodesizingmeth = 0
+        self.edgesizingmeth = 0
         self.metrics = self.create_metrics(self.parameters)   
         
         #create actions for file menu
@@ -1808,7 +1853,7 @@ class Window(QMainWindow):
         
         #for network A
         self.graph = 'GNM' #means this is the default, so if menu option not changed/used, will persume GNM graph
-        if self.can_use_db == True:
+        if can_use_db == True:
             inputs = ('Random - GNM', 'Random - Erdos Renyi',
                       'Small-World', 'Scale-free',
                       'Hierarchical Random','Hierarchical Random +',
@@ -1838,10 +1883,10 @@ class Window(QMainWindow):
         self.txtparamA3 = QLineEdit(self)
         self.txtparamA3.move(600, 45)
         self.txtparamA3.setEnabled(False)  
-                
+              
         #for network B
         self.graphB = 'None' #means this is the default, so if menu option not changed/used, will persume GNM graph
-        if self.can_use_db == True:        
+        if can_use_db == True:        
             inputs = ('None','Random - GNM', 'Random - Erdos Renyi',
                       'Small-World', 'Scale-free',
                       'Hierarchical Random','Hierarchical Random +',
@@ -2918,24 +2963,57 @@ class Window(QMainWindow):
         self.btnstart.setEnabled(True)
         self.ckbxviewnet.setEnabled(True) #view graph checkbox  
         
+        '''
+        self.parameters = None
+        self.running = False
+        self.pause = False
+        self.changedA = True
+        self.changedB = True
+        self.lastparam1A = None;self.lastparam2A = None;self.lastparam3A = None
+        self.lastparam1B = None;self.lastparam2B = None;self.lastparam3B = None
+        self.first = True
+        self.figureModel = None
+        self.iterate = True
+        self.timestep = -1
+        self.cancel = False
+        self.positions = None
+        self.G = None; self.GnetB = None
+        self.masterAnet = None; self.masterBnet = None
+        self.graphvis = None
+        self.analysistype = 'Single'
+        self.fullanalysis = False
+        self.active = 1
+        self.inactive = 0
+        self.timedelay = 2
+        self.coloractive = 'green'
+        self.colorinactive = 'red'
+        self.imagedestlocation = ''
+        self.pertimestep = 1
+        self.whenToSave = []
+        self.saveimage = False
+        self.multiiterations = False
+        self.numofiterations = 1 
+        self.iterationsdone = 0
+        self.saveoutputfile = True
+        '''
     def reset(self):
         '''Reset all the appropriate variables, enable/disable the appropriate 
         buttons and check boxes and reset any text.'''
         print 'in RESET function'
-        self.G = None
-        self.GnetB = None
-        self.cmboxA.setCurrentIndex(0)
-        self.networkselectionA('GNM') #this clears the text boxes - dont really want it too though
-        self.cmboxB.setCurrentIndex(0)
-        self.networkselectionB('None') #this clears the text boxes - dont really want it too though
-        self.cmboxtype.setCurrentIndex(0)        
-        self.txtparamt1.setEnabled(False)
-        self.txtparamt2.setEnabled(False)
-        self.positions = None
+        #self.G = None
+        #self.GnetB = None
+        #self.cmboxA.setCurrentIndex(0)
+        #self.networkselectionA('GNM') #this clears the text boxes - dont really want it too though
+        #self.cmboxB.setCurrentIndex(0)
+        #self.networkselectionB('None') #this clears the text boxes - dont really want it too though
+        #self.cmboxtype.setCurrentIndex(0)        
+        #self.txtparamt1.setEnabled(False)
+        #self.txtparamt2.setEnabled(False)
+        #self.positions = None
         self.cancel = False
         self.timestep = -1
         self.graphvis = None
-        self.figureModel = None
+        #self.figureModel = None
         self.iterate = True
         self.fullanalysis = False
         self.lbl4.setText('Ready')
@@ -3039,9 +3117,9 @@ class Window(QMainWindow):
         opened. Returns the options as they have been stored for the option 
         parameter window.'''
         self.oldnxpglocation = self.nxpglocation
-        return self.timedelay, self.coloractive, self.colorinactive, self.imagedestlocation,self.pertimestep,self.saveimage,self.analysistype,self.multiiterations, self.numofiterations, self.saveoutputfile, self.imagedpi, self.nxpglocation,self.runallseqmodels
+        return self.timedelay, self.coloractive, self.colorinactive, self.imagedestlocation,self.pertimestep,self.saveimage,self.analysistype,self.multiiterations, self.numofiterations, self.saveoutputfile, self.imagedpi, self.nxpglocation,self.runallseqmodels,self.nodesizingmeth,self.edgesizingmeth
     
-    def updateGUI_options(self,destlocation,pertimesteps,saveimage,multiiterations,numofiterations,colactive,colinactive,timedelay,saveoutputfile,imagedpi,nxpglocation,runallseqmodels):
+    def updateGUI_options(self,destlocation,pertimesteps,saveimage,multiiterations,numofiterations,colactive,colinactive,timedelay,saveoutputfile,imagedpi,nxpglocation,runallseqmodels,nodesizingmeth,edgesizingmeth):
         '''Updates the state of the variables altered in the options window 
         when it is closed.'''
         self.imagedestlocation = destlocation
@@ -3058,7 +3136,7 @@ class Window(QMainWindow):
         self.imagedpi = imagedpi
         self.nxpglocation = nxpglocation
         if self.nxpglocation <> self.oldnxpglocation:
-            self.try_nxpg_import()
+            self.try_nxpg_import() 
         self.oldnxpglocation = None
         self.runallseqmodels = runallseqmodels
         if self.runallseqmodels == True:
@@ -3069,6 +3147,10 @@ class Window(QMainWindow):
             self.ckbxRandom.setEnabled(False)
             self.ckbxDegree.setEnabled(False)
             self.ckbxBetweenness.setEnabled(False)
+        self.nodesizingmeth = nodesizingmeth
+        self.edgesizingmeth = edgesizingmeth
+        print 'ppppppppppppppppppppppppppppppppppppppppppppppppp'
+        print self.nodesizingmeth
 
     def showwindow_metrics(self):
         '''Open the metrics window.'''
@@ -3221,7 +3303,10 @@ class Window(QMainWindow):
                 else:
                     removednodes = set(self.graphvis.nodes()) - set(GA.nodes()) #need to convert to sets as lists cannot be subtracted
                     for node in removednodes: #set the state to inactive for relavant nodes 
-                        self.graphvis.node[node]['state'] = self.inactive 
+                        self.graphvis.node[node]['state'] = self.inactive
+                #get node size
+                self.graphvis = self.get_node_size_metric(GA, self.graphvis, self.nodesizingmeth)   
+                self.graphvis = self.get_edge_size_metric(GA, self.graphvis, self.nodesizingmeth)
                 if self.multiiterations == True:
                     print 'SAVEING IMAGE FOR ITERATION'
                     self.imagedestlocation_withsim = self.imagedestlocation + '_sim' + str(self.iterationsdone+1)
@@ -3314,6 +3399,9 @@ class Window(QMainWindow):
                 #saves the initial image of the full network
                 if self.ckbxviewnet.isChecked() == True: show = True
                 else: show = False
+                #get node size
+                self.graphvis = self.get_node_size_metric(GA, self.graphvis, self.nodesizingmeth)
+                self.graphvis = self.get_edge_size_metric(GA, self.graphvis, self.nodesizingmeth)
                 self.imagedestlocation_withsim = self.imagedestlocation + '_sim' + str(self.iterationsdone+1)
                 self.figureModel, self.timestep, self.whenToSave = draw(self.graphvis, self.positions, self.figureModel, self.timestep, self.coloractive, self.colorinactive, show, self.pertimestep, self.imagedestlocation_withsim, self.whenToSave)
 
@@ -3430,16 +3518,63 @@ class Window(QMainWindow):
         if self.saveimage == True:
             if self.ckbxviewnet.isChecked() == True: show = True
             else: show = False
-            if DEPENDENCY == True:
-                meth = 'DEPENDENCY'
-            if BETWEENNESS == TRUE:
-                meth = 'BETWEENNESS'
+            #get node size
+            self.graphvis = self.get_node_size_metric(GA, self.graphvis, self.nodesizingmeth)
+            self.graphvis = self.get_edge_size_metric(GA, self.graphvis, self.edgesizingmeth)         
             self.imagedestlocation_withsim = self.imagedestlocation + '_'+ meth +'_sim_' + str(self.iterationsdone+1)
             self.figureModel, self.timestep, self.whenToSave = draw(self.graphvis, self.positions, self.figureModel, self.timestep, self.coloractive, self.colorinactive, show, self.pertimestep, self.imagedestlocation_withsim, self.whenToSave)
 
         print '=====================RUNNING FULL ANALYSIS================'  
         self.full_analysis(self.parameters)
-                    
+    
+    def get_node_size_metric(self, G, graphvis, nodesizemethod):
+        """"""
+        if self.nodesizingmeth == 0:
+            blist = []
+            for node in G.nodes():
+                blist.append(-999999)
+        elif self.nodesizingmeth == 1:
+            blist_1 = G.degree().values()
+            #need to normalise this netween 0 and 1 -same range as betweenness and clustering
+            div = max(blist_1)            
+            blist = []
+            for item in blist_1:
+                if div <> 0:
+                    blist.append(float(item)/float(div))
+                else:
+                    blist.append(0) #this is need as when the network has failed, all have a degree of zero
+            blist_1 = None
+                
+        elif self.nodesizingmeth == 2:
+            blist = nx.betweenness_centrality(G).values()
+        elif self.nodesizingmeth == 3:
+            blist = nx.clustering(G).values()
+        p = 0
+        for i in G.nodes_iter():
+            if blist[p] < 0.1:
+                G.node[i]['size'] = 0.1
+                graphvis.node[i]['size'] = 0.1
+            else:
+                G.node[i]['size'] = blist[p]
+                graphvis.node[i]['size'] = blist[p]
+            p += 1
+        return graphvis
+    
+    def get_edge_size_metric(self, G, graphvis, edgesizemethod):
+        """"""
+        if self.edgesizingmeth == 0:
+            blist = []
+            for ed in G.edges_iter():
+                blist.append(-999999)
+        elif self.edgesizingmeth == 1:
+            blist = nx.edge_betweenness_centrality(G,normalized=True).values()
+        p = 0
+        for o,d in G.edges_iter():
+            G[o][d]['size'] = blist[p]
+            graphvis[o][d]['size'] = blist[p]
+            p+=1
+        return graphvis        
+        
     def drawview(self):
         '''Draws the network without running any anlysis. Initiated by the Draw
         button and option in the edit menu.'''
@@ -3472,9 +3607,12 @@ class Window(QMainWindow):
         #theses are needed for auto saving when running failure analysis        
         self.show = True
         #self.figureModel, self.timestep = draw(self.graphvis, self.positions, self.figureModel, self.timestep, self.coloractive, self.colorinactive)
+        #get node sizes
+        self.graphvis = self.get_node_size_metric(self.G, self.graphvis, self.nodesizingmeth)
+        self.graphvis = self.get_edge_size_metric(self.G, self.graphvis, self.nodesizingmeth)
         self.figureModel, self.timestep, self.whenToSave = draw(self.graphvis, self.positions, self.figureModel, self.timestep, self.coloractive, self.colorinactive, self.show, self.pertimestep,self.imagedestlocation,self.whenToSave)
 
-  
+     
     def step_analysis(self):
         ''''Perform the resilience analysis through user control for each node
         removal process.'''
@@ -3610,7 +3748,7 @@ class Window(QMainWindow):
             return
         if parameters <> None:
             self.parameters = parameters
-            
+        print 'got to 1'    
         self.fullanalysis = True
         self.btnstep.setEnabled(False)
         self.btndraw.setEnabled(False)
@@ -3622,7 +3760,8 @@ class Window(QMainWindow):
         param2 = self.txtparamA2.text()
         param3 = self.txtparamA3.text()
         self.check_for_changes(param1,param2,param3,'A')
-        #print 'got this far 1'
+        print 'got to 2'
+        self.G = self.masterAnet
         if self.G == None or self.changedA == True:
             #print 'stuck here 4'
             self.lbl4.setText('Intialising')
@@ -3630,9 +3769,12 @@ class Window(QMainWindow):
             QApplication.processEvents()
             #print 'changedA is: ', self.changedA
             if self.changedA == True:
+                print 'got to 1a'
                 #print 'built network'
                 self.G = self.buildnetwork(param1,param2,param3,'A')
+            print 'got to 2a'
             if self.G <> None:
+                print 'got to 2a1'
                 #print 'stuck here 3'
                 #create a copy for the vis and adds attribute state
                 self.positions = None
@@ -3640,16 +3782,18 @@ class Window(QMainWindow):
                 for node in self.graphvis.nodes_iter():  
                     self.graphvis.node[node]['state'] = self.active
                 self.parameters = self.get_analysis_type()
+            print 'got to 2b'
             if self.G == None: #reset the interface as network could not be built
-                #print 'stuck here 1'
+                print 'got to 2ba'
                 self.btnstep.setEnabled(True)
                 self.btndraw.setEnabled(True)
                 self.ckbxviewnet.setEnabled(True)
                 self.enableallckbx()
                 #print 'G is None'
+                print 'got to 2bb'
                 return
         elif self.graphvis == None:
-            #print 'stuck here 2'
+            print 'got to 2c'
             self.graphvis=self.G.copy()
             for node in self.graphvis.nodes_iter():  
                 self.graphvis.node[node]['state'] = self.active
@@ -3657,13 +3801,15 @@ class Window(QMainWindow):
         #print 'got this far 2'
         #-----------------check parameters exist
         #this is needed if the user draws the network first       
+        print 'got to 3'
         if self.parameters == None:
             self.parameters = self.get_analysis_type()
         #-----------------unpack parameters
         metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges = self.parameters
         #print 'got this far 3'
         #-----------------check network B and build if needed
-
+        print 'got to 4'
+        self.GnetB = self.masterBnet
         if self.GnetB == None and STAND_ALONE == False:
             param1 = self.txtparamB1.text()
             param2 = self.txtparamB2.text()
@@ -3678,6 +3824,7 @@ class Window(QMainWindow):
                 self.ckbxviewnet.setEnabled(True)
                 self.enableallckbx()
                 return
+        print 'got to 5'
         #build edges if needed
         if DEPENDENCY == True:
             a_to_b_edges = self.AtoBEdges()
@@ -3689,12 +3836,13 @@ class Window(QMainWindow):
         self.parameters = metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
         #print 'got this far 4'
         #------------------for safety reasons
+        print 'got to 6'
         if self.parameters == None:
             print 'this is here for satefy. SHOULD NEVER BE USED'
             self.parameters = self.get_analysis_type()
         #-------------------sort metrics here - this is required when not stand_alone
         self.metrics = self.sort_metrics(self.parameters)        
-        #print 'got this far 5'
+        print 'got to 7'
         #------------------get file name and handle an error arising here
         if fileName == None and self.saveoutputfile == True:
             #print 'asks here as well'
@@ -3716,7 +3864,7 @@ class Window(QMainWindow):
                 self.ckbxviewnet.setEnabled(True)
                 return
             self.parameters = self.metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
-        #print 'got this far 6'
+        print 'got to 8'
         if self.whenToSave == [] and self.pertimestep > 0:
             self.whenToSave = []
             r = 0    
@@ -3876,10 +4024,6 @@ class Window(QMainWindow):
             self.positions=vis.tree(self.G, bfs)
         elif selected == 'Geographic':
             print self.G.number_of_nodes()
-            print self.G.nodes()
-            print self.G.node[1]
-            print self.G.node[2]
-            print self.G.node[1]['Wkt']
             self.positions=vis.geo(self.G)
         else:
             print 'Error in the selection of vis method'
@@ -4628,10 +4772,10 @@ def draw(G, positions, figureModel, timestep, coloractive, colorinactive, show, 
     pl.cla()    
     drawnet(G, positions, timestep, coloractive, colorinactive) 
 
-    if pertimestep > 0 and len(whenToSave) > 0:
-        print 'when to save is:' , whenToSave
-        print 'timestep is: ', timestep
-        print 'when to save zero is: ', whenToSave[0]
+    if pertimestep > 0 and len(whenToSave) > 0 and len(imagedestlocation) > 0:
+        #print 'when to save is:' , whenToSave
+        #print 'timestep is: ', timestep
+        #print 'when to save zero is: ', whenToSave[0]
         if timestep == whenToSave[0]:
             i = 0
             while i < len(imagedestlocation):
@@ -4660,61 +4804,143 @@ def draw(G, positions, figureModel, timestep, coloractive, colorinactive, show, 
     return figureModel, timestep, whenToSave
       
 def drawnet(G, positions, timestep, coloractive, colorinactive):
-    '''Draws the network.'''
-    inactivenodes=[]
-    activenodes=[]
+    '''Draws the network'''   
     pl.cla()
     #cheat way of removing the axis and labels quickly
     g1 = nx.Graph() 
     nx.draw(g1)
     #conditionals to change size of nodes depending on the number of them
     if G.number_of_nodes() <=50:
-        size = 300
+        size_mult = 300
     elif G.number_of_nodes()>50 and G.number_of_nodes()<=100:
-        size = 100
+        size_mult = 100
     elif G.number_of_nodes()>100 and G.number_of_nodes()<=250:
-        size = 50
+        size_mult = 50
     else:
-        size = 30
-    nx.draw_networkx_nodes(G, positions, node_size=size, node_color=str(coloractive), with_labels=True)
-    nx.draw_networkx_edges(G, positions, edge_width=6, edge_color=str(coloractive))
-    
-    nx.draw(network,
-            pos = positions,
-            node_color = [network.node[i]['state'] for i in network.nodes_iter()],
-            with_labels = False,
-            edge_color = 'c',
-            cmap = PL.cm.YlOrRd,
-            vmin = 0,
-            vmax = 1)    
-    
-    
+        size_mult = 30
+ 
     if timestep <> -1:
         pl.title('iteration = ' + str(timestep))
     timestep+=1
 
-    for node in G.nodes_iter():
-        if G.node[node]['state'] == 0: #inactive
-            inactivenodes.append(node)
-            edgelist = G.edges(node)
-            nx.draw_networkx_edges(G, positions, edge_width=6.1, edgelist = edgelist, edge_color = str(colorinactive))
-        elif G.node[node]['state']== 1: #active
-            activenodes.append(node)
-            edgelist = G.edges(node)
-    print 'active nodes = ', len(activenodes)
-    print 'inactive nodes = ', len(inactivenodes)
+    inactive_edges = []
+    active_edges = []
+    for o,d in G.edges_iter():
+        if G.node[o]['state'] == 0 or G.node[d]['state'] == 0:
+            temp = o,d            
+            inactive_edges.append(temp)
+        else:
+            temp = o,d
+            active_edges.append(temp)
+            
+    #the edge widths should be changing, but they are not - not too sure why
+    nx.draw_networkx_edges(G, 
+                           pos = positions, 
+                           edge_width = [G[o][d]['size'] *size_mult for o,d in G.edges_iter()], 
+                           edgelist = inactive_edges,
+                           edge_color = str(colorinactive)) 
+    nx.draw_networkx_edges(G,
+                           pos = positions,
+                           edge_width = [G[o][d]['size'] *size_mult for o,d in G.edges_iter()],
+                           edgelist = active_edges,
+                           edge_color = str(coloractive))
+    
+    #i think that when a node becomes isolated, it is not being classed as inactive
+    inactive_nodes = []
+    active_nodes = []
+    for nd in G.nodes_iter():
+        if G.node[nd]['state'] == 0:
+            inactive_nodes.append(nd)
+        elif G.node[nd]['state'] == 1:
+            active_nodes.append(nd)
+        
+    nx.draw_networkx_nodes(G,
+                pos = positions,
+                nodelist = active_nodes,
+                node_color = str(coloractive),
+                node_size = [G.node[i]['size'] *size_mult for i in G.nodes_iter()],
+                )
+    nx.draw_networkx_nodes(G,
+                pos = positions,
+                nodelist = inactive_nodes,
+                node_color = str(colorinactive),
+                node_size = 0.1*size_mult
+                )
+    
+    print 'active nodes = ', len(active_nodes)
+    print 'inactive nodes = ', len(inactive_nodes)
     
     #need some code in here to all put base map on when geographic option selected
-    geographic = False
-    if geographic == True:                
-        from mpl_toolkits.basemap import Basemap
-        map1 = Basemap(projection='tmerc', width=1100000, height=1100000, lat_0=55,lon_0=-3 ,resolution='l')
-        map1.drawcoastlines(linewidth=0.25)
-        map1.drawcountries(linewidth=0.25)
-        map1.fillcontinents(color='coral',lake_color='aqua')
-    print 'SET DPI as 300'
-    nx.draw_networkx_nodes(G, positions, node_size=size, nodelist = inactivenodes, node_color = str(colorinactive), with_labels=True)   
-    
+    geographic = True
+    geo_vis2 = nx.Graph()
+    if geographic == True:
+        #this method puts the nodes in the correct places, but the edges are not correct
+
+        k = 0 #counter for the nodes
+        #reads the network and create a new one with all nodes and egdes for real vis
+        for o,d in G.edges_iter():
+            coordlist = G[o][d]['Wkt']
+            coordlist = coordlist[12:-1]
+            coordlist = coordlist.split(',')
+            j = 0 #iterates through the corrds for the linestring
+            nodes_in_line = []
+            while j < len(coordlist):
+                found = False
+                for nd in geo_vis2.nodes_iter():
+                    if geo_vis2.node[nd]['coord'] == coordlist[j]:
+                        found = True
+                        nodes_in_line.append(nd)
+                        break
+                if found == False:
+                    geo_vis2.add_node(k)
+                    geo_vis2.node[k]['coord']=coordlist[j]
+                    nodes_in_line.append(k)
+                    k += 1
+                j += 1
+                
+            #using the list of nodes in the linestring, create the edges
+            ndinline = 0
+            while ndinline < len(nodes_in_line)-1:
+                geo_vis2.add_edge(nodes_in_line[ndinline],nodes_in_line[ndinline+1])
+                ndinline+=1
+            
+        import numpy as np
+        dim=2
+        scale=2
+        pos=np.asarray(np.random.random((len(geo_vis2),dim)),dtype=np.float32)
+        u = 1
+        for nd in geo_vis2.nodes_iter():
+            coord = geo_vis2.node[nd]['coord']
+            a,b = coord.split(' ')
+            temp =np.array([float(a),float(b)])  
+            pos[u-1]=temp
+            u +=1
+        pos =vis._rescale_layout(pos,scale=scale)
+     
+        pl.cla()
+        #labels = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+        nx.draw_networkx_nodes(geo_vis2,
+                    pos = pos,
+                    nodelist = [0,13],
+                    node_color = str(coloractive),
+                    node_size = 3,
+                    )
+        
+        nx.draw_networkx_edges(geo_vis2,
+                    pos = pos,
+                    edge_color = str(coloractive),
+                    edge_width = 6,
+                    ) 
+        
+    '''                
+    from mpl_toolkits.basemap import Basemap
+    map1 = Basemap(projection='tmerc', width=1100000, height=1100000, lat_0=55,lon_0=-3 ,resolution='l')
+    map1.drawcoastlines(linewidth=0.25)
+    map1.drawcountries(linewidth=0.25)
+    map1.fillcontinents(color='coral',lake_color='aqua')
+    '''
+    #print 'SET DPI as 300'
+        
 def replace_all(text, dic):
     'Used to modify strings to make them suitable for purpose.'
     for i,j in dic.iteritems():
