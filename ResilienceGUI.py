@@ -12,9 +12,14 @@ import networkx as nx
 import pylab as pl
 import matplotlib as mp
 import visalgorithms_v8 as vis
-import interdependency_analysis_v3_2 as res
+import interdependency_analysis_v4_5 as res #this one needs updating/changing for the required setup
 import inhouse_algorithms as customnets
+import time
 #from matplotlib.widgets import CheckButtons
+
+figureModel = None
+global valueset, forthread
+valueset = 0
 
 try:
     import osgeo.ogr as ogr
@@ -26,9 +31,10 @@ try:
 except:
     print 'ERROR! Cannot find nx_pg functions, thus there will be limited or no data base functionality.'
 
+class pickparameters(QtGui.QDialog):   
 
-class pickparameters(QtGui.QDialog):    
     def __init__(self, parent=None):
+        global valueset
         QtGui.QDialog.__init__(self, parent)  
         self.lblop1 = QtGui.QLabel('Option 1:', self)
         self.lblop1.adjustSize()
@@ -49,22 +55,72 @@ class pickparameters(QtGui.QDialog):
         self.cancelbtn = QtGui.QPushButton('Cancel', self)
         self.cancelbtn.move(135, 80)
         self.cancelbtn.clicked.connect(self.cancelclick)
-        
+        #just need to sort this out so the variable values can be transfered into this class easily
+        #attempt to get the metric values for the graphs from the mian window class
+
+        self.values = valueset #converts global valueset into the self.values, which is the metric values to be displayed
         self.setGeometry(700,500,280,110)#above; vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Graph parameters')  #title of windpw          
         self.show()#show window  
     
+        self.fig = pl.gcf()
+        self.fig.canvas.set_window_title('Results plot')
+        pl.ion()
+        pl.show() #this displays a blank plot which I then want the graph to be displayed in
+        
+    #may have to use a similar methodology to that used when trying to visualise the networks as they fail
+    #all the code the displaying the results should possibly go in here, would mean that it will be easier to modify and make run smoother
+    #the only effect this would havee is the appropraite parameters would need to be sent/got to this class.
+    #would also mean when the apply button is clicked, would change the graphs without having to be closed and re-opened.
+    #would appear much more dynamic, running off trigger functions.
     def applyclick(self):
         self.metric1 = self.option1.currentText()
         self.metric2 = self.option2.currentText()
         self.metric1 = self.identifymetric(self.metric1)
         self.metric2 = self.identifymetric(self.metric2)
+        
         if self.metric1 == self.metric2:
             QtGui.QMessageBox.information(self, 'Warning','The same parameters have been selected for both options. Please change one.','&OK')
             return
         else:
-            pl.close()
-            self.close()
+            #need to get the values so this can work - means working on the other code before it even gets here            
+            valuenames = 'average path length', 'nodes removed count','isolated nodes count','average degree', 'number of components' #list for the labels, needs updating manually
+            self.values = list(self.values)
+            one, two, three, four, five = self.values
+            
+            pl.cla() #clean the plot            
+            p1=pl.plot(self.values[self.metric1], 'b', linewidth=2, label=valuenames[self.metric1])
+            if self.metric2<>99:
+                p2=pl.plot(self.values[self.metric2], 'r', linewidth=2, label=valuenames[self.metric2])            
+            pl.xlabel('Number of iterations')
+            pl.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)                
+            self.fig.canvas.manager.window.update() #refresh the plot
+            pl.show() #show a window
+            
+    def drawgraph(self, values):
+        #get the two mtrics to display from the combobox window        
+        inputdlg = pickparameters()
+        if inputdlg.exec_():
+            data = inputdlg.getval()
+            return
+        else:
+             metric1, metric2 = inputdlg.getval()
+        values = list(values)
+        valuenames = 'average path length', 'nodes removed count','isolated nodes count','average degree', 'number of components' #list for the labels, needs updating manually
+        #here add a call to a new window where the items to be displaye on the graph can be specified. Limit to two to make it easier to begin with anyway.
+        fig = pl.gcf()
+        fig.canvas.set_window_title('Results plot')
+        one, two, three, four, five = values
+        p1=pl.plot(values[metric1], 'b', linewidth=2, label=valuenames[metric1])
+        if metric2<>99:
+            p2=pl.plot(values[metric2], 'r', linewidth=2, label=valuenames[metric2])
+        
+        #p3=pl.plot(numofcomponents, 'y', linewidth=2, label='number of components')
+        pl.xlabel('Number of iterations')              
+        #pl.legend(bbox_to_anchor=(1.05, 1), loc=2, mode="expand",borderaxespad=0.)
+        pl.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)                
+        pl.show() #in future have it work dynamically so can pick the results it displays from some check boxes
+
                     
     def cancelclick(self):
         self.close()            
@@ -300,80 +356,33 @@ class MainWindow(QtGui.QMainWindow):
         Group2.addButton(self.ckbx5)
         Group2.addButton(self.ckbx6)
         Group2.exclusive()
-        
-        self.lbl1 = QtGui.QLabel("Network Options", self)
+    
+        self.lbl1 = QtGui.QLabel("Network Type", self)
         self.lbl1.setFont(fontbold)
         self.lbl1.adjustSize()
         self.lbl1.move(275, 25)
-        self.ckbx7 = QtGui.QCheckBox("WS", self)
-        self.ckbx7.adjustSize()
-        self.ckbx7.move(275, 45)
-        self.ckbx8 = QtGui.QCheckBox("GNM", self)
-        self.ckbx8.adjustSize()
-        self.ckbx8.move(325, 45)
-        self.ckbx7.toggle()
-        self.ckbx9 = QtGui.QCheckBox("BA", self)
-        self.ckbx9.adjustSize()
-        self.ckbx9.move(275, 65)
-        self.ckbx10 = QtGui.QCheckBox("ER", self)
-        self.ckbx10.adjustSize()
-        self.ckbx10.move(325, 65)
-        self.ckbx12 = QtGui.QCheckBox("HR", self)
-        self.ckbx12.adjustSize()
-        self.ckbx12.move(275, 85)
-        self.ckbx13 = QtGui.QCheckBox("HR+", self)
-        self.ckbx13.adjustSize()
-        self.ckbx13.move(275, 105)        
-        self.ckbx14 = QtGui.QCheckBox("HC", self)
-        self.ckbx14.adjustSize()
-        self.ckbx14.move(325, 85)        
-        self.ckbx15 = QtGui.QCheckBox("Tree", self)
-        self.ckbx15.adjustSize()
-        self.ckbx15.move(325, 105)
-        self.ckbx11 = QtGui.QCheckBox("dB", self)
-        self.ckbx11.adjustSize()
-        self.ckbx11.move(275, 125)
-        self.ckbx18 = QtGui.QCheckBox("Lists", self)
-        self.ckbx18.adjustSize()
-        self.ckbx18.move(325, 125)
-        Group3 = QtGui.QButtonGroup(self)
-        Group3.addButton(self.ckbx7)
-        Group3.addButton(self.ckbx8)
-        Group3.addButton(self.ckbx9)
-        Group3.addButton(self.ckbx10)
-        Group3.addButton(self.ckbx11)
-        Group3.addButton(self.ckbx12)
-        Group3.addButton(self.ckbx13)
-        Group3.addButton(self.ckbx14)
-        Group3.addButton(self.ckbx15)
-        Group3.addButton(self.ckbx18)
-        Group3.exclusive()
-     
+        
+        self.graph = 'GNM' #means this is the default, so if menu option not changed/used, will persume GNM graph
+        inputs = ('GNM','Erdos Renyi','Watts Strogatz','Barabasi Albert','Hierarchical Random','Hierarchical Random +','Hierarchical Communities','Tree','Database','Lists',)
+        self.cmbox = QtGui.QComboBox(self)
+        self.cmbox.move(275,40)
+        self.cmbox.addItems(inputs)
+        self.cmbox.activated[str].connect(self.cmbxselection)           
+        
         self.lbl10 = QtGui.QLabel("Graph Inputs", self)
         self.lbl10.setFont(fontbold)
         self.lbl10.adjustSize()
         self.lbl10.move(400, 25)
         self.txtinput1 = QtGui.QLineEdit(self)        
         self.txtinput1.move(400, 45)
-        self.txtinput1.setToolTip('The number of nodes')
+        self.txtinput1.setToolTip('The number of nodes. eg., 34 or 178') #set the start up states for that top of the list, GNM
         self.txtinput2 = QtGui.QLineEdit(self)
         self.txtinput2.move(400, 80)
-        self.txtinput2.setToolTip('Number of neighbours connected to a node')
+        self.txtinput2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389')
         self.txtinput3 = QtGui.QLineEdit(self)
         self.txtinput3.move(400, 115)
-        self.txtinput3.setToolTip('Probability of being rewired eg.,0.4')
-        
-        self.ckbx7.stateChanged.connect(self.wsck)
-        self.ckbx8.stateChanged.connect(self.gnmck)
-        self.ckbx9.stateChanged.connect(self.back)
-        self.ckbx10.stateChanged.connect(self.erck)  
-        self.ckbx11.stateChanged.connect(self.dbc)
-        self.ckbx12.stateChanged.connect(self.hrck)
-        self.ckbx13.stateChanged.connect(self.ahrck)
-        self.ckbx14.stateChanged.connect(self.hcck)
-        self.ckbx15.stateChanged.connect(self.trck)
-        self.ckbx18.stateChanged.connect(self.lick)
-        
+        self.txtinput3.setEnabled(False)        
+          
         self.lbl5 = QtGui.QLabel("Remove subgraphs/isolated nodes", self)
         self.lbl5.setFont(fontbold)
         self.lbl5.adjustSize()
@@ -387,21 +396,25 @@ class MainWindow(QtGui.QMainWindow):
         self.ckbx17.move(130, 120)
         self.ckbx17.setToolTip("Select if nodes are to be removed when they become isolated")
 
+        self.viewfailures = False
         self.ckbx19 = QtGui.QCheckBox("View net failure", self)
         self.ckbx19.adjustSize()
-        self.ckbx19.move(200, 155)
+        self.ckbx19.move(275, 85)
         self.ckbx19.setToolTip("View the network failure as nodes are removed")
         #may be don't need a variable here, as can use the function below
-        #self.ckbx19.stateChanged.connect(self.viewfailure) -dont need this here anymore. all action performed in the draw function
+        self.ckbx19.stateChanged.connect(self.viewfailure) #-dont need this here anymore. all action performed in the draw function
+        
+        self.stepstate = False
+        self.ckbx20 = QtGui.QCheckBox("Run step by step", self)
+        self.ckbx20.adjustSize()
+        self.ckbx20.move(275, 105)
+        self.ckbx20.stateChanged.connect(self.stepbstepstate)
 
         self.btn2 = QtGui.QPushButton('Draw', self)
         self.btn2.move(300, 150)
-
         self.btn1 = QtGui.QPushButton('Start', self)
         self.btn1.move(400, 150)
         self.built = self.btn2.clicked.connect(self.View) #view the network and set built as true
-
-        #self.btn1.clicked.connect(self.getdbparameters)
         self.btn1.clicked.connect(self.RunAnalysis)     
                 
         self.setGeometry(300,300,515,185)#above; vertical place on screen, hoz place on screen, width of window, height of window
@@ -416,16 +429,88 @@ class MainWindow(QtGui.QMainWindow):
         inputDlg.show() 
         
     def viewfailure(self):  #function to set state of variable for the visualising the network as it fails
-        print 'runnning function'        
+        #when the eternal module is called, would make sence to send the required varables for the visualisation method to the module        
+        #print 'runnning function'        
         if self.ckbx19.isChecked():
-            print 'box checked'
-            self.viewfaliures = True
+            #print 'it is checked'            
+            self.viewfailures = True
         else:
-            print 'box not checked'
+            #print 'it is not checked'
             self.viewfailures = False
-        print 'sucessfully checked state'
-        return self.viewfaliures
-        
+        #print 'sucessfully checked state, viewfailures = ', self.viewfailures
+    def stepbstepstate(self):
+        if self.ckbx20.isChecked():
+            #print 'box is checked'
+            self.stepstate = True
+        else:
+            #print 'box is not checked'
+            self.stepstate = False
+        #print 'checked the state successfully, stepstate = ', self.stepstate   
+    def cmbxselection(self, text):
+        self.graph = text
+        print self.graph
+        if text == 'GNM':
+             self.txtinput3.setEnabled(False)
+             self.txtinput1.setEnabled(True)
+             self.txtinput2.setEnabled(True)
+             self.txtinput1.setToolTip('The number of nodes. eg., 34 or 178')
+             self.txtinput2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389')   
+        elif text == 'Erdos Renyi':
+            self.txtinput3.setEnabled(False)
+            self.txtinput1.setEnabled(True)
+            self.txtinput2.setEnabled(True)
+            self.txtinput1.setToolTip('The number of nodes. eg., 34 or 178')
+            self.txtinput2.setToolTip('Probability of edge creation eg.,0.4 or 0.7')
+        elif text == 'Watts Strogatz':
+            self.txtinput1.setEnabled(True)
+            self.txtinput2.setEnabled(True)
+            self.txtinput3.setEnabled(True)
+            self.txtinput1.setToolTip('The number of nodes. eg.,34 or 178')
+            self.txtinput2.setToolTip('Number of neighbours connected to a node. eg., 2 or 15')
+            self.txtinput3.setToolTip('Probability of being rewired eg.,0.4 or 0.7')
+        elif text == 'Barabasi Albert':
+            self.txtinput3.setEnabled(False)
+            self.txtinput1.setEnabled(True)
+            self.txtinput2.setEnabled(True)
+            self.txtinput1.setToolTip('The number of nodes. eg., 34 or 178')
+            self.txtinput2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6')
+        elif text == 'Hierarchical Random':
+            self.txtinput1.setEnabled(True)
+            self.txtinput2.setEnabled(True)
+            self.txtinput3.setEnabled(True)
+            self.txtinput1.setToolTip('The number of level. eg., 2 or 4')
+            self.txtinput2.setToolTip('The number of children from each new node. eg., 2 or 6')
+            self.txtinput3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
+        elif text == 'Hierarchical Random +':
+            self.txtinput1.setEnabled(True)
+            self.txtinput2.setEnabled(True)
+            self.txtinput3.setEnabled(True)
+            self.txtinput1.setToolTip('The number of nodes. eg., 34 or 178')
+            self.txtinput2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6')
+            self.txtinput3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
+        elif text == 'Hierarchical Communities':
+            self.txtinput1.setEnabled(True)
+            self.txtinput2.setEnabled(True)
+            self.txtinput3.setEnabled(False)
+            self.txtinput1.setToolTip('The number of levels. eg., 2 or 4 (max is 4)')
+            self.txtinput2.setToolTip('The number of type of community, 0 for square, 1 for triangle.')
+        elif text == 'Tree':
+             self.txtinput1.setEnabled(True)
+             self.txtinput2.setEnabled(True)
+             self.txtinput3.setEnabled(False)
+             self.txtinput1.setToolTip('The number of child nodes per parent. eg., 3 or 5')
+             self.txtinput2.setToolTip('The number of levels in the tree (excluding the source level). eg., 3 or 6')
+        elif text == 'Database':
+            self.txtinput1.setEnabled(False)
+            self.txtinput2.setEnabled(False)
+            self.txtinput3.setEnabled(False)
+        elif text == 'Lists':   
+            self.txtinput1.setEnabled(True)
+            self.txtinput2.setEnabled(True)
+            self.txtinput3.setEnabled(False)
+            self.txtinput1.setToolTip('The list if nodes for the network eg., (1,2,3,4)')
+            self.txtinput2.setToolTip('The list of edges for the network eg., ((1,2),(1,4),(1,3),(2,3),(3,4))')
+
     def Open(self):
         print 'needs finishing'
         self.ckbx18.toggle()
@@ -435,68 +520,8 @@ class MainWindow(QtGui.QMainWindow):
         text1, text2 = text.split('\n')
         self.txtinput1.setText(text1)
         self.txtinput2.setText(text2)
-        #load in a csv, add lists to text boxes, then select lists for the input               
-    def wsck(self):
-        self.txtinput1.setEnabled(True)
-        self.txtinput2.setEnabled(True)
-        self.txtinput3.setEnabled(True)
-        self.txtinput1.setToolTip('The number of nodes. eg.,34 or 178')
-        self.txtinput2.setToolTip('Number of neighbours connected to a node. eg., 2 or 15')
-        self.txtinput3.setToolTip('Probability of being rewired eg.,0.4 or 0.7')
-    def gnmck(self):
-        self.txtinput3.setEnabled(False)
-        self.txtinput1.setEnabled(True)
-        self.txtinput2.setEnabled(True)
-        self.txtinput1.setToolTip('The number of nodes. eg., 34 or 178')
-        self.txtinput2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389')   
-    def back(self):
-        self.txtinput3.setEnabled(False)
-        self.txtinput1.setEnabled(True)
-        self.txtinput2.setEnabled(True)
-        self.txtinput1.setToolTip('The number of nodes. eg., 34 or 178')
-        self.txtinput2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6')
-    def erck(self):
-        self.txtinput3.setEnabled(False)
-        self.txtinput1.setEnabled(True)
-        self.txtinput2.setEnabled(True)
-        self.txtinput1.setToolTip('The number of nodes. eg., 34 or 178')
-        self.txtinput2.setToolTip('Probability of edge creation eg.,0.4 or 0.7')
-    def hrck(self):
-        self.txtinput1.setEnabled(True)
-        self.txtinput2.setEnabled(True)
-        self.txtinput3.setEnabled(True)
-        self.txtinput1.setToolTip('The number of level. eg., 2 or 4')
-        self.txtinput2.setToolTip('The number of children from each new node. eg., 2 or 6')
-        self.txtinput3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
-    def ahrck(self):
-        self.txtinput1.setEnabled(True)
-        self.txtinput2.setEnabled(True)
-        self.txtinput3.setEnabled(True)
-        self.txtinput1.setToolTip('The number of nodes. eg., 34 or 178')
-        self.txtinput2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6')
-        self.txtinput3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
-    def hcck(self):
-        self.txtinput1.setEnabled(True)
-        self.txtinput2.setEnabled(True)
-        self.txtinput3.setEnabled(False)
-        self.txtinput1.setToolTip('The number of levels. eg., 2 or 4 (max is 4)')
-        self.txtinput2.setToolTip('The number of type of community, 0 for square, 1 for triangle.')
-    def trck(self):
-        self.txtinput1.setEnabled(True)
-        self.txtinput2.setEnabled(True)
-        self.txtinput3.setEnabled(False)
-        self.txtinput1.setToolTip('The number of child nodes per parent. eg., 3 or 5')
-        self.txtinput2.setToolTip('The number of levels in the tree (excluding the source level). eg., 3 or 6')
-    def dbc(self):
-        self.txtinput1.setEnabled(False)
-        self.txtinput2.setEnabled(False)
-        self.txtinput3.setEnabled(False)
-    def lick(self):
-        self.txtinput1.setEnabled(True)
-        self.txtinput2.setEnabled(True)
-        self.txtinput3.setEnabled(False)
-        self.txtinput1.setToolTip('The list if nodes for the network eg., (1,2,3,4)')
-        self.txtinput2.setToolTip('The list of edges for the network eg., ((1,2),(1,4),(1,3),(2,3),(3,4))')
+        #load in a csv, add lists to text boxes, then select lists for the input                  
+       
     def labelUpdate(self):
         self.lbl4.clear()
     def setLabel(self):
@@ -619,14 +644,14 @@ class MainWindow(QtGui.QMainWindow):
                 nx.draw_spectral(G,node_size=20,alpha=0.5,node_color="blue", with_labels=False)
                 fig.canvas.set_window_title('Spectral visualisation')
             elif self.method == 'Circle Tree (bfs)':
-                if param2 > 4:
-                    QtGui.QMessageBox.information(self, 'Message', "Warning. This visulaisation may not appear as expected due to the high param 2 value.") 
+                #if param2 > 4:
+                #    QtGui.QMessageBox.information(self, 'Message', "Warning. This visulaisation may not appear as expected due to the high param 2 value.") 
                 pos = vis.tree_circle(G, bfs = True)                
                 nx.draw(G,pos,node_size=20,alpha=0.5,node_color="blue", with_labels=False)
                 fig.canvas.set_window_title('Circle Tree (bfs) visualisation')
             elif self.method == 'Circle Tree (dfs)':
-                if param2 > 4:
-                    QtGui.QMessageBox.information(self, 'Message', "Warning. This visulaisation may not appear as expected due to the high param 2 value.") 
+                #if param2 > 4:
+                #    QtGui.QMessageBox.information(self, 'Message', "Warning. This visulaisation may not appear as expected due to the high param 2 value.") 
                 pos = vis.tree_circle(G, bfs = False) 
                 nx.draw(G,pos,node_size=20,alpha=0.5,node_color="blue", with_labels=False)
                 fig.canvas.set_window_title('Circle Tree (dfs) visualisation')
@@ -656,6 +681,7 @@ class MainWindow(QtGui.QMainWindow):
                   
     #this function is for the start button to run the analysis
     def RunAnalysis(self):
+        global valueset, forthread
         self.lbl4.clear()
         QtGui.QApplication.processEvents() #refresh gui
         SINGLE = False
@@ -730,18 +756,57 @@ class MainWindow(QtGui.QMainWindow):
             REMOVE_ISOLATES = True
             
         parameters = SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, fileName
+        #get a position array to use for the remainder of the analysis
+        self.positions = nx.circular_layout(G)
+        viewfailure = self.viewfailures, self.stepstate, self.positions          
         #run code here call to external function/module 
-        result, values = res.main(G,parameters)
-        path_length_A, node_count_removed_A, isolated_n_count_A, averagedegree, numofcomponents = values
+        #result, values = res.main(G,parameters, viewfailure)
+        #result, values = res.core_analysis(G, parameters, viewfailure)   
+        '''need to make a few amendmants here so can use a run and step button'''        
+        #create a step function in here which can be called when a user clicks a steo button
+        #also needs to be useable for running all the analysis in one go
+        #to make this work, need to aort out how this GUI will work in terms of controlling the analysis process        
+        #self.values = (12,13,16,12,8,2,2,2,0)
+        graphparameters = res.core_analysis(G, viewfailure) #sending viewfailure as included in graph parameter packet, but does not need to be really
+        iterate = True #this starts as true until no more itterations are to be done, as decided in the step module
+
+        forthread = graphparameters, parameters, iterate
+        self.workThread = WorkThread() #set the name of the thread
+        graphparameters = res.core_analysis(G, viewfailure) #sending viewfailure as included in graph parameter packet, but does not need to be really
+        while iterate == True:   
+            global valueset, forthread
+            graphparameters, parameters, iterate = forthread
+            #graphparameters, iterate = self.runstep(graphparameters, parameters, iterate)#this runs the step function            
+            #print 'iterate after the global declaration but before the workthread call is: ', iterate            
+            if iterate == True:            
+                self.connect(self.workThread, QtCore.SIGNAL("self.forthread[list]"), self.runstep)
+                self.workThread.start()
+                time.sleep(20)
+            else:
+                print 'the analysis process has finished'
+            print 'ITERATE IN GUI CODE IS ', iterate 
+        print 'ITERATE IS ', iterate  
+
+        self.values = res.outputresults(graphparameters, parameters)        
+        path_length_A, node_count_removed_A, isolated_n_count_A, averagedegree, numofcomponents = self.values
         #change the text in lbl4 here to say completed
+        result = True #This should come from the analysis module at some point to confirm the analysis has been successfull        
         if result == True:
             self.lbl4.setText("Analysis Completed")     
-            ok = QtGui.QMessageBox.information(self, 'Information', "Network resileince analysis successfully completed." , '&OK','&View Graph')
-            while ok == 1: #if the view graph option is clicked
-                self.drawgraph(values)
-            else:
-                self.lbl4.setText("Analysis failed")            
+            ok = QtGui.QMessageBox.information(self, 'Information', "Network resileince analysis successfully completed. Do you want to view the metric graphs?" , '&No','&View Graphs')
+            if ok == 1: #if the view graph option is clicked
+                #might need to ammend this bit here so opens up the new gui where all the visualisation goes on                
+                valueset= self.values
+                inputdlg = pickparameters()
+                inputdlg()
+        else:
+            self.lbl4.setText("Analysis failed")            
         self.lbl4.adjustSize()
+
+    #function which will run the analysis one step at a time
+    def runstep(self, graphparameters, parameters, iterate):
+        graphparameters, iterate = res.step(graphparameters, parameters, iterate)
+        return graphparameters, iterate
         
     def drawgraph(self, values):
         #get the two mtrics to display from the combobox window        
@@ -804,7 +869,9 @@ class MainWindow(QtGui.QMainWindow):
     
     def buildNet(self, param1, param2, param3):
         #build network
-        if self.ckbx7.isChecked(): #ws
+        if self.graph == 'Watts Strogatz':
+            print 'It works'
+        if self.graph == 'Watts Strogatz': #ws 
             if param1 == '':  
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
                 return
@@ -841,7 +908,7 @@ class MainWindow(QtGui.QMainWindow):
                 ok = QtGui.QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase parameter 2 or decrease parameter 3.", '&OK')                  
                 #would like to put a retry button on the message box, but not sure how we would know how to restart the analysis after doing this, as can be called from two places
                 return #exit sub
-        elif self.ckbx8.isChecked(): #gnm
+        elif self.graph == 'GNM': #gnm
             if param1 == '':  
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
                 return
@@ -867,7 +934,7 @@ class MainWindow(QtGui.QMainWindow):
                     #bring up error message box
                     QtGui.QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase the number of edges.")
                     return #exit sub
-        elif self.ckbx9.isChecked(): #ba
+        elif self.graph == 'Barabasi Albert': #ba
             if param1 == '':  
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
                 return
@@ -888,7 +955,7 @@ class MainWindow(QtGui.QMainWindow):
             if nx.is_connected(G)==False:
                 QtGui.QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase the number of edges.")
                 return #exit sub
-        elif self.ckbx10.isChecked(): #er
+        elif self.graph == 'Erdos Renyi': #er
             if param1 == '':  
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
                 return
@@ -906,19 +973,19 @@ class MainWindow(QtGui.QMainWindow):
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 2, the nuber of edges, is in an incorrect format.")
                 return
             if param2 <0 or param2 >1:
-                QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 3 is an incorrect value.")
+                QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 2 is an incorrect value.")
                 return
             G = nx.erdos_renyi_graph(param1, param2)
             if nx.is_connected(G)==False:
                 #bring up error message box
                 QtGui.QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase the number of edges.")
                 return #exit sub
-        elif self.ckbx11.isChecked(): #database connection  -currently only allows a single network
+        elif self.graph == 'Database': #database connection  -currently only allows a single network
             #G = self.checkconnection()
             G = self.getdbnetwork()
             if G == False:
                 return
-        elif self.ckbx12.isChecked(): #hr
+        elif self.graph == 'Hierarchical Random': #hr
             if param1 == '':  
                  QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
                  return
@@ -944,7 +1011,7 @@ class MainWindow(QtGui.QMainWindow):
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 3, the probability of new edges, is in an incorrect format.")
                 return
             G = customnets.hr(param1,param2,param3)
-        elif self.ckbx13.isChecked(): #ahr
+        elif self.graph=='Hierarchical Random +': #ahr
             if param1 == '':  
                  QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
                  return
@@ -970,7 +1037,7 @@ class MainWindow(QtGui.QMainWindow):
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 3, the probability of new edges, is in an incorrect format.")
                 return
             G = customnets.ahr(param1,param2,param3)
-        elif self.ckbx14.isChecked(): #hc
+        elif self.graph == 'Hierarchical Communities': #hc
             #param1 = level
             #param2 = square/tri
             if param1 == '':  
@@ -1005,7 +1072,7 @@ class MainWindow(QtGui.QMainWindow):
             else:
                 print 'There has been an error'
            
-        elif self.ckbx15.isChecked(): #trees
+        elif self.graph == 'Tree': #trees
             #param 1 is the number of new nodes
             #param 2 is the number of level excluding the source
             if param1 == '':  
@@ -1025,7 +1092,7 @@ class MainWindow(QtGui.QMainWindow):
                 QtGui.QMessageBox.warning(self, 'Error!', "Input for parameter 2, the number levels, is in an incorrect format.")
                 return  
             G=nx.balanced_tree(param1, param2)
-        elif self.ckbx18.isChecked(): #list
+        elif self.graph == 'Lists': #list
             #param1 is a list of nodes  #param2 is a list of egdes
             #need to convert the input strings to lists with integers in the correct format
             if param1 =='' or param2=='':
@@ -1069,28 +1136,50 @@ class MainWindow(QtGui.QMainWindow):
             QtGui.QMessageBox.warning(self, 'Error!', "Error! Please try again.")          
             return #exit sub
         return G, param1, param2, param3
-
-#method not working yet
-#live drawing of the graph
-def draw(G):
-    mw = MainWindow
-    print 'calling function'
-    viewnet = mw.viewfailure(mw)
-    if viewnet == True:
-        print 'the box is checked'
+    '''
+    #method not working yet
+    #live drawing of the graph
+    figureModel = None
+    def draw(self,G, positions): 
+        if self.figureModel == None or self.figureModel.canvas.manager.window == None:
+            print 'figureModel = ', self.figureModel
+            print 'entered the draw if statement'
+            self.figureModel = pl.figure()
+            print 'figureModel now = ', self.figureModel
+            pl.ion()
         print 'it is drawing the graph'
         pl.cla()
-        #positions = vis.tree_circle(G, bfs=True)
-        nx.draw_circular(G, with_labels = False)
-        #,cmap = PL.cm.jet, vmin = 0) node_color = [network.node[nd]['load'] for nd in network.nodes_iter()])
-        #PL.title('t = ' + str(time))
-        pl.show()
-    elif viewnet == False:
-        print 'it is false'
-        sys.exitsub()
-    print 'done everything else'
+        print 'the number of nodes is ', G.number_of_nodes()
+        nx.draw(G,positions,node_size=20,alpha=0.5,node_color="blue", with_labels=False)
+        self.figureModel.canvas.manager.window.update() 
+        time.sleep(3)#add a delay so can see the visualisation before preceeding
+    '''
+    def stepbystepcontrol(G):
+        print 'step by step control'     
     
-    
+class WorkThread(QtCore.QThread): #create the worker thread, where the sresilience analysis will be run
+    def __init__(self): #initiate the thread
+        QtCore.QThread.__init__(self)
+        
+    def run(self): #run the thread
+        global valueset, forthread
+        graphparameters, parameters, iterate = forthread
+        print 'this is the work thread'#this is where the code to run the thread should go I think
+        #would appear that this global thing is not being updated        
+        #time.sleep(20)
+        #need to put in the method to call the step code here
+        graphparameters, iterate = res.step(graphparameters, parameters, iterate) #run one step of the analysis
+        print 'the value set in the workthread is', valueset
+        print 'in the work thread graphparameters = ', graphparameters
+        print 'the thread should be finishing now'
+        print 'iterate in the work thread is: ', iterate
+        forthread = graphparameters, parameters, iterate
+        #self.emit( QtCore.SIGNAL('forthread[list]'), "from work thread " + str(forthread) )
+
+        #them some signal shit to tranfer messages and data to the main application
+        #in theory, the step function in the analysis module should be called from here
+        
+        
 def replace_all(text, dic):
     for i,j in dic.iteritems():
         text = text.replace(i,j)
