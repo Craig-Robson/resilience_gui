@@ -5,33 +5,50 @@ Created on Sun Dec 16 10:34:32 2012
 @author: Craig
 """
 
-def circular_layout(G, dim=2, scale=1):
-
+def geo(G,dim=2, scale=2):
+    '''Will draw a network stored using the network schema geographically by 
+    extracting the coordinates from the attributes of each node.'''
+    print 'in geo'
     try:
+        import networkx as nx
         import numpy as np
     except ImportError:
-        raise ImportError("circular_layout() requires numpy: http://scipy.org/ ")
-    if len(G)==0:
-        return {}
-    if len(G)==1:
-        return {G.nodes()[0]:(1,)*dim}
-    t=np.arange(0,2.0*np.pi,2.0*np.pi/len(G),dtype=np.float32)
-    pos=np.transpose(np.array([np.cos(t),np.sin(t)]))
-    pos=_rescale_layout(pos,scale=scale)
-    return dict(zip(G,pos))
+        raise ImportError("requires numpy")
+    #this needs the database connection to be used as well
+    'will return the positions for the nodes based on coordinates which are attibutes in the nodes'
+    #need to get the attribue coordintes here and reduce them to atual coords which can be used
+    pos=np.asarray(np.random.random((len(G),dim)),dtype=np.float32)#creates array from input gragh for coords
+    #attstring = str(G.node[1]['Wkt'])
     
+    try:
+        print 'node at zero is: ', G.node[0]
+    except:
+        print 'no node at zero'
+    
+    #getting errors here as lokking for node zero which does not exist
+    for node in G.nodes_iter():  
+        attstring = G.node[node]['Wkt']
+        attstring = attstring[7:] #removes the first seven characters
+        attstring = attstring[:-1] #removes the final bracket
+        a,b = attstring.split()
+        temp =np.array([float(a),float(b)])  
+        pos[node-1]=temp
+    pos=_rescale_layout(pos,scale=scale)
+    return dict(zip(G,pos)) #should try/add to all the others so they are the same as the other layouts.
     
 def tree_circle(G,bfs,dim=2, scale=2):
+    '''Plots a network as a number of circles increasing in size from the 
+    source node of the tree in the middle of the plot.'''
     if bfs == True:
-        G = assign_levels_bfs(G)
+        G, sourcenode = assign_levels_bfs(G)
     elif bfs == False:
-        G = assign_levels_dfs(G)
+        G, sourcenode = assign_levels_dfs(G)
     else:
         print 'Internal error with tree circle function'
     try:
         import numpy as np
     except ImportError:
-        raise ImportError("circular_layout() requires numpy: http://scipy.org/ ")
+        raise ImportError("requires numpy ")
     if len(G)==0: #if network empty, should never get here though
         return {}
     if len(G)==1: #if network only has one node, again should very rarely get here
@@ -44,11 +61,11 @@ def tree_circle(G,bfs,dim=2, scale=2):
     while i <= lvl_max:#creates a lists of lists, a list for each level
         levelnodes.append([])
         i+=1
-    s = 0
-    while s < len(G.nodes()):         
-        n_lvl = G.node[s]["level"] #get node level 
-        levelnodes[n_lvl].append(s)
-        s+=1
+    
+    for node in G.nodes():
+        n_lvl = G.node[node]["level"]
+        levelnodes[n_lvl].append(node)
+
     print 'levels: ', levelnodes
     #assign positions for all nodes
     circleadjustment = 0.0
@@ -71,8 +88,16 @@ def tree_circle(G,bfs,dim=2, scale=2):
             poslist[level]=np.transpose(np.array([np.cos(t)*circleadjustment,np.sin(t)*circleadjustment])) #assign node       
             level += 1
     print 'this is pos list level ', poslist
-    r = 0
+    '''
+    try:
+        if G.node[0]<> None:
+            r = 0
+    except:
+        if G.node[1]<>None:
+            r=1
+    '''
     s = 0
+    '''
     while r <(len(G.nodes())): #for all nodes
         n_lvl = G.node[r]["level"] #get the node level
         if r <> levelnodes[n_lvl][s]: #if the node number matches that in the level at position s do whatevrer
@@ -81,14 +106,31 @@ def tree_circle(G,bfs,dim=2, scale=2):
             pos[r]=poslist[n_lvl][s] #assign position   
             s = 0
             r += 1
+    '''            
+    i=0
+    for node in G.nodes():
+        loop = True
+        while loop == True:
+            print 'node is: ', node
+            n_lvl = G.node[node]["level"] #get the node level
+            print levelnodes[n_lvl][s]
+            if node <> levelnodes[n_lvl][s]: #if the node number matches that in the level at position the required
+                s +=1
+            else: #go onto the next node
+                pos[i]=poslist[n_lvl][s] #assign position   
+                s = 0
+                i +=1
+                loop = False
+
     pos=_rescale_layout(pos,scale=scale)
-    return pos #return positions and network
+    return dict(zip(G,pos)) #return positions and network
 
 def tree(G,bfs,dim=2, scale=2):
+    '''Draws a network as a tree with the source node at the top of the plot.'''
     if bfs == True:
-        G = assign_levels_bfs(G)
+        G, sourcenode = assign_levels_bfs(G)
     elif bfs == False:
-        G = assign_levels_dfs(G)
+        G, sourcenode = assign_levels_dfs(G)
     else:
         print 'Internal error with visualisation algorithm'
     try:
@@ -108,11 +150,11 @@ def tree(G,bfs,dim=2, scale=2):
     while i <= lvl_max:#creates a lists of lists, a list for each level
         levelnodes.append([])
         i+=1
-    s = 0
-    while s < len(G.nodes()):         
-        n_lvl = G.node[s]["level"] #get node level 
-        levelnodes[n_lvl].append(s)
-        s+=1
+
+    for node in G.nodes():         
+        n_lvl = G.node[node]["level"] #get node level 
+        levelnodes[n_lvl].append(node)
+        
         
     vertsplit = 1.0/(lvl_max+4)        
     hozsplit = [0]
@@ -142,8 +184,16 @@ def tree(G,bfs,dim=2, scale=2):
                 i +=1
             level += 1
     #print 'this is pos list level ', poslist
-    r = 0
+    '''    
+    try:
+        if G.node[0]<>None:
+            r=0
+    except:
+        if G.node[1]<>None:
+            r=1
+    '''
     s = 0
+    '''
     while r <(len(G.nodes())): #for all nodes
         n_lvl = G.node[r]["level"] #get the node level
         if r <> levelnodes[n_lvl][s]: #if the node number matches that in the level at position the required
@@ -152,15 +202,37 @@ def tree(G,bfs,dim=2, scale=2):
             pos[r]=poslist[n_lvl][s] #assign position   
             s = 0
             r += 1
+    '''
+    
+    i=0
+    for node in G.nodes():
+        loop = True
+        while loop == True:
+            print 'node is: ', node
+            n_lvl = G.node[node]["level"] #get the node level
+            print levelnodes[n_lvl][s]
+            if node <> levelnodes[n_lvl][s]: #if the node number matches that in the level at position the required
+                s +=1
+            else: #go onto the next node
+                pos[i]=poslist[n_lvl][s] #assign position   
+                s = 0
+                i +=1
+                loop = False
+            #r += 1                             
+          
     n_lvl = -1
-    r = 0
-    while n_lvl <> 0: #for all nodes
-        n_lvl = G.node[r]["level"] #get the node level
-        r += 1
-    pos[r-1]=0.5,1 #assign the origin node the correct position
+    
+    for node in G.nodes(): #for all nodes
+        n_lvl = G.node[node]["level"] #get the node level
+    i=0
+    for node in G.nodes():
+        if sourcenode == node:
+            pos[i]=0.5,1
+        i+=1
+    #assign the origin node the correct position
     pos=_rescale_layout(pos,scale=scale)
     #print 'this is the pos list', pos    
-    return pos
+    return dict(zip(G,pos))
     
 
 def _rescale_layout(pos,scale=1):
@@ -184,6 +256,12 @@ def get_stats(G):
     #code to find the number of level and nodes per level
     k = 0  
     lvl_max = 0
+    for node in G.nodes():
+        if lvl_max <G.node[node]["level"]:
+            lvl_max = G.node[node]["level"]
+        else:
+            lvl_max = lvl_max
+    '''
     while k < len(G.nodes()): #find the max_level
         try:
             if lvl_max < G.node[k]["level"]:
@@ -191,7 +269,11 @@ def get_stats(G):
         except:
             lvl_max = lvl_max
         k += 1    
-    k = 0  
+    '''
+        
+  
+    '''        
+    k = 0      
     while k < len(G.nodes()): #assign a level to nodes which dont have one (max plus one)
         try:
             G.node[k]["level"]
@@ -199,6 +281,7 @@ def get_stats(G):
             G.node[k]["level"] = lvl_max + 1 
         k += 1
     print 'number of levels = ', lvl_max
+    '''
     
     #code to find tne number of nodes per level
     g = 0.0
@@ -206,6 +289,12 @@ def get_stats(G):
     while g <= lvl_max:
         nodes_per_lvl.append(0.0)
         g += 1    
+    
+    for node in G.nodes():
+        lvl = G.node[node]["level"]
+        n_p_l = nodes_per_lvl[lvl-1]
+        nodes_per_lvl[lvl-1] = n_p_l + 1
+    '''
     p = 0
     while p < len(G.nodes()):
         lvl = G.node[p]["level"]
@@ -213,21 +302,18 @@ def get_stats(G):
         nodes_per_lvl[lvl-1] = n_p_l + 1
         p += 1
     print G.nodes()
+    '''
     return G, lvl_max
     
     
 def assign_levels_bfs(G):
-    source_node=0 #source node, could be any as idetified in what ever way
-    """
-    bc_list = nx.degree(G) #the list of nodes and value
-    bc_max = max_element(bc_list) #the max value
-    node_max = 0
-    while node_max <> bc_max: #keep looping until find node whith the max value
-       node_max = bc_list[source_node] 
-       source_node += 1
-    source_node += -1 
-    """    
-    source=source_node
+    "Assign to the node a level in the hierarchy using the breadth-first-search method."
+    #find the node with the highest degree
+    #val_list = nx.degree(G)
+    #betweenness centrality works much better than degree
+    val_list = nx.betweenness_centrality(G)
+    max_val, node = max_val_random(val_list)
+    source=node
     
     #breadth first search
     visited=set([source])
@@ -243,21 +329,18 @@ def assign_levels_bfs(G):
                 stack.append((child,iter(G[child])))
         except StopIteration:
             stack.pop(0)
-    return G
+    return G, node
 
 def assign_levels_dfs(G):
-    source_node=0 #source node, could be any as idetified in what ever way
-    """    
-    bc_list = nx.degree(G) #the list of nodes and value
-    bc_max = max_element(bc_list) #the max value
-    node_max = 0
-    while node_max <> bc_max: #keep looping until find node whith the max value
-       node_max = bc_list[source_node]
-       source_node += 1
-    source_node += -1
-    """    
-    source=source_node    
-    # produce edges for components with sourc
+    '''Assign to the nodes a level in the hierachy based on the 
+    depth-first-search algorithm.'''
+    #find the node with the highest degree
+    #val_list = nx.degree(G)
+    #betweenness centrality works much better than degree
+    val_list = nx.betweenness_centrality(G)    
+    max_val, node = max_val_random(val_list)
+    source=node
+ 
     nodes=[source]
     visited=set()
     levels=set()
@@ -278,27 +361,90 @@ def assign_levels_dfs(G):
                         stack.append((child,iter(G[child])))
                 except StopIteration:
                     stack.pop()
-    return G
+    return G, node
 
 def max_element(alist):
     ma=-99999
     i=0
-    while i <len(alist):
+    for i in alist:
         if alist[i]>ma:
             ma=alist[i]
         i+=1
     return ma
 
+def max_val_random(alist):
+    '''Find the maximum value in a list, and if tied between two or more 
+    values, randomly select one of the ties values.'''
+    ma = -99999
+    node = -99999 
+    tie_list = []
+    #i=1
+    for i in alist:
+        print i,' has a value of: ', alist[i]
+        if alist[i] == 0: #dont need to use no isolates here as those with zero should be removed anyway
+            node = node
+            print 'the node has a degree of zero: ', node
+        elif alist[i] > ma: #if the value is higher than the max value already
+            tie_list = []#reset to zero in length
+            tie_list.append(i) #need to do this in case it is the joint highest
+            ma = alist[i]
+            print 'this value is higher than the max value. node is: ', i,', value is: ' ,ma
+            node = i
+        elif alist[i] == ma:
+            tie_list.append(i)
+            print 'adding node to tie_list'
+        else:
+            pass
+            print 'no action taken for node ', i
+        i = i+1
+    '''
+    while i<len(alist):
+            print i,' has a value of: ', alist[i]
+            if alist[i] == 0: #dont need to use no isolates here as those with zero should be removed anyway
+                node = node
+                print 'the node has a degree of zero: ', node
+            elif alist[i] > ma: #if the value is higher than the max value already
+                tie_list = []#reset to zero in length
+                tie_list.append(i) #need to do this in case it is the joint highest
+                ma = alist[i]
+                print 'this value is higher than the max value. node is: ', i,', value is: ' ,ma
+                node = i
+            elif alist[i] == ma:
+                tie_list.append(i)
+                print 'adding node to tie_list'
+            else:
+                pass
+                print 'no action taken for node ', i
+            i = i+1
+    '''
+    node = r.choice(tie_list)
+    #print 'node selected to remove is : ', node
+    #print 'it has a degree of : ', ma
+    return ma, node
+
+import random as r
 import pylab as pl    
 import networkx as nx
 
 '''
-#G = nx.gnm_random_graph(50,123)
-G = nx.balanced_tree(2,2)
+G = nx.gnm_random_graph(25,35)
+#G = nx.balanced_tree(2,2)
 #G = assign_levels_bfs(G)
 #G = assign_levels_dfs(G)
 bfs = True
 pos= tree(G, bfs)
 nx.draw(G,pos,node_size=20,alpha=0.5,node_color="blue", with_labels=False)
 pl.show()
+
+#look at geospatial algorithms module for how to create an intersection algorithm
+#use an interection algotithm  which utilises the coords of the nodes for the corrds of the edges
+#randomly assign the node postions one at level 2 until the number of edge crossing in minimised.
+#then repeat for the next level
+#dont change for the level above as would damage all the work already done
+#set a limit in the number of itertions it performs
+#etc
+#could be very slow esp on larger graphs.
+
+#need to think about the edges within a level as well.
+
 '''
