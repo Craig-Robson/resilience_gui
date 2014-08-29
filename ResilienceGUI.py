@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Spyder Editor
+This is the script file for the whole GUI which can vusaliase networks and also
+ run a range of resileince models over any network which imported/created.
 
-This temporary script file is located here:
-/home/craig/.spyder2/.temp.py
+
+
+
+Need to add a whole lot of stuff here about the code, what it does and how to use it. Less important now that GUI works though.
+
+
 """
 
 import sys
@@ -11,12 +16,12 @@ from PyQt4 import QtGui, QtCore
 #import networkx as nx
 import pylab as pl
 import matplotlib as mp
-import visalgorithms_v10 as vis
-import interdependency_analysis_v4_9 as res #this one needs updating/changing for the required setup
+import visalgorithms_v10_1 as vis
+import interdependency_analysis_v5_0_1 as res #this one needs updating/changing for the required setup
 import inhouse_algorithms as customnets
 import time
 #from matplotlib.widgets import CheckButtons #could be used but appears on outputs so not worth it
-global valueset, forthread
+global valueset, forthread, timedelay
 figureModel = None
 valueset = 0
 sys.path.append('C:/a8243587_DATA/GitProjects/nx_pgnet')
@@ -24,17 +29,18 @@ sys.path.append('C:/a8243587_DATA/GitProjects/nx_pgnet')
 try:
     import osgeo.ogr as ogr
 except:
-    QtGui.QMessageBox.error('Error!', "Could not import the osgeo.ogr library. There will be no database connectivity as a result.")
-
+    #QtGui.QMessageBox.warning(self,'Error!', "Could not import the osgeo.ogr library. There will be no database connectivity as a result.")
+    pass
 try:
     import nx_pg, nx_pgnet
 except:
-    QtGui.QMessageBox.error('Error!', "Could not import nx_pg or nx_pgnet. There will be no database connectivity as a result.")
-
+    #QtGui.QMessageBox.warning('Error!', "Could not import nx_pg or nx_pgnet. There will be no database connectivity as a result.")
+    pass
 try:
     import networkx as nx
 except:
-    QtGui.QMessageBox.error('Error!', "Could not import networkx. The application cannot work without this.")
+    #QtGui.QMessageBox.warning('Error!', "Could not import networkx. The application cannot work without this.")
+    pass
 
 class ViewGraphs(QtGui.QDialog):   
     "Class for the window which allows the viewing of the results in terms of the graph metrics."
@@ -63,6 +69,9 @@ class ViewGraphs(QtGui.QDialog):
         self.cancelbtn.setToolTip('Close the window')        
         self.cancelbtn.move(135, 80)
         self.cancelbtn.clicked.connect(self.cancelclick)
+
+        self.option1.activated[str].connect(self.option1changed)             
+        self.option2.activated.connect(self.option2changed)
         #just need to sort this out so the variable values can be transfered into this class easily
         #attempt to get the metric values for the graphs from the mian window class
 
@@ -70,94 +79,112 @@ class ViewGraphs(QtGui.QDialog):
         self.setGeometry(900,500,280,110)#above; vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Graph parameters')  #title of windpw          
         self.show()#show GUI window  
+        self.option1value = 0        
+        self.option2value = 1
         
         self.figureGraph = pl.figure() #create the figure
         self.figureGraph = pl.gcf() #allow the title to be changed
         self.figureGraph.canvas.set_window_title('Results plot') #assign a title
         pl.ion() #make the plot interactive so the update process is easier
         pl.show() #this displays a blank plot which I then want the graph to be displayed in
+        self.option2.removeItem(self.option1value)
+        self.option1.removeItem(self.option2value)
+        self.applyclick()
         
-    #may have to use a similar methodology to that used when trying to visualise the networks as they fail
-    #all the code the displaying the results should possibly go in here, would mean that it will be easier to modify and make run smoother
-    #the only effect this would havee is the appropraite parameters would need to be sent/got to this class.
-    #would also mean when the apply button is clicked, would change the graphs without having to be closed and re-opened.
-    #would appear much more dynamic, running off trigger functions.
+    def option1changed(self):
+        '''Update the option in combo box 2 and draw the graph.'''
+        #clear the list in box 2
+        self.option2.clear()
+        #add all option back to the list2
+        self.option2.addItems(self.metriclist)
+        #set option 2 to what it was on before
+        self.option2.setCurrentIndex(self.option2value)
+        #get the position for the data 
+        self.option1value = self.identifymetric(self.option1.currentText()) #get metric index for data list
+        self.option2.removeItem(self.option1value)     
+        self.applyclick()
+        
+    def option2changed(self):
+        '''Update the options in combo box 1 and draw the graph.'''
+        self.option1.clear()
+        self.option1.addItems(self.metriclist)
+        self.option1.setCurrentIndex(self.option1value)
+        #get the position value for data in its list of lists
+        self.option2value = self.identifymetric(self.option2.currentText()) #get metric index for data list
+        #remove the item from box1 selected in box2
+        self.option1.removeItem(self.option2value)
+        self.applyclick()
+        
     def applyclick(self):
-        "Runs the code to identify the metrics requested for the visualisation."
-        self.metric1 = self.option1.currentText()
-        self.metric2 = self.option2.currentText()
-        self.metric1 = self.identifymetric(self.metric1)
-        self.metric2 = self.identifymetric(self.metric2)
+        '''Runs the code to identify the metrics requested for the visualisation.'''
+        #self.metric1 = self.option1.currentText()
+        #self.metric2 = self.option2.currentText()
+        #self.metric1 = self.identifymetric(self.metric1)
+        #self.metric2 = self.identifymetric(self.metric2)
+        self.metric1 = self.option1value
+        self.metric2 = self.option2value
+        #if self.metric1 == self.metric2:
+            #QtGui.QMessageBox.information(self, 'Warning','The same parameters have been selected for both options. Please change one.','&OK')
+            #return
+        #else:
+        #need to get the values so this can work - means working on the other code before it even gets here            
+        self.valuenames = 'average path length', 'number of components', 'average degree','nodes removed count','isolates removed',  'number of isolates' #list for the labels, needs updating manually
+        self.values = list(self.values)
+        #one, two, three, four, five, six = self.values          
         
-        if self.metric1 == self.metric2:
-            QtGui.QMessageBox.information(self, 'Warning','The same parameters have been selected for both options. Please change one.','&OK')
-            return
-        else:
-            #need to get the values so this can work - means working on the other code before it even gets here            
-            self.valuenames = 'average path length', 'nodes removed count','isolates removed','average degree', 'number of components', 'number of isolates' #list for the labels, needs updating manually
-    
-            self.values = list(self.values)
-            one, two, three, four, five, six = self.values          
-            
-            if self.figureGraph == None or self.figureGraph.canvas.manager.window == None: #if figure model window has not been opened yet
-                self.figureGraph = pl.figure()
-                pl.ion()
-                pl.show()  
-            #need this in case the user closes the window 
-            try:
-                self.figureGraph.canvas.set_window_title('Results plot') 
-            except:
-                self.figureGraph = None
-                self.figureGraph = pl.figure()
-                self.figureGraph.canvas.set_window_title('Results plot') 
-            
-            pl.subplot(211)
-            pl.cla() #clear the plot   
-            pl.plot(self.values[self.metric1], 'b', linewidth=2, label=self.valuenames[self.metric1])
-            pl.xlabel('Number of nodes removed')
-            
-            pl.ylabel(self.valuenames[self.metric1])
-            pl.subplot(212)    
-            pl.cla()
-            if self.metric2<>99:
-                pl.plot(self.values[self.metric2], 'r', linewidth=2, label=self.valuenames[self.metric2])            
-            pl.xlabel('Number of nodes removed')
-            pl.ylabel(self.valuenames[self.metric2])              
-            #self.figureGraph.canvas.manager.window.update() #refresh the plot
-            #pl.canvas.set_window_title('Results plot')
-            pl.show() #show a window 
+        if self.figureGraph == None or self.figureGraph.canvas.manager.window == None: #if figure model window has not been opened yet
+            self.figureGraph = pl.figure()
+            pl.ion()
+            pl.show()  
+        #need this in case the user closes the window 
+        try:
+            self.figureGraph.canvas.set_window_title('Results plot') 
+        except:
+            self.figureGraph = None
+            self.figureGraph = pl.figure()
+            self.figureGraph.canvas.set_window_title('Results plot') 
+        
+        pl.subplot(211)
+        pl.cla() #clear the plot   
+        pl.plot(self.values[self.metric1], 'b', linewidth=2, label=self.valuenames[self.metric1])
+        pl.xlabel('Number of nodes removed')
+
+        print 'option 1 says: ', self.option1.currentText()
+        print 'option 2 says: ', self.option2.currentText()
+        pl.ylabel(self.option1.currentText())
+        pl.subplot(212)    
+        pl.cla()
+        if self.metric2<>99:
+            pl.plot(self.values[self.metric2], 'r', linewidth=2, label=self.valuenames[self.metric2])            
+        pl.xlabel('Number of nodes removed')
+        pl.ylabel(self.option2.currentText())            
+        #self.figureGraph.canvas.manager.window.update() #refresh the plot
+        #pl.canvas.set_window_title('Results plot')
+        pl.show() #show a window 
 
     def cancelclick(self):
-        "Close the slection box and graph window when the cancel button is clicked."
+        '''Close the slection box and graph window when the cancel button is clicked.'''
         self.close()            
         pl.close()
         
     def getval(self):
-        "Used to pass varaibles between classes."
+        '''Used to pass varaibles between classes.'''
         return self.metric1, self.metric2
 
     def closeEvent(self, event):
         pl.close()
-        '''
-        reply = QtGui.QMessageBox.question(self, 'Message',"Are you sure you want to quit?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
-        
-        if reply == QtGui.QMessageBox.Yes: #if the user clicks yes
-            event.accept()
-            pl.close()
-        else: #if the user clicks no
-            event.ignore()
-        '''
+
     def identifymetric(self, metric):
-        "Method to idenitfy the metric requested, and assign the correct value for the position of its data in the lists of lists."
+        '''Method to idenitfy the metric requested, and assign the correct value for the position of its data in the lists of lists.'''
         if metric == 'Average path length':
             metric = 0
-        elif metric == 'Nodes count removed':
-            metric = 1
-        elif metric == 'Isolated node count':
-            metric = 2
-        elif metric == 'Average degree':
-            metric = 3
         elif metric == 'Number of components':
+            metric = 1
+        elif metric == 'Average degree':
+            metric = 2
+        elif metric == 'Nodes count removed':
+            metric = 3
+        elif metric == 'Isolated node count':
             metric = 4
         elif metric == 'Number of isolates':
             metric = 5
@@ -168,7 +195,7 @@ class ViewGraphs(QtGui.QDialog):
         return metric
         
 class DbConnect(QtGui.QDialog):    
-    "Class for the database parameters connection window."
+    '''Class for the database parameters connection window.'''
     def __init__(self, parent=None):
         #super(dbconnect, self).__init__(parent)
         QtGui.QDialog.__init__(self, parent)   
@@ -241,7 +268,7 @@ class DbConnect(QtGui.QDialog):
         self.show()#show window   
      
     def savetext(self):
-        "Save the text from that was in the text boxes when function called."
+        '''Save the text from that was in the text boxes when function called.'''
         global DBinputs
         self.DBNAME = self.txtinput1.text()
         self.HOST = self.txtinput2.text()
@@ -254,7 +281,7 @@ class DbConnect(QtGui.QDialog):
         self.close()
     
     def cancel(self):
-        "Clear the text boxes and close the window when the cancel button is clicked."
+        '''Clear the text boxes and close the window when the cancel button is clicked.'''
         self.DBNAME = ''
         self.HOST = ''
         self.PORT = ''
@@ -264,11 +291,11 @@ class DbConnect(QtGui.QDialog):
         self.close()
         
     def getval(self):
-        "Used to pass data between classes."
+        '''Used to pass data between classes.'''
         return self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME
     
     def restoreinputs(self):
-        "Restore the previusoly saved vlaues from the last successful execution of the database connection. Data is retireved from a global variable."
+        '''Restore the previusoly saved vlaues from the last successful execution of the database connection. Data is retireved from a global variable.'''
         global DBinputs
         if DBinputs == None:
             #when no inputs have been used suceesfully yet
@@ -289,10 +316,32 @@ class ExtraParamWindow(QtGui.QWidget): # not sure if I will need this after all
         self.initUI()
         
     def initUI(self):
-        self.setGeometry(300,500,550,150) #above; vertical place on screen, hoz place on screen, width of window, height of window
+        global timedelay
+        self.lbltimedelay = QtGui.QLabel("Time(secs) between iterations: ",self)
+        self.lbltimedelay.move(15,25)
+        self.lbltimedelay.adjustSize()
+        self.txttimedelay = QtGui.QLineEdit(self) 
+        self.txttimedelay.move(170,22)
+        self.txttimedelay.setFixedWidth(50)
+        self.txttimedelay.setText(str(timedelay))
+        self.txttimedelay.setToolTip('The minimum time(seconds) between iterations. Min = 0, Max = 300')        
+        self.validator = QtGui.QIntValidator(0,300,self.txttimedelay)       
+        self.txttimedelay.setValidator(self.validator)
+        
+        self.apply = QtGui.QPushButton("Apply", self)
+        self.apply.adjustSize()
+        self.apply.move(145,50)
+        self.apply.clicked.connect(self.applyandclose)
+                
+        self.setGeometry(300,500,230,80) #above; vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Parameter Window') #title of window  
-        self.show()#show window      
+        self.show()#show window  
 
+    def applyandclose(self):
+        global timedelay
+        timedelay = int(self.txttimedelay.text())
+        self.close()
+        
 class MainWindow(QtGui.QMainWindow):
                 
     def __init__(self):
@@ -300,7 +349,7 @@ class MainWindow(QtGui.QMainWindow):
         self.initUI()
 
     def initUI(self):
-        global DBinputs, figureModel
+        global DBinputs, figureModel, timedelay
         #here to save having to type them in every time at the moment
         self.DBNAME = 'inter_london'
         self.HOST = 'localhost'
@@ -310,6 +359,7 @@ class MainWindow(QtGui.QMainWindow):
         self.NETNAME = 'power_lines'
         DBinputs = self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME    
         
+        self.threadPool = []
         figureModel = None
         self.first = True
         self.figureModel = None
@@ -317,7 +367,9 @@ class MainWindow(QtGui.QMainWindow):
         self.timestep = 0
         self.cancel = False
         self.positions = None
-          
+        timedelay = 2
+        self.pausetime = timedelay
+        
         #create actions for file menu
         RunAction = QtGui.QAction('&Run',self)
         RunAction.setShortcut('Ctrl+R')
@@ -369,7 +421,7 @@ class MainWindow(QtGui.QMainWindow):
         editMenu.addAction(RunAction)
         editMenu.addAction(viewnetAction)
         editMenu.addAction(resetAction)
-        #editMenu.addAction(extraAction) #not need for the moment 
+        editMenu.addAction(extraAction) #not need for the moment 
         #editMenu.addAction(dbAction)
         editMenu.addAction(clearAction)
         fileMenu.addAction(openAction)
@@ -427,7 +479,8 @@ class MainWindow(QtGui.QMainWindow):
         self.ckbx6 = QtGui.QCheckBox("Betweenness", self)
         self.ckbx6.adjustSize()
         self.ckbx6.move(130,85) 
-        self.ckbx6.setToolTip("Select the node with the highest betweenness value")
+        self.ckbx6.setToolTip(
+        "Select the node with the highest betweenness value")
         Group2 = QtGui.QButtonGroup(self)     
         Group2.addButton(self.ckbx4)
         Group2.addButton(self.ckbx5)
@@ -443,12 +496,14 @@ class MainWindow(QtGui.QMainWindow):
         self.lbl1.move(275, 25)
         
         self.graph = 'GNM' #means this is the default, so if menu option not changed/used, will persume GNM graph
-        inputs = ('GNM','Erdos Renyi','Watts Strogatz','Barabasi Albert','Hierarchical Random','Hierarchical Random +','Hierarchical Communities','Tree','Database','Lists',)
+        inputs = ('GNM','Erdos Renyi','Watts Strogatz','Barabasi Albert',
+                  'Hierarchical Random','Hierarchical Random +',
+                  'Hierarchical Communities','Tree','Database','Lists',)
         self.cmbox = QtGui.QComboBox(self)
         self.cmbox.move(275,40)
         self.cmbox.addItems(inputs)
         self.cmbox.setToolTip("Select the graph type or graph input method")
-        self.cmbox.activated[str].connect(self.cmbxselection)           
+        self.cmbox.activated[str].connect(self.networkselection)           
         
         self.lbl10 = QtGui.QLabel("Graph Inputs", self)
         self.lbl10.setFont(fontbold)
@@ -459,12 +514,11 @@ class MainWindow(QtGui.QMainWindow):
         self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178') #set the start up states for that top of the list, GNM        
         self.txtparam2 = QtGui.QLineEdit(self)
         self.txtparam2.move(400, 80)
-        self.txtparam2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389')
+        self.txtparam2.setToolTip(
+        'The number of edges. eg.,twice the no. of edges, 124 or 389')
         self.txtparam3 = QtGui.QLineEdit(self)
         self.txtparam3.move(400, 115)
         self.txtparam3.setEnabled(False)        
-        self.QValidator = QtGui.QIntValidator(1,2000,self.txtparam1)       
-        self.txtparam1.setValidator(self.QValidator)
           
         self.lbl5 = QtGui.QLabel("Remove subgraphs/isolated nodes", self)
         self.lbl5.setFont(fontbold)
@@ -473,11 +527,13 @@ class MainWindow(QtGui.QMainWindow):
         self.ckbxsubgraphs = QtGui.QCheckBox("Subgraphs", self)  
         self.ckbxsubgraphs.adjustSize()
         self.ckbxsubgraphs.move(25, 120)
-        self.ckbxsubgraphs.setToolTip("Select if subgraphs are to be removed when they appear in the network")
+        self.ckbxsubgraphs.setToolTip(
+        "Select if subgraphs are to be removed when they appear in the network")
         self.ckbxisolates = QtGui.QCheckBox("Isolates", self)
         self.ckbxisolates.adjustSize()
         self.ckbxisolates.move(130, 120)
-        self.ckbxisolates.setToolTip("Select if nodes are to be removed when they become isolated")
+        self.ckbxisolates.setToolTip(
+        "Select if nodes are to be removed when they become isolated")
         self.ckbxnoisolates = QtGui.QCheckBox("Exclude isolates", self)
         self.ckbxnoisolates.adjustSize()
         self.ckbxnoisolates.move(235, 120)
@@ -513,19 +569,20 @@ class MainWindow(QtGui.QMainWindow):
         self.btnreset.clicked.connect(self.reset)        
         
         self.setGeometry(300,300,515,195)#above; vertical place on screen, hoz place on screen, width of window, height of window
-        self.setWindowTitle('Resilience Analysis') #title of window 
+        self.setWindowTitle('Network Tool v1.2') #title of window 
         self.show() #show window
                
     def showepwindow(self):
-        "Open the extra parameter window."
+        '''Open the extra parameter window.'''
         self.w = ExtraParamWindow()
         self.w.show()
     def showdbwindow(self):
-        "Open the database connection window."
+        '''Open the database connection window.'''
         inputDlg = DbConnect(self)
         inputDlg.show() 
     def ckbxoptionlimited(self):
-        "Change the enabled checkboxes for node slection when single analysis is selected and check the only valid option."
+        '''Change the enabled checkboxes for node slection when single analysis
+        is selected and check the only valid option.'''
         self.ckbx5.setEnabled(False)
         self.ckbx6.setEnabled(False)
         self.ckbx5.setChecked(False)
@@ -533,11 +590,12 @@ class MainWindow(QtGui.QMainWindow):
         self.ckbx4.setChecked(True)
         QtGui.QApplication.processEvents() #refresh gui
     def ckbxoptionall(self):
-        "Set all the node selection check boxes as checkable again."
+        '''Set all the node selection check boxes as checkable again.'''
         self.ckbx5.setEnabled(True)
         self.ckbx6.setEnabled(True)
     def limitoptions(self):
-        "Change the state of the option checkboxes when the isolates check box is selected."
+        '''Change the state of the option checkboxes when the isolates check 
+        box is selected.'''
         if self.ckbxisolates.isChecked():
             self.ckbxnoisolates.setEnabled(False)
             self.ckbxnoisolates.setChecked(True)
@@ -545,7 +603,9 @@ class MainWindow(QtGui.QMainWindow):
             self.ckbxnoisolates.setEnabled(True)
             self.ckbxnoisolates.setChecked(False)
     def reset(self):
-        "Executed when the analysis is completed, or it is ended for any reason. Resets all the appropraie values and settings back to the starting state and closes and plotting window which is open."
+        '''Executed when the analysis is completed, or it is ended for any 
+        reason. Resets all the appropraie values and settings back to the 
+        starting state and closes and plotting window which is open.'''
         #this should be used for reseting all values and appropriate varables back to zero, meaning any current analysis is deleted
         self.first = True
         self.iterate = True
@@ -559,109 +619,163 @@ class MainWindow(QtGui.QMainWindow):
         self.btnstep.setEnabled(True) #allow the button to be pressed again
         self.btnstart.setEnabled(True)
         self.ckbxviewnet.setEnabled(True) #view graph checkbox       
-        pl.close()     
+        pl.close('all') #not seem to be working
+        #pl.close()
+        
     def clear(self):
+        '''Clear the three QLinEdit/input text boxes.'''
         self.txtparam1.setText('')
         self.txtparam2.setText('')
         self.txtparam3.setText('')
         
     def closeall(self):
-        "Closes the other windows if they are open when Exit chosen from File menu."
+        '''Closes the other windows if they are open when Exit chosen from 
+        File menu.'''
         pl.close('all') #closes the network visualisation window
         #need to add some more here
         
-    def viewfailure(self):  #function to set state of variable for the visualising the network as it fails
-        "Sets the viewfailure varaible based on if the appropraite checkbox is checked."        
+    def viewfailure(self):  
+        '''Sets the viewfailure varaible based on if the appropraite checkbox 
+        is checked.'''
         #when the eternal module is called, would make sence to send the required variables for the visualisation method to the module        
         if self.ckbxviewnet.isChecked():         
             self.viewfailures = True
         else:
             self.viewfailures = False
         
-    def cmbxselection(self, text):
-        "Alter the interface depending on what is selected in the combo box for graph type."
+    def networkselection(self, text):
+        '''Alter the interface depending on what is selected in the combo box 
+        for graph type.'''
         self.graph = text
         if text == 'GNM':
-             self.txtparam3.setEnabled(False)
-             self.txtparam1.setEnabled(True)
-             self.txtparam2.setEnabled(True)
-             self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178')
-             self.txtparam2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389')   
+            self.clear()
+            self.txtparam3.setEnabled(False)
+            self.txtparam1.setEnabled(True)
+            self.txtparam2.setEnabled(True)
+            self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparam2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389. Min = 1, Max = 6000') 
+            self.QValidator = QtGui.QIntValidator(1,2000,self.txtparam1)       
+            self.txtparam1.setValidator(self.QValidator)
+            self.QValidator = QtGui.QIntValidator(1,6000,self.txtparam2)       
+            self.txtparam2.setValidator(self.QValidator)
         elif text == 'Erdos Renyi':
+            self.clear()
             self.txtparam3.setEnabled(False)
             self.txtparam1.setEnabled(True)
             self.txtparam2.setEnabled(True)
-            self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178')
+            self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
             self.txtparam2.setToolTip('Probability of edge creation eg.,0.4 or 0.7')
+            self.QValidator = QtGui.QIntValidator(1,2000,self.txtparam1)       
+            self.txtparam1.setValidator(self.QValidator)
+            self.txtparam2.setInputMask("B.9")
         elif text == 'Watts Strogatz':
+            self.clear()
             self.txtparam1.setEnabled(True)
             self.txtparam2.setEnabled(True)
             self.txtparam3.setEnabled(True)
-            self.txtparam1.setToolTip('The number of nodes. eg.,34 or 178')
-            self.txtparam2.setToolTip('Number of neighbours connected to a node. eg., 2 or 15')
+            self.txtparam1.setToolTip('The number of nodes. eg.,34 or 178. Min = 1, Max = 2000')
+            self.txtparam2.setToolTip('Number of neighbours connected to a node. eg., 2 or 15. Min = 1, Max = 200')
             self.txtparam3.setToolTip('Probability of being rewired eg.,0.4 or 0.7')
+            self.QValidator = QtGui.QIntValidator(1,2000,self.txtparam1)       
+            self.txtparam1.setValidator(self.QValidator)
+            self.QValidator = QtGui.QIntValidator(1,200,self.txtparam2)       
+            self.txtparam2.setValidator(self.QValidator)
+            self.txtparam3.setInputMask("B.9")
         elif text == 'Barabasi Albert':
+            self.clear()
             self.txtparam3.setEnabled(False)
             self.txtparam1.setEnabled(True)
             self.txtparam2.setEnabled(True)
-            self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178')
-            self.txtparam2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6')
+            self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178. Min = 1, Max = 2000')
+            self.txtparam2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 50')
+            self.QValidator = QtGui.QIntValidator(1,2000,self.txtparam1)       
+            self.txtparam1.setValidator(self.QValidator)
+            self.QValidator = QtGui.QIntValidator(1,50,self.txtparam2)       
+            self.txtparam2.setValidator(self.QValidator)
         elif text == 'Hierarchical Random':
+            self.clear()
             self.txtparam1.setEnabled(True)
             self.txtparam2.setEnabled(True)
             self.txtparam3.setEnabled(True)
-            self.txtparam1.setToolTip('The number of level. eg., 2 or 4')
-            self.txtparam2.setToolTip('The number of children from each new node. eg., 2 or 6')
+            self.txtparam1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
+            self.txtparam2.setToolTip('The number of children from each new node. eg., 2 or 6. Min = 1, Max = 10')
             self.txtparam3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
+            self.QValidator = QtGui.QIntValidator(1,10,self.txtparam1)       
+            self.txtparam1.setValidator(self.QValidator)
+            self.QValidator = QtGui.QIntValidator(1,10,self.txtparam2)       
+            self.txtparam2.setValidator(self.QValidator)
+            self.txtparam3.setInputMask("B.9")
         elif text == 'Hierarchical Random +':
+            self.clear()
             self.txtparam1.setEnabled(True)
             self.txtparam2.setEnabled(True)
             self.txtparam3.setEnabled(True)
-            self.txtparam1.setToolTip('The number of nodes. eg., 34 or 178')
-            self.txtparam2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6')
+            self.txtparam1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 10')
+            self.txtparam2.setToolTip('The number of edges to attach to a new node. eg., 3 or 6. Min = 1, Max = 10')
             self.txtparam3.setToolTip('The probability of extra connections. eg., 0.3 or 0.7')
+            self.QValidator = QtGui.QIntValidator(1,10,self.txtparam1)       
+            self.txtparam1.setValidator(self.QValidator)
+            self.QValidator = QtGui.QIntValidator(1,10,self.txtparam2)       
+            self.txtparam2.setValidator(self.QValidator)
+            self.txtparam3.setInputMask("B.9")
         elif text == 'Hierarchical Communities':
+            self.clear()
             self.txtparam1.setEnabled(True)
             self.txtparam2.setEnabled(True)
             self.txtparam3.setEnabled(False)
-            self.txtparam1.setToolTip('The number of levels. eg., 2 or 4 (max is 4)')
+            self.txtparam1.setToolTip('The number of levels. eg., 2 or 4. Min = 1, Max = 4')
             self.txtparam2.setToolTip('The number of type of community, 0 for square, 1 for triangle.')
+            self.QValidator = QtGui.QIntValidator(1,4,self.txtparam1)       
+            self.txtparam1.setValidator(self.QValidator)
+            self.QValidator = QtGui.QIntValidator(0,1,self.txtparam2)       
+            self.txtparam2.setValidator(self.QValidator)
         elif text == 'Tree':
-             self.txtparam1.setEnabled(True)
-             self.txtparam2.setEnabled(True)
-             self.txtparam3.setEnabled(False)
-             self.txtparam1.setToolTip('The number of child nodes per parent. eg., 3 or 5')
-             self.txtparam2.setToolTip('The number of levels in the tree (excluding the source level). eg., 3 or 6')
+            self.clear()
+            self.txtparam1.setEnabled(True)
+            self.txtparam2.setEnabled(True)
+            self.txtparam3.setEnabled(False)
+            self.txtparam1.setToolTip('The number of child nodes per parent. eg., 3 or 5. Min = 1, Max = 50')
+            self.txtparam2.setToolTip('The number of levels in the tree (excluding the source level). eg., 3 or 6. Min = 1, Max = 10')
+            self.QValidator = QtGui.QIntValidator(1,50,self.txtparam1)       
+            self.txtparam1.setValidator(self.QValidator)
+            self.QValidator = QtGui.QIntValidator(1,10,self.txtparam2)       
+            self.txtparam2.setValidator(self.QValidator)
         elif text == 'Database':
+            self.clear()
             self.txtparam1.setEnabled(False)
             self.txtparam2.setEnabled(False)
             self.txtparam3.setEnabled(False)
         elif text == 'Lists':   
+            self.clear()
             self.txtparam1.setEnabled(True)
             self.txtparam2.setEnabled(True)
             self.txtparam3.setEnabled(False)
             self.txtparam1.setToolTip('The list if nodes for the network eg., (1,2,3,4)')
             self.txtparam2.setToolTip('The list of edges for the network eg., ((1,2),(1,4),(1,3),(2,3),(3,4))')
-
     def openfile(self):
-        "Function for opening a text file and adding the lists to the input boxes on the GUI."
+        '''Function for opening a text file and adding the lists to the input 
+        boxes on the GUI.'''
         #load in a csv, add lists to text boxes, then select lists for the input 
         fname = QtGui.QFileDialog.getOpenFileName(self, 'Open file')
+        text = 'Lists'
+        self.networkselection(text)
+        
         text=open(fname).read()
         text1, text2 = text.split('\n')
         self.txtparam1.setText(text1)
         self.txtparam2.setText(text2)
         self.cmbox.setCurrentIndex(9)
-        text = 'Lists'
-        self.cmbxselection(text)
+        
+        
         
     def setfilelocation(self):
-        "Set the file location for the output file."
+        '''Set the file location for the output file.'''
         fileName = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.txt')  
         return fileName
 
     def viewnet(self):
-        "Function to view the network using the range of options. Activated through the draw button or the draw menu option."
+        '''Function to view the network using the range of options. Activated 
+        through the draw button or the draw menu option.'''
         
         param1 = self.txtparam1.text() 
         param2 = self.txtparam2.text()
@@ -705,7 +819,7 @@ class MainWindow(QtGui.QMainWindow):
         return 
                     
     def showcombo(self):
-        "Loads a GUI where the use selects the method of positioning the nodes."
+        '''Loads a GUI where the use selects the method of positioning the nodes.'''
         if self.graph == 'Database':
             items = 'Circle', 'Random', 'Spring', 'Shell', 'Spectral','Circle Tree (bfs)', 'Circle Tree (dfs)', 'Tree (bfs)', 'Tree (dfs)', 'Geographic'
         else:
@@ -718,7 +832,8 @@ class MainWindow(QtGui.QMainWindow):
         return method
                       
     def runsim(self):
-        "Runs the analysis in one go, initiated by the start button. Also allows for the cancel button to work."
+        '''Runs the analysis in one go, initiated by the start button. Also 
+        allows for the cancel button to work.'''
         self.cancel = False #set as false as this will allow the analysis to run
         
         
@@ -732,12 +847,11 @@ class MainWindow(QtGui.QMainWindow):
                 if self.G==None: #this stops the analysis if the network is empty after the build process. Pos a better way earlier in the process available, but still works.
                     self.cancel = True
                     self.reset()
-                
             else:
                 self.lbl4.setText("Ready - Analysis Canceled") #changes the text in the GUI   
                 self.lbl4.adjustSize()
                 QtGui.QApplication.processEvents() #refresh gui
-                self.iterate = False
+                self.iterate = False #this not needed I think
                 self.reset()
                 return
         if self.iterate == False:
@@ -750,7 +864,8 @@ class MainWindow(QtGui.QMainWindow):
             
                 
     def analysisfinished(self,result, values):        
-        "When the analysis finished, displays the GUI with the next option to view the metric graphs."        
+        '''When the analysis finished, displays the GUI with the next option 
+        to view the metric graphs.'''
         global valueset
         self.reset()
         if result == True:   
@@ -772,12 +887,12 @@ class MainWindow(QtGui.QMainWindow):
 
     #function which will run the analysis one step at a time
     def runstep(self, graphparameters, parameters, iterate):
-        "Run the analysis."
+        '''Run the analysis.'''
         graphparameters, iterate = res.step(graphparameters, parameters, iterate)
         return graphparameters, iterate
 
     def stepanalysis(self):
-        "Activated by the step button. Runs one step of analysis."
+        '''Activated by the step button. Runs one step of analysis.'''
         self.lbl4.setText("Processing")
         self.lbl4.adjustSize()
         QtGui.QApplication.processEvents() #refresh gui
@@ -785,7 +900,7 @@ class MainWindow(QtGui.QMainWindow):
         self.btnstep.setEnabled(False)#so button cannot be pressed while process is running
         active = 1
         inactive = 0
-        global forthread
+        global forthread, timedelay
         self.ckbxviewnet.setEnabled(False)
         if self.first == True:   
             self.btndraw.setEnabled(False)
@@ -839,9 +954,11 @@ class MainWindow(QtGui.QMainWindow):
             self.workThread = WorkThread() #name workthread
             i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
             if self.iterate == True: #self.iterate used to be part of a global variable
-                self.connect(self.workThread, QtCore.SIGNAL("self.forthread[list]"), self.runstep)
-                self.workThread.start()
-                time.sleep(2) #still need some changes here so can get rid of this sleep bit
+                self.threadPool.append( WorkThread() )
+                #this recieves the stuff and calls the function to add the text to the list
+                self.connect( self.threadPool[len(self.threadPool)-1], QtCore.SIGNAL("update(QString)"), self.runstep )
+                self.threadPool[len(self.threadPool)-1].start()  
+                
                 #gets the results refreshed                
                 self.graphparameters, self.parameters, self.iterate = forthread
                 i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
@@ -868,9 +985,11 @@ class MainWindow(QtGui.QMainWindow):
                     self.lbl4.adjustSize()
                     QtGui.QApplication.processEvents() #refresh gui
                     self.figureModel, self.timestep = draw(self.graphviz, self.positions, self.figureModel, self.timestep)
+                    self.pausetime = timedelay                    
+                    time.sleep(self.pausetime) 
             elif self.iterate == False: #when the iterate variable changes to False, which means the analysis has finished
                 self.values = res.outputresults(self.graphparameters, self.parameters)     
-                path_length_A, node_count_removed_A, isolated_n_count_removed_A, averagedegree, numofcomponents, isolates_n_count_A = self.values
+                path_length_A, numofcomponents,  averagedegree, node_count_removed_A, isolated_n_count_removed_A,  isolates_n_count_A = self.values
                 #put print messages in here to monitor the values if the metrics form the analysis
                
                 result = True #This should come from the analysis module at some point to confirm the analysis has been successfull        
@@ -884,7 +1003,8 @@ class MainWindow(QtGui.QMainWindow):
         QtGui.QApplication.processEvents() #refresh gui
     
     def getpositions(self, selected):
-        "Using the selected text from the combo box, calculate the positions for the nodes."
+        '''Using the selected text from the combo box, calculate the positions
+        for the nodes.'''
         'Default(Random)', 'Circle', 'Spring', 'Shell', 'Spectral', 'Circle Tree (bfs)', 'Circle Tree (dfs)', 'Tree (bfs)', 'Tree (dfs)'
         if selected == 'Default(Random)':
             self.positions=nx.random_layout(self.G)
@@ -914,7 +1034,8 @@ class MainWindow(QtGui.QMainWindow):
             print 'Error in the selection of vis method'
 
     def checkanalysistype(self):
-        "Get the analysis type, the file location and if any of the other options have been selected related to the analysis if the network."
+        '''Get the analysis type, the file location and if any of the other 
+        options have been selected related to the analysis if the network.'''
         SINGLE = False
         SEQUENTIAL = False
         CASCADING = False
@@ -971,16 +1092,21 @@ class MainWindow(QtGui.QMainWindow):
               
               
     def closeEvent(self, event):
+        '''Over rides the automatic close event so can ask user if they 
+        want to quit.'''
         reply = QtGui.QMessageBox.question(self, 'Message',"Are you sure you want to quit?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         
         if reply == QtGui.QMessageBox.Yes: #if the user clicks yes
             event.accept()
+            self.cancel = True
             self.closeall()
         else: #if the user clicks no
             event.ignore()
             
     def getdbparameters(self):
-        "Open the GUI for the user to input the database connection parameters. This needs looking at as works, but not as intended. Could thus do with cleaning up."
+        '''Open the GUI for the user to input the database connection 
+        parameters. This needs looking at as works, but not as intended. 
+        Could thus do with cleaning up.'''
         self.failed = False        
         dlg = DbConnect()
         if dlg.exec_():
@@ -994,7 +1120,7 @@ class MainWindow(QtGui.QMainWindow):
             return 
         
     def getdbnetwork(self):
-        "Connect to the database and pull the network into the system."
+        '''Connect to the database and pull the network into the system.'''
         self.getdbparameters()
         if self.failed == False:           
             try:
@@ -1028,7 +1154,7 @@ class MainWindow(QtGui.QMainWindow):
             self.cancel = True
             return
     def buildnet(self, param1, param2, param3):
-        "Build the network given the input parametrs."
+        '''Build the network given the input parametrs.'''
         #means if the network is not built, G still exists, but will be set ot None, thus this can be caught easily
         self.G = None 
         #build network
@@ -1318,7 +1444,7 @@ class WorkThread(QtCore.QThread): #create the worker thread, where the sresilien
         self.wait()
         
     def run(self): #run the thread
-        "Run the analysis on a second thread to help stop the GUI freezing."
+        '''Run the analysis on a second thread to help stop the GUI freezing.'''
         global valueset, forthread
         graphparameters, parameters, iterate = forthread
         #need to put in the method to call the step code here
@@ -1329,7 +1455,7 @@ class WorkThread(QtCore.QThread): #create the worker thread, where the sresilien
         #them some signal to tranfer messages and data to the main application
 
 def draw(G, positions, figureModel, timestep):
-    "Handles the initial setup parameters for drawing the network as well as then calling the function to draw the network"
+    '''Handles the initial setup parameters for drawing the network as well as then calling the function to draw the network'''
     if figureModel == None or figureModel.canvas.manager.window == None: #if figure model window has not been opened yet
         figureModel = pl.figure()
         pl.ion()
@@ -1350,7 +1476,7 @@ def draw(G, positions, figureModel, timestep):
     return figureModel, timestep
       
 def drawnet(G, positions, timestep):
-    "Draws the network."
+    '''Draws the network.'''
     inactivenodes=[]
     activenodes=[]
     inactiveedges=[]
@@ -1359,7 +1485,16 @@ def drawnet(G, positions, timestep):
     #cheat way of removing the axis and labels quickly
     g1 = nx.Graph() 
     nx.draw(g1)
-    nx.draw_networkx_nodes(G, positions, node_color = 'g', with_labels=True)
+    #conditionals to change size of nodes depending on the number of them
+    if G.number_of_nodes() <=50:
+        size = 300
+    elif G.number_of_nodes()>50 and G.number_of_nodes()<=100:
+        size = 100
+    elif G.number_of_nodes()>100 and G.number_of_nodes()<=250:
+        size = 50
+    else:
+        size = 30
+    nx.draw_networkx_nodes(G, positions, node_size= size, node_color = 'g', with_labels=True)
     nx.draw_networkx_edges(G, positions, edge_width=6, edge_color = 'g')
     if timestep <> -1:
         pl.title('iteration = ' + str(timestep))
@@ -1379,12 +1514,12 @@ def drawnet(G, positions, timestep):
     #nx.draw(G, positions, nodelist = activenodes, node_color = 'r')#, with_labels=False)
     #nx.draw(G, positions, nodelist = inactivenodes, node_color = 'b')#, with_labels=False)
     #nx.draw_networkx_nodes(G, positions, nodelist = activenodes, node_color = 'g')
-    nx.draw_networkx_nodes(G, positions, nodelist = inactivenodes, node_color = 'r', with_labels=True)   
+    nx.draw_networkx_nodes(G, positions, node_size=size, nodelist = inactivenodes, node_color = 'r', with_labels=True)   
     #nx.draw_networkx_edges(G, positions, edgelist = inactiveedges, edge_color = 'b')
     #nx.draw_networkx_edges(G, positions, edgelist = activeedges, edge_color = 'r')
 
 def replace_all(text, dic):
-    "Used to modify strings to make them suitable for purpose."
+    '''Used to modify strings to make them suitable for purpose.'''
     for i,j in dic.iteritems():
         text = text.replace(i,j)
     return text
