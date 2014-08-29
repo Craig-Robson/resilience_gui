@@ -46,8 +46,10 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 import networkx as nx
 import pylab as pl
+import matplotlib.pyplot as plt
 #import interdependency_analysis_v5_0_1 as res 
-import interdependency_analysis_v5_2_4 as res 
+import random as r
+import interdependency_analysis_v5_2_6 as res 
 import inhouse_algorithms as customnets
 import visalgorithms_v10_1 as vis
 import metric_calcs_v_1_0 as mc
@@ -57,21 +59,16 @@ class DbConnect(QDialog):
     def __init__(self, parent=None):
         #super(dbconnect, self).__init__(parent)
         QDialog.__init__(self, parent)   
-        #parametes for database connection     
+        
+        #parametes for database connection               
         exitAction = QAction('&Exit',self)
         exitAction.triggered.connect(qApp.quit)
-        print 'building db connection window'
-        self.DBNAME= ""
-        self.HOST = "" 
-        self.PORT = ""
-        self.USER = ""
-        self.PASSWORD = ""        
+                
         self.lbl1 = QLabel('dbname: ', self)
         self.lbl1.move(25,30)
         self.lbl1.adjustSize()
         self.txtinput1 = QLineEdit(self)        
         self.txtinput1.move(75, 25)
-        self.txtinput1.setText(self.DBNAME)
         self.txtinput1.setToolTip('name of database')
         self.lbl2 = QLabel('host: ', self)
         self.lbl2.move(25,55)
@@ -108,28 +105,34 @@ class DbConnect(QDialog):
         self.applybtn.setToolTip('Connect to the database and run the analysis')
         self.applybtn.move(170, 185)
         self.applybtn.adjustSize()
-        self.applybtn.clicked.connect(self.applyclick)
+        self.applybtn.clicked.connect(self.applyc self.failedlick)
         
         self.cancelbtn = QPushButton('Cancel', self)
         self.cancelbtn.setToolTip('Cancel the analysis and close the window')
         self.cancelbtn.move(10, 185)
         self.cancelbtn.adjustSize()
         self.cancelbtn.clicked.connect(self.cancel)
-
+             
         self.restore = QPushButton('Restore', self)
         self.restore.setToolTip('Restore the settings from the previous successful analyiss this session')
         self.restore.move(90, 185)
         self.restore.adjustSize()
         self.restore.clicked.connect(self.restoreinputs)
+        #get the last set of connection parameters if they exist is not all will be None
+        self.dbconnect = self.pullindbconnect()
+        DBNAME,HOST,PORT,USER,PASSWORD,NETNAME=self.dbconnect
+        if HOST == None and DBNAME == None and USER == None and NETNAME == None and PORT == None and PASSWORD == None:
+            self.restore.setEnabled(False)
 
         self.setGeometry(300,500,250,220)#above; vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('db Connection Parameters')  #title of windpw          
         self.show()#show window   
+    def pullindbconnect(self):
+        '''This pulls in the database connection properties from the main 
+        window.'''
+        dbconnect = window.returndbconnection()
+        return dbconnect
    
-    def updateparameters(self, dbconnect):
-        ''''''
-        print 'updating db parameters'
-        self.dbconnect = dbconnect
     def applyclick(self):
         '''Save the text from that was in the text boxes when function called.'''
         self.DBNAME = self.txtinput1.text()
@@ -138,29 +141,69 @@ class DbConnect(QDialog):
         self.USER = self.txtinput4.text()
         self.PASSWORD = self.txtinput5.text()        
         self.NETNAME = self.txtinput6.text()
-        self.dbconnect = self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME    
-        #DBinputs = self.DBconnect   
-        print 'performing window update'
-        window.updatedb(self.dbconnect)
+        
+        sys.path.append('C:/a8243587_DATA/GitRepo/nx_pgnet')
+        import nx_pgnet
+        import osgeo.ogr as ogr
+        try:
+            #needed to convert the items to strings for the connection
+            self.DBNAME = str(self.DBNAME)
+            self.HOST = str(self.HOST)
+            self.PORT = str(self.PORT)
+            self.USER = str(self.USER)
+            self.PASSWORD = str(self.PASSWORD)
+            self.NETNAME = str(self.NETNAME)              
+            '''
+            # paramers for a safe conenction that should always work
+            self.DBNAME = 'roads_national'
+            self.HOST = 'localhost'
+            self.PORT = '5433'
+            self.USER = 'postgres'
+            self.PASSWORD = 'aaSD2011'
+            '''
+            conn = None
+            conn = ogr.Open("PG: host='%s' dbname='%s' user='%s' password='%s' port='%s'" % (self.HOST, self.DBNAME, self.USER, self.PASSWORD, self.PORT))
+            conn_worked = True
+        except:
+            QMessageBox.warning(self, 'Error!', "Could not connect to the database. Please check your inputs and try again.",'&OK')                
+            self.G = None
+            conn_worked = False
+            return
+            
+        if conn_worked == True:
+            try:
+                self.NETNAME = str(self.NETNAME)
+                '''                
+                #this is part of the known set for testing
+                self.NETNAME = 'ire_m_t_roads' 
+                '''
+                self.G = nx_pgnet.read(conn).pgnet(self.NETNAME)
+                #package the successfult connection parameters
+                self.dbconnect = self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME
+            except:
+                QMessageBox.warning(self, 'Error!', "Could not find network in database. Please check the network name.",'&OK')             
+                return
+        
+        #return the good set of connection parameters and the graph
+        window.updatedb(self.dbconnect, self.G)
         self.close()
     
     def cancel(self):
-        '''Clear the text boxes and close the window when the cancel button is clicked.'''
-        self.DBNAME = ''
-        self.HOST = ''
-        self.PORT = ''
-        self.USER = ''
-        self.PASSWORD = ''
-        self.NETNAME = '' 
+        '''Clear the text boxes and close the window when the cancel button is 
+        clicked.'''
         self.close()
         
     def getval(self):
-        '''Used to pass data between classes.'''
+        '''Used to pass the database connection data back to the window class.'''
+        return
         return self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME
     
-    def restoreinputs(self):
-        '''Restore the previusoly saved vlaues from the last successful execution of the database connection. Data is retireved from a global variable.'''
-        if self.dbconnect == None:
+    def restoreinputs(self, dbconnect):
+        '''Restore the previusoly saved vlaues from the last successful 
+        execution of the database connection. Data is retireved from a global 
+        variable.'''
+        DBNAME,HOST,PORT,USER,PASSWORD,NETNAME=self.dbconnect
+        if HOST == None and DBNAME == None and USER == None and NETNAME == None and PORT == None and PASSWORD == None:
             #when no inputs have been used suceesfully yet
             QMessageBox.warning(self, 'Warning', "No inputs to restore. Inputs must have been used already before they can be restored." , '&OK')
         else:
@@ -462,7 +505,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.show()
 
     def update_ckbs(self, metrics):
-        '''updates check boxs on startup based on previuos selections'''
+        '''Updates check boxs on startup based on previuos selections. The 
+        previous selections are stored in memory in the window function are 
+        retrieved upon launch of the window.'''
         self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
         self.size_of_components_A,self.giant_component_size_A,self.av_nodes_in_components_A,self.isolated_nodes_A,self.isolated_n_count_A,self.isolated_n_count_removed_A,self.subnodes_A,self.subnodes_count_A,self.path_length_A,self.av_path_length_components_A,self.av_path_length_geo_A,self.giant_component_av_path_length_A,self.average_degree_A,self.inter_removed_count_A = self.option_metrics_A
         if self.option_metrics_B == None:
@@ -579,6 +624,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
             self.ckbinterremovedcount_B.setEnabled(False)
 
     def check_checkbxs(self, metrics):
+        '''Checks the check boxes to identify those which have been checked or 
+        are not checked. Then packages the all metrics into the correct metric 
+        containers.'''
         self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = metrics
                 
         if self.ckbsizeofcomponents_A.isChecked():
@@ -674,16 +722,21 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         print 'after checking the boxs ',self.option_metrics_B
         self.metrics = self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B
         return self.metrics
+
     def applyandclose(self):
+        '''Calls for the check boxes to be checked for their state and then 
+        packages up the containers into a single container. The single container 
+        then replaces the latest version in the window class.'''
         self.metrics = self.check_checkbxs(self.metrics)
         self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
-        print 'on close: ', self.option_metrics_B 
         window.updatemetrics(self.metrics)
         self.close() 
+
     def closeclick(self):
+        '''Closes the window when initiated via the close button.'''
         self.close()
     def get_metrics(self, metrics):
-        print 'using get metrics'
+        '''Does not do anything.'''    
         self.metrics = metrics
         basic_metrics_A, basic_metrics_B, option_metrics_A, option_metrics_B
                
@@ -699,7 +752,7 @@ class OptionsWindow(QWidget):
         self.timedelay, self.col1, self.col2 = window.updateoptions()        
         self.timedelay = str(self.timedelay)
         self.lbltimedelay =QLabel("Time(secs) between iterations: ",self)
-        self.lbltimedelay.move(15,25)
+        self.lbltimedelay.move(12,25)
         self.lbltimedelay.adjustSize()
         self.txttimedelay = QLineEdit(self) 
         self.txttimedelay.move(170,22)
@@ -739,16 +792,16 @@ class OptionsWindow(QWidget):
 
         self.apply = QPushButton("Apply", self)
         self.apply.adjustSize()
-        self.apply.move(145,170)
+        self.apply.move(145,100)
         self.apply.clicked.connect(self.applyandclose)
         self.apply.setToolTip("Apply any changes and close the window.")
         self.closebtn = QPushButton("Close", self)
         self.closebtn.adjustSize()
-        self.closebtn.move(70,170)
+        self.closebtn.move(70,100)
         self.closebtn.clicked.connect(self.closeclick)
         self.closebtn.setToolTip("Close the window without saving any changes.")
                 
-        self.setGeometry(300,300,230,250) #vertical place on screen, hoz place on screen, width of window, height of window
+        self.setGeometry(300,300,230,130) #vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Options Window') #title of window  
         self.show()
     def getcoloractive(self, text):
@@ -777,18 +830,30 @@ class ViewGraphs(QDialog):
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
         
-        self.valueset = window.updatevalueset()        
+        self.valueset = window.updatevalueset() #gets the metrics values
+        basic_metrics_A, basic_metrics_B, option_metrics_A, option_metrics_B = self.valueset
+        self.nodes_removed_A,self.node_count_removed_A,self.count_nodes_left_A,self.number_of_edges_A,self.number_of_components_A=basic_metrics_A
+        self.valueset = self.node_count_removed_A,self.count_nodes_left_A,self.number_of_edges_A,self.number_of_components_A
+        if basic_metrics_B <> None:
+            self.nodes_removed_B,self.node_count_removed_B,self.count_nodes_left_B,self.number_of_edges_B,self.number_of_components_B=basic_metrics_B        
+        print 'option metrics A= ', option_metrics_A
+
         self.figureGraph = None
         self.lblop1 = QLabel('Plot 1:', self)
         self.lblop1.adjustSize()
-        self.lblop1.move(15, 28)        
+        self.lblop1.move(15, 28)
         self.option1 = QComboBox(self)
-        self.metriclist=['Average path length', 'Number of components', 'Average degree', 'Nodes count removed', 'Isolated node count', 'Number of isolates', 'None']
+        
+        if basic_metrics_B <> None:
+            self.metriclist = ['Average path length_A', 'Average path length_B','Number of components_A', 'Number of components_B','Average degree_A','Average degree_B','Nodes count removed_A','Nodes count removed_B','Isolated node count_A','Isolated node count_B','Number of isolates_A','Number of isolates_B','None']
+        else:
+            self.metriclist = ['Number of nodes removed', 'Number of nodes left', 'Number of edges left', 'Number of components', 'None']
+        
         self.option1.addItems(self.metriclist)
         self.option1.move(60, 25)
         self.lblop2 = QLabel('Plot 2:', self)
         self.lblop2.adjustSize()
-        self.lblop2.move(15, 58) 
+        self.lblop2.move(15, 58)
         self.option2 = QComboBox(self)
         self.option2.addItems(self.metriclist)      
         self.option2.move(60, 55)
@@ -802,10 +867,10 @@ class ViewGraphs(QDialog):
         #just need to sort this out so the variable values can be transfered into this class easily
         #attempt to get the metric values for the graphs from the mian window class
 
-        self.setGeometry(900,500,210,110)#above; vertical place on screen, hoz place on screen, width of window, height of window
+        self.setGeometry(900,500,240,110)#above; vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Graph parameters')  #title of windpw          
         self.show()#show GUI window  
-        self.option1value = 0        
+        self.option1value = 0
         self.option2value = 1
         
         self.figureGraph = pl.figure() #create the figure
@@ -813,8 +878,8 @@ class ViewGraphs(QDialog):
         self.figureGraph.canvas.set_window_title('Results plot') #assign a title
         pl.ion() #make the plot interactive so the update process is easier
         pl.show() #this displays a blank plot which I then want the graph to be displayed in
-        self.option2.removeItem(self.option1value)
-        self.option1.removeItem(self.option2value)
+        self.option2.removeItem(self.option1value) #from list2, remove the item selected in list1
+        self.option1.removeItem(self.option2value) #from list1 remove the item selected in list2
         self.applyclick()
         
     def option1changed(self):
@@ -845,7 +910,10 @@ class ViewGraphs(QDialog):
         '''Runs the code to identify the metrics requested for the visualisation.'''
         self.metric1 = self.option1value
         self.metric2 = self.option2value
-        self.valuenames = 'average path length', 'number of components', 'average degree','nodes removed count','isolates removed',  'number of isolates' #list for the labels, needs updating manually
+        self.valuenames = 'Node count removed', 'Count nodes left', 'Number of edges left', 'Number of components', 'None'
+        
+
+        #self.valuenames = 'average path length', 'number of components', 'average degree','nodes removed count','isolates removed',  'number of isolates' #list for the labels, needs updating manually
         self.valueset = list(self.valueset)  
         
         if self.figureGraph == None or self.figureGraph.canvas.manager.window == None: #if figure model window has not been opened yet
@@ -884,7 +952,8 @@ class ViewGraphs(QDialog):
         pl.show() #show a window 
 
     def cancelclick(self):
-        '''Close the slection box and graph window when the cancel button is clicked.'''
+        '''Close the slection box and graph window when the cancel button is 
+        clicked.'''
         self.close()            
         pl.close()
         
@@ -893,23 +962,26 @@ class ViewGraphs(QDialog):
         return self.metric1, self.metric2
 
     def closeEvent(self, event):
+        '''CLoses the windows.'''
         pl.close()
 
     def identifymetric(self, metric):
-        '''Method to idenitfy the metric requested, and assign the correct value for the position of its data in the lists of lists.'''
-        if metric == 'Average path length':
+        '''Method to idenitfy the metric requested, and assign the correct 
+        value for the position of its data in the lists of lists.'''
+                
+        if metric == 'Number of nodes removed':
             metric = 0
-        elif metric == 'Number of components':
+        elif metric == 'Number of nodes left':
             metric = 1
-        elif metric == 'Average degree':
+        elif metric == 'Number of edges left':
             metric = 2
-        elif metric == 'Nodes count removed':
+        elif metric == 'Number of components':
             metric = 3
-        elif metric == 'Isolated node count':
-            metric = 4
-        elif metric == 'Number of isolates':
-            metric = 5
-        elif metric == 'None': #this should never happen
+        #elif metric == 'Isolated node count':
+            #metric = 4
+        #elif metric == 'Number of isolates':
+            #metric = 5
+        elif metric == 'None': 
             metric = 99
         else:
             print 'Uncategorised'
@@ -931,12 +1003,12 @@ class Window(QMainWindow):
         except:
             QMessageBox.warning(self,'Import Error!', "Could not import the osgeo.ogr library. There will be no database connectivity as a result.")        
         try:
-            try:            
+            try: 
                 sys.path.append('C:/a8243587_DATA/GitRepo/nx_pgnet')
-                import nx_pgnet, nx_pg
+                import nx_pgnet #,nx_pg
             except:
                 pass
-            sys.path.append('C:/Users/Craig/Documents/GitRepo/nx_pgnet')
+                #sys.path.append('C:/Users/Craig/Documents/GitRepo/nx_pgnet')
         except:
             QMessageBox.warning(self, 'Import Error!', 'Could not import the nx_pgnet or nx_pg modules. This will not allow the database conection to work.')
         
@@ -951,16 +1023,18 @@ class Window(QMainWindow):
         self.PASSWORD = 'aaSD2011'        
         self.NETNAME = 'power_lines'
         '''
-        self.DBNAME = ''
-        self.HOST = ''
-        self.PORT = ''
-        self.USER = ''
-        self.PASSWORD = ''        
-        self.NETNAME = ''
+        self.DBNAME = None
+        self.HOST = None
+        self.PORT = None
+        self.USER = None
+        self.PASSWORD = None        
+        self.NETNAME = None
         self.dbconnect = self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME    
         self.parameters = None
         self.running = False
         self.pause = False
+        self.changed = True
+        self.lastparam1 = None;self.lastparam2 = None;self.lastparam3 = None
         self.first = True
         self.figureModel = None
         self.iterate = True
@@ -968,6 +1042,8 @@ class Window(QMainWindow):
         self.cancel = False
         self.positions = None
         self.G = None
+        self.GnetB = None
+        self.analysistype = 'Single'
         self.fullanalysis = False
         self.active = 1
         self.inactive = 0
@@ -997,25 +1073,37 @@ class Window(QMainWindow):
         metricsAction.setShortcut('Ctrl+M')
         metricsAction.setStatusTip('Open metrics window')
         metricsAction.triggered.connect(self.showmetricswindow)
-    
+        '''
         dbAction = QAction('&DB Connection', self)
         dbAction.setShortcut('Ctrl+B')
         dbAction.setStatusTip('Open db connection properties')
         dbAction.triggered.connect(self.showdbwindow)
-        
+        '''
         openAction = QAction('&Open', self)
         openAction.setShortcut('Ctrl+O')
         openAction.setStatusTip('Load node and edge lists from .txt file')
-        openAction.triggered.connect(self.openfile)
+        openAction.triggered.connect(self.openfileA)
         
         resetAction = QAction('&Cancel/Reset', self)
         resetAction.setStatusTip('Cancel the analysis')
         resetAction.triggered.connect(self.reset)
         
-        clearAction = QAction('&Clear inputs', self)
-        clearAction.setShortcut('Ctrl+E')
-        clearAction.setStatusTip('Clear the input text boxes')
-        clearAction.triggered.connect(self.clearAll)
+        ClearAllAction = QAction('&Clear all', self)
+        ClearAllAction.setShortcut('Ctrl+E')
+        ClearAllAction.setStatusTip('Clear the input text boxes')
+        ClearAllAction.triggered.connect(self.clearAll)
+        
+        ClearAAction = QAction('&Inputs for A', self)
+        ClearAAction.setStatusTip('Clear the input text boxes for network A')
+        ClearAAction.triggered.connect(self.clearA)
+
+        ClearBAction = QAction('&Inputs for B', self)
+        ClearBAction.setStatusTip('Clear the input text boxes for network B')
+        ClearBAction.triggered.connect(self.clearB)        
+        
+        ClearDepeEdgesAction = QAction('&Dependency Edges', self)
+        ClearDepeEdgesAction.setStatusTip('Clear the input text for the dependency edges')        
+        ClearDepeEdgesAction.triggered.connect(self.clearDependencyEdges)
         
         viewnetAction = QAction('&View Network', self)
         viewnetAction.setShortcut('Ctrl+D')
@@ -1045,39 +1133,52 @@ class Window(QMainWindow):
         calcAssortativityAction.triggered.connect(self.calcAssortativity)
         
         calcBetweennessAction = QAction('&Betweenness Centrality',self)
-        self.G = nx.gnm_random_graph(12,45)
         calcBetweennessAction.triggered.connect(self.calcBetweenness)
         
         calcAvPathLengthAction = QAction('&Av Pathn Length',self)
         calcAvPathLengthAction.triggered.connect(self.calcAvPathLength)
         
+        AtoBEdgesAction = QAction('&A to B Edges',self)        
+        AtoBEdgesAction.triggered.connect(self.AtoBEdges)
+        
+        BtoAEdgesAction = QAction('&B to A Edges',self)
+        BtoAEdgesAction.triggered.connect(self.BtoAEdges)
+        
         self.statusBar() #create status bar 
         menubar=self.menuBar() #create menu bar
         fileMenu = menubar.addMenu('&File') #add file menu
-        editMenu = menubar.addMenu('&Failure Options') #add edit menu
+        editMenu = menubar.addMenu('&Edit')
+        foMenu = menubar.addMenu('&Failure Options') #add edit menu
         calcMenu = menubar.addMenu('&Metrics') #add metric calculation menu
         
-        #add actions to file and edit menu's
-        editMenu.addAction(RunAction)
+        #add actions to file and edit menu's        
         editMenu.addAction(viewnetAction)
         editMenu.addAction(resetAction)
-        editMenu.addAction(optionsAction) 
-        editMenu.addAction(metricsAction)
-        editMenu.addAction(clearAction)
+        foMenu.addAction(RunAction)
+        foMenu.addAction(optionsAction) 
+        foMenu.addAction(metricsAction)
+        subEdges_menu = foMenu.addMenu('Random Dependency Edges')
+        subEdges_menu.addAction(AtoBEdgesAction)
+        subEdges_menu.addAction(BtoAEdgesAction)
+        subClear_menu = editMenu.addMenu('Clear')
+        subClear_menu.addAction(ClearAllAction)        
+        subClear_menu.addAction(ClearAAction)
+        subClear_menu.addAction(ClearBAction)
+        subClear_menu.addAction(ClearDepeEdgesAction)
         
         fileMenu.addAction(openAction)
         fileMenu.addAction(exitAction)
         
         calcMenu.addAction(getDegreeDistAction) 
-        sub_menu = calcMenu.addMenu('Calculate')
+        subCalc_menu = calcMenu.addMenu('Calculate')
         calcMenu.addAction(massCalcAction)
         calcMenu.addAction(metricsGraphAction)
         calcMenu.addAction(metricsExportAction)
-        sub_menu.addAction(calcClusteringAction)
-        sub_menu.addAction(calcClusteringSqAction)
-        sub_menu.addAction(calcAssortativityAction)
-        sub_menu.addAction(calcBetweennessAction)
-        sub_menu.addAction(calcAvPathLengthAction)
+        subCalc_menu.addAction(calcClusteringAction)
+        subCalc_menu.addAction(calcClusteringSqAction)
+        subCalc_menu.addAction(calcAssortativityAction)
+        subCalc_menu.addAction(calcBetweennessAction)
+        subCalc_menu.addAction(calcAvPathLengthAction)
         
         #create and set some lables
         self.lbl4 = QLabel("Ready", self)
@@ -1085,91 +1186,91 @@ class Window(QMainWindow):
         self.lbl4.adjustSize() 
         fontbold = QFont("Calibri", 10, QFont.Bold)      
 
-        self.lbl6 = QLabel("STATE: ", self)
-        self.lbl6.move(25,205)
-        self.lbl6.setFont(fontbold)
-        self.lbl6.adjustSize() 
+        lblState = QLabel("STATE: ", self)
+        lblState.move(25,205)
+        lblState.setFont(fontbold)
+        lblState.adjustSize() 
         #set and create GUI features for the analysis type
-        self.lbl2 = QLabel("Analysis types",self)
-        self.lbl2.setFont(fontbold)
-        self.lbl2.adjustSize()        
-        self.lbl2.move(25,25)
-        self.ckbx1 = QCheckBox("Single",self)
-        self.ckbx1.adjustSize()
-        self.ckbx1.move(25,45)
-        self.ckbx1.setToolTip("Remove one node and relpace before the next node is removed")
-        self.ckbx1.toggle()
-        self.ckbx1.stateChanged.connect(self.ckbxoptionlimited)
-        self.ckbx2 = QCheckBox("Sequential",self)
-        self.ckbx2.adjustSize()
-        self.ckbx2.move(25,65) 
-        self.ckbx2.setToolTip("Remove nodes one after each other until none are left")
-        self.ckbx2.stateChanged.connect(self.ckbxoptionall)
-        self.ckbx3 = QCheckBox("Cascading",self)
-        self.ckbx3.adjustSize()
-        self.ckbx3.move(25,85)
-        self.ckbx3.setToolTip("Remove a node, them all it's neighbours, then all of their neighbours etc,")
-        self.ckbx3.stateChanged.connect(self.ckbxoptionall)
-        self.Group1 = QButtonGroup(self)
-        self.Group1.addButton(self.ckbx1)
-        self.Group1.addButton(self.ckbx2)
-        self.Group1.addButton(self.ckbx3)
-        self.Group1.exclusive()
+        lblAType = QLabel("Analysis types",self)
+        lblAType.setFont(fontbold)
+        lblAType.adjustSize()        
+        lblAType.move(25,25)
+        self.ckbxSingle = QCheckBox("Single",self)
+        self.ckbxSingle.adjustSize()
+        self.ckbxSingle.move(25,45)
+        self.ckbxSingle.setToolTip("Remove one node and relpace before the next node is removed")
+        self.ckbxSingle.toggle()
+        self.ckbxSingle.stateChanged.connect(self.ckbxoptionlimited)
+        self.ckbxSequential = QCheckBox("Sequential",self)
+        self.ckbxSequential.adjustSize()
+        self.ckbxSequential.move(25,65) 
+        self.ckbxSequential.setToolTip("Remove nodes one after each other until none are left")
+        self.ckbxSequential.stateChanged.connect(self.ckbxoptionall)
+        self.ckbxCascading = QCheckBox("Cascading",self)
+        self.ckbxCascading.adjustSize()
+        self.ckbxCascading.move(25,85)
+        self.ckbxCascading.setToolTip("Remove a node, them all it's neighbours, then all of their neighbours etc,")
+        self.ckbxCascading.stateChanged.connect(self.ckbxoptionall)
+        GroupAtype = QButtonGroup(self)
+        GroupAtype.addButton(self.ckbxSingle)
+        GroupAtype.addButton(self.ckbxSequential)
+        GroupAtype.addButton(self.ckbxCascading)
+        GroupAtype.exclusive()
+        
         #set and create GUI features for the node selection method
-        self.lbl3 = QLabel("Node selection method",self)
-        self.lbl3.setFont(fontbold)
-        self.lbl3.adjustSize()        
-        self.lbl3.move(130,25)
-        self.ckbx4 = QCheckBox("Random", self)
-        self.ckbx4.adjustSize()
-        self.ckbx4.move(130,45)
-        self.ckbx4.setToolTip("Select the node to remove at random")
-        self.ckbx4.toggle()
-        self.ckbx5 = QCheckBox("Degree", self)
-        self.ckbx5.adjustSize()        
-        self.ckbx5.move(130,65)
-        self.ckbx5.setToolTip("Select the node with the highest degree")
-        self.ckbx6 = QCheckBox("Betweenness", self)
-        self.ckbx6.adjustSize()
-        self.ckbx6.move(130,85) 
-        self.ckbx6.setToolTip(
+        lblNSMethod = QLabel("Node selection method",self)
+        lblNSMethod.setFont(fontbold)
+        lblNSMethod.adjustSize()        
+        lblNSMethod.move(130,25)
+        self.ckbxRandom = QCheckBox("Random", self)
+        self.ckbxRandom.adjustSize()
+        self.ckbxRandom.move(130,45)
+        self.ckbxRandom.setToolTip("Select the node to remove at random")
+        self.ckbxRandom.toggle()
+        self.ckbxDegree = QCheckBox("Degree", self)
+        self.ckbxDegree.adjustSize()        
+        self.ckbxDegree.move(130,65)
+        self.ckbxDegree.setToolTip("Select the node with the highest degree")
+        self.ckbxBetweenness = QCheckBox("Betweenness", self)
+        self.ckbxBetweenness.adjustSize()
+        self.ckbxBetweenness.move(130,85) 
+        self.ckbxBetweenness.setToolTip(
         "Select the node with the highest betweenness value")
-        Group2 = QButtonGroup(self)     
-        Group2.addButton(self.ckbx4)
-        Group2.addButton(self.ckbx5)
-        Group2.addButton(self.ckbx6)
-        Group2.exclusive()
+        GroupNSMethod = QButtonGroup(self)     
+        GroupNSMethod.addButton(self.ckbxRandom)
+        GroupNSMethod.addButton(self.ckbxDegree)
+        GroupNSMethod.addButton(self.ckbxBetweenness)
+        GroupNSMethod.exclusive()
         #set when initated as not chackable as single is the defualt option
-        self.ckbx5.setEnabled(False)
-        self.ckbx6.setEnabled(False)
+        self.ckbxDegree.setEnabled(False)
+        self.ckbxBetweenness.setEnabled(False)
         #set and create GUI features for the network selection type
-        self.lbl1 = QLabel("Network Type", self)
-        self.lbl1.setFont(fontbold)
-        self.lbl1.adjustSize()
-        self.lbl1.move(275, 25)
+        self.lblNetType = QLabel("Network Type", self)
+        self.lblNetType.setFont(fontbold)
+        self.lblNetType.adjustSize()
+        self.lblNetType.move(275, 25)
         
         #for network A
         self.graph = 'GNM' #means this is the default, so if menu option not changed/used, will persume GNM graph
         inputs = ('GNM','Erdos Renyi','Watts Strogatz','Barabasi Albert',
                   'Hierarchical Random','Hierarchical Random +',
-                  'Hierarchical Communities','Tree','Database','Lists')
+                  'Hierarchical Communities','Tree','Database','CSV','Lists')
         self.cmboxA = QComboBox(self)
         self.cmboxA.move(275,44)
         self.cmboxA.addItems(inputs)
         self.cmboxA.setToolTip("Select the graph type or graph input method")
         self.cmboxA.activated[str].connect(self.networkselectionA)           
         #set and create GUI features for the input text boxes
-        self.lbl10 = QLabel("Graph Inputs", self)
-        self.lbl10.setFont(fontbold)
-        self.lbl10.adjustSize()
-        self.lbl10.move(400, 25)
+        lblGphInputs = QLabel("Graph Inputs", self)
+        lblGphInputs.setFont(fontbold)
+        lblGphInputs.adjustSize()
+        lblGphInputs.move(400, 25)
         self.txtparamA1 = QLineEdit(self)        
         self.txtparamA1.move(400, 45)
         self.txtparamA1.setToolTip('The number of nodes. eg., 34 or 178') #set the start up states for that top of the list, GNM        
         self.txtparamA2 = QLineEdit(self)
         self.txtparamA2.move(500, 45)
-        self.txtparamA2.setToolTip(
-        'The number of edges. eg.,twice the no. of edges, 124 or 389')
+        self.txtparamA2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389')
         self.txtparamA3 = QLineEdit(self)
         self.txtparamA3.move(600, 45)
         self.txtparamA3.setEnabled(False)              
@@ -1182,7 +1283,7 @@ class Window(QMainWindow):
         self.graphB = 'None' #means this is the default, so if menu option not changed/used, will persume GNM graph
         inputs = ('None','GNM','Erdos Renyi','Watts Strogatz','Barabasi Albert',
                   'Hierarchical Random','Hierarchical Random +',
-                  'Hierarchical Communities','Tree','Database','Lists')
+                  'Hierarchical Communities','Tree','Database','CSV','Lists')
         self.cmboxB = QComboBox(self)
         self.cmboxB.move(275,90)
         self.cmboxB.addItems(inputs)
@@ -1196,22 +1297,21 @@ class Window(QMainWindow):
         self.txtparamB2 = QLineEdit(self)
         self.txtparamB2.move(500, 90)
         self.txtparamB2.setEnabled(False)
-        self.txtparamB2.setToolTip(
-        'The number of edges. eg.,twice the no. of edges, 124 or 389')
+        self.txtparamB2.setToolTip('The number of edges. eg.,twice the no. of edges, 124 or 389')
         self.txtparamB3 = QLineEdit(self)
         self.txtparamB3.move(600, 90)
         self.txtparamB3.setEnabled(False)              
-        self.validator = QIntValidator(1,2000,self.txtparamB1)       
-        self.txtparamB1.setValidator(self.validator)
-        self.validator = QIntValidator(1,60000,self.txtparamB2)       
-        self.txtparamB2.setValidator(self.validator)  
+        validator = QIntValidator(1,2000,self.txtparamB1)       
+        self.txtparamB1.setValidator(validator)
+        validator = QIntValidator(1,60000,self.txtparamB2)       
+        self.txtparamB2.setValidator(validator)  
         
         #analysis options
         #single, dependency, interdependency
-        self.lbltype = QLabel("Analysis Type", self)
-        self.lbltype.setFont(fontbold)
-        self.lbltype.adjustSize()
-        self.lbltype.move(275, 135)
+        lbltype = QLabel("Analysis Type", self)
+        lbltype.setFont(fontbold)
+        lbltype.adjustSize()
+        lbltype.move(275, 135)
         self.graph_analysis = 'Single' #means this is the default, so if menu option not changed/used, will persume GNM graph
         inputs = ('Single','Dependency','Interdependency')
         self.cmboxtype = QComboBox(self)
@@ -1220,26 +1320,26 @@ class Window(QMainWindow):
         self.cmboxtype.setToolTip("Select the graph analysis type")
         self.cmboxtype.activated[str].connect(self.selectAnalysisType) 
         #set and create GUI features for the input text boxes
-        self.lblfromA = QLabel("From A to B", self)
-        self.lblfromA.adjustSize()
-        self.lblfromA.move(400, 135)
+        lblfromA = QLabel("From A to B", self)
+        lblfromA.adjustSize()
+        lblfromA.move(400, 135)
         self.txtparamt1 = QLineEdit(self)        
         self.txtparamt1.move(400, 155)
         self.txtparamt1.setEnabled(False)
         self.txtparamt1.setToolTip('List of dependency edges from network A to B') #set the start up states for that top of the list, GNM        
-        self.lblfromB = QLabel("From B to A", self)
-        self.lblfromB.adjustSize()
-        self.lblfromB.move(500, 135)
+        lblfromB = QLabel("From B to A", self)
+        lblfromB.adjustSize()
+        lblfromB.move(500, 135)
         self.txtparamt2 = QLineEdit(self)
         self.txtparamt2.move(500, 155)
         self.txtparamt2.setEnabled(False)
         self.txtparamt2.setToolTip('List if dependency edges from network B to A')        
         
         #set and create the extra options features on GUI    
-        self.lbl5 = QLabel("Remove subgraphs/isolated nodes", self)
-        self.lbl5.setFont(fontbold)
-        self.lbl5.adjustSize()
-        self.lbl5.move(25,105)
+        lblRemoveOptions = QLabel("Remove subgraphs/isolated nodes", self)
+        lblRemoveOptions.setFont(fontbold)
+        lblRemoveOptions.adjustSize()
+        lblRemoveOptions.move(25,105)
         self.ckbxsubgraphs = QCheckBox("Subgraphs", self)  
         self.ckbxsubgraphs.adjustSize()
         self.ckbxsubgraphs.move(25, 120)
@@ -1282,72 +1382,325 @@ class Window(QMainWindow):
         self.btnreset.move(390, 200)
         self.btnreset.adjustSize()
         self.btnreset.clicked.connect(self.reset)        
+        btnclear = QPushButton('Clear', self)        
+        btnclear.setToolTip('Clear all inputs for networks')
+        btnclear.move(310, 200)        
+        btnclear.adjustSize()
+        btnclear.clicked.connect(self.clearAll)        
         
         self.setGeometry(300,300,720,235)#above; vertical place on screen, hoz place on screen, width of window, height of window
-        self.setWindowTitle('Network Tool v1.8') #title of window 
+        self.setWindowTitle('Network Tool v2.3') #title of window 
         self.show() #show window
         #finished signal to follow on from the work thread
-        print 'it goes wrong here'
         self.connect(self.thread, SIGNAL("finished()"), self.updateUi)
     
     
     def calcClustering(self):
+        '''Calculates clustering related values for a network. If no network 
+        exists, or the inputs for network A have changed it will build the 
+        network itself. Returns the maximum, minimum, avergae and per node 
+        values in a message box.'''
         #calc the normal clustering coefficient
         #will return the average value
         #will also return the value per node
         #return other stats
-        
         #send calc to code in another script
+
+        param1 = self.txtparamA1.text()
+        param2 = self.txtparamA2.text()
+        param3 = self.txtparamA3.text()        
+        self.check_for_changes(param1,param2,param3)
+        if self.G == None or self.changed == False:
+            self.G = self.buildnetwork(param1,param2,param3, 'A') #builds network
+            if self.G == None: return
+        if self.G.number_of_nodes > 0:
+            maxVal, minVal, averageVal, nodeVal = mc.Clustering_Calc(self.G)
+            QMessageBox.information(self, "Computation Results: Clustering Coefficient", 'maximum: \t%s \nminimum: \t%s \naverage: \t%s \nper node: \n%s' %(maxVal, minVal, averageVal, nodeVal), QMessageBox.Ok)
+        else:
+            QMessageBox.information(self, "Computation Results: Clustering Coefficient", 'The graph created had no nodes. No calculations could be performed.')
         return
+
     def calcClusteringSq(self):
+        '''Calculates clustering (square) related values for a network. If no 
+        network exists, or the inputs for network A have changed it will build
+        the network itself. Returns the maximum, minimum, avergae and per node 
+        values in a message box.'''
         #calc the square clustering coefficient
         #will return the average value
         #will also return the value per node   
         #return other stats
         #send calc to code in another script
+        param1 = self.txtparamA1.text()
+        param2 = self.txtparamA2.text()
+        param3 = self.txtparamA3.text()        
+        self.check_for_changes(param1,param2,param3)
+        if self.G == None or self.changed == False:
+            self.G = self.buildnetwork(param1,param2,param3,'A')
+            if self.G == None: return
+        if self.G.number_of_nodes > 0:
+            maxVal, minVal, averageVal, nodeVal = mc.ClusteringSQ_Calc(self.G)
+            QMessageBox.information(self, "Computation Results: Clustering Coefficient (Square)", 'maximum: \t%s \nminimum: \t%s \naverage: \t%s \nper node: \n%s' %(maxVal, minVal, averageVal, nodeVal), QMessageBox.Ok)
+        else:
+            QMessageBox.information(self, "Computation Results: Clustering Coefficient (Square)", 'The graph created had no nodes. No calculations could be performed.')
         return
+
     def calcAssortativity(self):
+        '''Calculates the assortativity coefficient for a network. If no network 
+        exists, or the inputs for network A have changed it will build the 
+        network itself. Returns the coefficent value in a message box.'''
         #calc the assortativty coefficient
         #will return the average value
         #will also return the value per node   
         #return other stats
         #send calc to code in another script
+        param1 = self.txtparamA1.text()
+        param2 = self.txtparamA2.text()
+        param3 = self.txtparamA3.text()        
+        self.check_for_changes(param1,param2,param3)
+        if self.G == None or self.changed == False:
+            self.G = self.buildnetwork(param1,param2,param3,'A')
+            if self.G == None: return
+        if self.G.number_of_nodes > 0:
+            val  = mc.Assortativity_Calc(self.G)
+            QMessageBox.information(self, "Computation Results: Assortativity Coefficient", 'assortativity coefficient: \t%s' %(val), QMessageBox.Ok)
+        else:
+            QMessageBox.information(self, "Computation Results: Assortativity Coefficient", 'The graph created had no nodes. No calculations could be performed.')        
         return
-    def calcBetweenness(self, G):
+        
+    def calcBetweenness(self):
+        '''Calculates betweenness related values for a network. If no network 
+        exists, or the inputs for network A have changed it will build the 
+        network itself. Returns the maximum, minimum, avergae and per node 
+        values in a message box.'''
         #calc the betweenness centrality
         #send calc to code in another script
-        maxBetweenness, minBetweenness, averageBetweenness, nodeBetweenness = mc.Betweenness_Calc(self.G)
-        #present results to user
-        
-        #need to output these in some way which allow te user to copy and past them        
-        
-        QMessageBox.information(self, "My message box", 'max betweenness is: \t%s \nmin betweenness is: \t%s \naverage bewteenness is: \t%s \nbetweenness per node is: \t%s' %(maxBetweenness, minBetweenness, averageBetweenness, nodeBetweenness), QMessageBox.Ok)
-        
-        #QMessageBox.question(self,  'Message',  'Are you sure to quit?',  QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
-
+        param1 = self.txtparamA1.text()
+        param2 = self.txtparamA2.text()
+        param3 = self.txtparamA3.text()        
+        self.check_for_changes(param1,param2,param3)
+        if self.G == None or self.changed == False:
+            self.G = self.buildnetwork(param1,param2,param3,'A')
+            if self.G == None: return            
+        if self.G.number_of_nodes > 0:
+            maxVal, minVal, averageVal, nodeVal = mc.Betweenness_Calc(self.G)
+            QMessageBox.information(self, "Computation Results: Betweenness Centrality", 'maximum: \t%s \nminimum: \t%s \naverage: \t%s \nper node: \n%s' %(maxVal, minVal, averageVal, nodeVal), QMessageBox.Ok)
+        else:
+            QMessageBox.information(self, "Computation Results: Betweenness Centrality", 'The graph created had no nodes. No calculations could be performed.')        
+        return
+    
     def calcAvPathLength(self):
+        '''Calculates the average shortest path length and as well as per 
+        subgraph for a nework. If no network exists or the input values for 
+        network A have changed, the network will be built. The results are 
+        presented in a message box.'''
         #calc the average path length
         #send calc to code in another script
+        param1 = self.txtparamA1.text()
+        param2 = self.txtparamA2.text()
+        param3 = self.txtparamA3.text()        
+        self.check_for_changes(param1,param2,param3)
+        if self.G == None or self.changed == False:
+            self.G = self.buildnetwork(param1,param2,param3,'A')
+            if self.G == None: return
+        if self.G.number_of_nodes > 0:
+            whole_graph, subgraphs = mc.AveragePathLength_Calc(self.G)
+            QMessageBox.information(self, "Computation Results: Average path length", 'whole graph: \t%s \nper subgraph: \n%s' %(whole_graph,subgraphs), QMessageBox.Ok)
+        else:
+            QMessageBox.information(self, "Computation Results: Average path length", 'The graph created had no nodes. No calculations could be performed.')        
         return
+        
     def calcDegreeDist(self):
+        '''Generates a degree distribution plot for a network. If no network 
+        exisits, or the contents of the input boxes for network A have changed,
+        it will try and build the network.'''
         #calc the degree distribution
         #send calc to code in another script
+        param1 = self.txtparamA1.text()
+        param2 = self.txtparamA2.text()
+        param3 = self.txtparamA3.text()        
+        self.check_for_changes(param1,param2,param3)
+        if self.G == None or self.changed == False:
+            self.G = self.buildnetwork(param1,param2,param3,'A')
+            if self.G == None: return
+        if self.G.number_of_nodes > 0:
+            degreedist = mc.DegreeDistribution(self.G)
+            QMessageBox.information(self, "Computation Results: Degree Distribution", 'Degree distribution: \n%s' %(degreedist), QMessageBox.Ok)
+        else:
+            QMessageBox.information(self, "Computation Results: Degree Distribution", 'The graph created had no nodes. No calculations could be performed.')        
+        degs = {}
+        for n in self.G.nodes () :
+            deg = self.G.degree(n)
+            if deg not in degs :
+                degs[deg] = 0
+            degs[deg] += 1
+        
+        items = sorted(degs.items())
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.loglog([ k for (k,v) in items] , [v for (k,v) in items])
+        plt.xlabel("degree")
+        plt.ylabel("frequency")
+        plt.show()
         return
+        
     def massCalc(self):
+        '''Used to calculate the full range of metrics. Returns the average 
+        where multiple values possible via a message window. Results will also
+        be written to a text file but this has not been added yet.'''
         #will open a new window where user can select the metrics they want to calculate
-        #send calc to code in another script
+        #then calc the metrics
+        #create a text file output
+        #make a summary window appear
+        param1 = self.txtparamA1.text()
+        param2 = self.txtparamA2.text()
+        param3 = self.txtparamA3.text()        
+        self.check_for_changes(param1,param2,param3)
+        if self.G == None or self.changed == False:
+            self.G = self.buildnetwork(param1,param2,param3,'A')
+            if self.G == None: return
+        if self.G.number_of_nodes > 0:
+            maxValCC, minValCC, averageValCC, nodeValCC = mc.Clustering_Calc(self.G)
+            maxValCS, minValCS, averageValCS, nodeValCS = mc.ClusteringSQ_Calc(self.G)
+            maxValBC, minValBC, averageValBC, nodeValBC = mc.Betweenness_Calc(self.G)
+            whole_graph, subgraphs = mc.AveragePathLength_Calc(self.G)
+            val  = mc.Assortativity_Calc(self.G)
+            #need code here which writes the full set of results to a textfile
+            #will have to open the file dialog 
+            QMessageBox.information(self, "Computation Results: Selected metrics", 'Mean clustering coefficient: \t%s \nMean clustering coefficient(Sq): \t%s \nMean betweenness coefficient: \t%s \nAssotativity coefficient: \t%s \nAverage path length: \t%s' %(averageValCC, averageValCS, averageValBC, val, whole_graph), QMessageBox.Ok)
+        else:
+            QMessageBox.information(self, "Computation Results: Selected metrics", 'The graph created had no nodes. No calculations could be performed.')        
         return
+        
     def plotGraph(self):
+        '''This will allow the user to plot a graph with any of the metrics 
+        they like. The details of te functionality and use of this need 
+        considering further.'''
         #will allow the user to plot a graph with any of the metrics
         #send calc to code in another script
+        QMessageBox.information(self, "Information", 'This has no functionality as yet.')
         return
+        
     def export(self):
+        '''This will export some detailed metric results.'''
         #will allow the user to export something - prbs gping to be an option within some of the menus
+        QMessageBox.information(self, "Information", 'This has no functionality as yet.')
         return
+        
+    def AtoBEdges(self):
+        '''Function to randomly create a set of edges which conenct network B 
+        to A. Parameters for networks must be entered already and user is 
+        required to set how many edges they want. Can be called from the 
+        Failure options menu or will run if no edges have been entered when 
+        they are needed to.'''
+        #need to build the networks
+        #ask user how mant edges they want to add
+
+        #need to check that the analysis is not stand alone - safety check        
+        #build network A if required
+        if self.analysistype == 'Single':
+            QMessageBox.warning(self, 'Error!', "This function is not required for analysing a single network."+self.NETNAME,'&OK')            
+            return
+        param1 = self.txtparamA1.text()
+        param2 = self.txtparamA2.text()
+        param3 = self.txtparamA3.text()        
+        self.check_for_changes(param1,param2,param3)
+        if self.G == None or self.changed == False:
+            self.G = self.buildnetwork(param1,param2,param3, 'A') #builds network
+            if self.G == None: return
+            
+        #build network B if required
+        param1 = self.txtparamB1.text()
+        param2 = self.txtparamB2.text()
+        param3 = self.txtparamB3.text()  
+        self.check_for_changes(param1,param2,param3)
+        if self.GnetB == None or self.changed == False:
+            self.GnetB = self.buildnetwork(param1,param2,param3, 'B') #builds network
+            if self.GnetB == None: return 
+        
+        #this needs change to an input message for the window
+
+        numberOfEdgesToCreate = self.EdgesDialog()
+        #numberOfEdgesToCreate = 5
+
+        #generate node pairs
+        ANodes = self.G.nodes()
+        BNodes = self.GnetB.nodes()
+        dependencyEdges = [] 
+        edges = 0                
+        while edges < numberOfEdgesToCreate:
+            edges += 1
+            temp = []
+            temp.append(r.choice(ANodes))
+            temp.append(r.choice(BNodes))
+            dependencyEdges.append(temp)
+        QMessageBox.information(self, 'Information', "The dependency edges have been created.\n %s"%(dependencyEdges)+self.NETNAME,'&OK')            
+        self.txtparamt1.setText(str(dependencyEdges))
+        return
+
+    def BtoAEdges(self):
+        '''Function to randomly create a set of edges which conenct network A 
+        to B. Parameters for networks must be entered already and user is 
+        required to set how many edges they want. Can be called from the 
+        Failure options menu or will run if no edges have been entered when 
+        they are needed to.'''
+        #need to build the networks
+        #ask user how mant edges they want to add
+        if self.analysistype == 'Single' or self.analysistype == 'Dependency':
+            QMessageBox.warning(self, 'Error!', "This function is only required when analysing an inerdependent system, not for the analysis of a single network or a system with dependency."+self.NETNAME,'&OK')      
+            return
+        param1 = self.txtparamA1.text()
+        param2 = self.txtparamA2.text()
+        param3 = self.txtparamA3.text()        
+        self.check_for_changes(param1,param2,param3)
+        if self.G == None or self.changed == False:
+            self.G = self.buildnetwork(param1,param2,param3, 'A') #builds network
+            if self.G == None: return
+            
+        #build network B if required
+        param1 = self.txtparamB1.text()
+        param2 = self.txtparamB2.text()
+        param3 = self.txtparamB3.text()  
+        self.check_for_changes(param1,param2,param3)
+        if self.GnetB == None or self.changed == False:
+            self.GnetB = self.buildnetwork(param1,param2,param3, 'B') #builds network
+            if self.GnetB == None: return 
+        
+        #this needs change to an input message for the window
+        numberOfEdgesToCreate = 5
+
+        #generate node pairs
+        ANodes = self.G.nodes()
+        BNodes = self.GnetB.nodes()
+        dependencyEdges = [] 
+        edges = 0                
+        while edges < numberOfEdgesToCreate:
+            edges += 1
+            temp = []
+            temp.append(r.choice(ANodes))
+            temp.append(r.choice(BNodes))
+            dependencyEdges.append(temp)
+        QMessageBox.information(self, 'Information', "The dependency edges have been created.\n %s"%(dependencyEdges)+self.NETNAME,'&OK')            
+        self.txtparamt2.setText(str(dependencyEdges))
+
+        return   
+        
+    def EdgesDialog(self):
+        text, ok = QInputDialog.getText(self, 'Input Dialog', 
+            'Enter the number of edges wanted:')
+        if ok:
+            #need some more error checking in here so only integers can be added
+            try:            
+                text = int(text)
+                return text
+            except:
+                print  'Error'
+        
     def create_metrics(self, parameters):
-        '''creates metrics'''
+        '''Creates the metrics and thier respective data containers based on 
+        the parameters for the analysis'''
         
         if parameters == None:
+            #this runs on startup
             STAND_ALONE = True
         
         #basic metrics A
@@ -1407,6 +1760,7 @@ class Window(QMainWindow):
         return self.metrics        
 
     def startorpause(self):
+        ''''''
         if self.running == True:
             self.pause = True
         elif self.running == False:
@@ -1415,14 +1769,19 @@ class Window(QMainWindow):
             self.full_analysis()
 
     def updatecolors(self, coloractive, colorinactive):
+        '''Saves the color options for the network visualisations when the 
+        options window is closed.'''        
         self.coloractive = coloractive
         self.colorinactive = colorinactive
 
     def updatetimedelay(self,timedelay):
+        '''Updates the time delay variable for the visualisations when the 
+        options window is closed by the user.'''
         self.timedelay = timedelay
 
     def selectAnalysisType(self, text):
-        '''change which input tect boxes are activiated based on the selection'''
+        '''Change which input text boxes are activiated based on the selection 
+        of the anlysis type.'''
         self.analysistype = text
         if self.analysistype == 'Single':
             self.txtparamt1.setEnabled(False)
@@ -1447,60 +1806,92 @@ class Window(QMainWindow):
         else:
             self.ckbxnoisolates.setEnabled(True)
             self.ckbxnoisolates.setChecked(False)
+            
     def ckbxoptionlimited(self):
         '''Change the enabled checkboxes for node slection when single analysis
         is selected and check the only valid option.'''
-        self.ckbx5.setEnabled(False)
-        self.ckbx6.setEnabled(False)
-        self.ckbx5.setChecked(False)
-        self.ckbx6.setChecked(False)
-        self.ckbx4.setChecked(True)
+        self.ckbxDegree.setEnabled(False)
+        self.ckbxBetweenness.setEnabled(False)
+        self.ckbxDegree.setChecked(False)
+        self.ckbxBetweenness.setChecked(False)
+        self.ckbxRandom.setChecked(True)
         QApplication.processEvents() #refresh gui
+
     def ckbxoptionall(self):
         '''Set all the node selection check boxes as checkable again.'''
-        self.ckbx5.setEnabled(True)
-        self.ckbx6.setEnabled(True)
+        self.ckbxDegree.setEnabled(True)
+        self.ckbxBetweenness.setEnabled(True)
+
     def disableallckbx(self):
-        self.ckbx1.setEnabled(False)
-        self.ckbx2.setEnabled(False)
-        self.ckbx3.setEnabled(False)
-        self.ckbx4.setEnabled(False)
-        self.ckbx5.setEnabled(False)
-        self.ckbx6.setEnabled(False)
+        '''Used to disable all the checkboxes when resileince analysis is being 
+        run. Called by the full_analysis function.'''
+        self.ckbxSingle.setEnabled(False)
+        self.ckbxSequential.setEnabled(False)
+        self.ckbxCascading.setEnabled(False)
+        self.ckbxRandom.setEnabled(False)
+        self.ckbxDegree.setEnabled(False)
+        self.ckbxBetweenness.setEnabled(False)
         self.ckbxisolates.setEnabled(False)
         self.ckbxnoisolates.setEnabled(False)
         self.ckbxsubgraphs.setEnabled(False)
+
     def enableallckbx(self):
-        self.ckbx1.setEnabled(True)
-        self.ckbx2.setEnabled(True)
-        self.ckbx3.setEnabled(True)
-        self.ckbx4.setEnabled(True)
-        if self.ckbx1.isChecked():
+        '''Used by the reset function to enable all the checkboxes which need 
+        are required in the default setup.'''
+        self.ckbxSingle.setEnabled(True)
+        self.ckbxSequential.setEnabled(True)
+        self.ckbxCascading.setEnabled(True)
+        self.ckbxRandom.setEnabled(True)
+        if self.ckbxSingle.isChecked():
             pass
         else:
-            self.ckbx5.setEnabled(True)
-            self.ckbx6.setEnabled(True)
+            self.ckbxDegree.setEnabled(True)
+            self.ckbxBetweenness.setEnabled(True)
         self.ckbxisolates.setEnabled(True)
         if self.ckbxisolates.isChecked():
             pass
         else:
             self.ckbxnoisolates.setEnabled(True)
         self.ckbxsubgraphs.setEnabled(True)
-    def openfile(self):
-         '''Function for opening a text file and adding the lists to the input boxes on the GUI.'''
+
+    def openfileA(self):
+         '''Function for opening a text file and adding the node and edge lists 
+         to the input boxes for network A.'''
          #load in a csv, add lists to text boxes, then select lists for the input 
          fname = QFileDialog.getOpenFileName(self, 'Open file')
          text = 'Lists'
-         self.networkselection(text)
+         self.networkselectionA(text)
          text=open(fname).read()
          text1, text2 = text.split('\n')
-         self.txtparam1.setText(text1)
-         self.txtparam2.setText(text2)
-         self.cmbox.setCurrentIndex(9)
-        
+         self.txtparamA1.setText(text1)
+         self.txtparamA2.setText(text2)
+         self.cmboxA.setCurrentIndex(9)
+    
+    def openfileB(self):
+         '''Function for opening a text file and adding the node and edge lists
+         to the input boxes for network B.'''
+         #load in a csv, add lists to text boxes, then select lists for the input 
+         fname = QFileDialog.getOpenFileName(self, 'Open file')
+         text = 'Lists'
+         self.networkselectionB(text)
+         text=open(fname).read()
+         text1, text2 = text.split('\n')
+         self.txtparamB1.setText(text1)
+         self.txtparamB2.setText(text2)
+         self.cmboxB.setCurrentIndex(9)
+
     def reset(self):
-        '''Reset the variables and re-enable any items which have been disabled.'''
+        '''Reset all the appropriate variables, enable/disable the appropriate 
+        buttons and check boxes and reset any text.'''
         self.G = None
+        self.GnetB = None
+        self.cmboxA.setCurrentIndex(0)
+        self.networkselectionA('GNM') #this clears the text boxes - dont really want it too though
+        self.cmboxB.setCurrentIndex(0)
+        self.networkselectionB('None') #this clears the text boxes - dont really want it too though
+        self.cmboxtype.setCurrentIndex(0)        
+        self.txtparamt1.setEnabled(False)
+        self.txtparamt2.setEnabled(False)
         self.positions = None
         self.cancel = False
         self.timestep = -1
@@ -1520,122 +1911,106 @@ class Window(QMainWindow):
         self.btnstep.setEnabled(True) #allow the button to be pressed again
         self.btnstart.setEnabled(True)
         self.ckbxviewnet.setEnabled(True) #view graph checkbox  
+        #self.clearAll()
+        self.graph = 'GNM'
+        #pl.close()
+        
     def clearAll(self):
-        '''Clear the three QLinEdit/input text boxes.'''
-        self.txtparamA1.setText('')
-        self.txtparamA2.setText('')
-        self.txtparamA3.setText('')
-        self.txtparamB1.setText('')
-        self.txtparamB2.setText('')
-        self.txtparamB3.setText('')
+        '''Clear all the QLinEdit/input text boxes for both networks A and B. 
+        Uses the individual functions for A and B.'''
+        self.clearA()
+        self.clearB()
+        self.clearDependencyEdges()
+
     def clearA(self):
-        '''Clear the three QLinEdit/input text boxes.'''
+        '''Clear the three QLinEdit/input text boxes for the first network(A).'''
         self.txtparamA1.setText('')
         self.txtparamA2.setText('')
         self.txtparamA3.setText('')
+
     def clearB(self):
-        '''Clear the three QLinEdit/input text boxes.'''
+        '''Clear the three QLinEdit/input text boxes for the second network(B).'''
         self.txtparamB1.setText('')
         self.txtparamB2.setText('')
         self.txtparamB3.setText('')
+    
+    def clearDependencyEdges(self):
+        '''Clear the dependency edges boxes.'''
+        self.txtparamt1.setText('')
+        self.txtparamt2.setText('')
     
     def closeall(self):
         '''Closes the other windows if they are open when Exit chosen from 
         File menu.'''
         pl.close('all') #closes the network visualisation window
+
+    def check_for_changes(self,param1,param2,param3):
+        '''Checks to see if any of the inputs for a graph have changed. 
+        Does not check the network type or the analysis type.'''
+        if param1 <> self.lastparam1: self.changed = False
+        if param2 <> self.lastparam2: self.changed = False
+        if param3 <> self.lastparam3: self.changed = False
+        return
+
     def showoptionswindow(self):
         '''Open the extra parameter window.'''
         self.w = OptionsWindow()
         self.w.updatetimedelay(self.timedelay)
+
     def updateoptions(self):
-        '''called by the options window to get recent variable values'''
+        '''Called by the options window to get recent variable values. Returns 
+        the options as they have been stored for the option parameter window.'''
         return self.timedelay, self.coloractive, self.colorinactive 
+
     def showmetricswindow(self):
         '''Open the metrics window.'''
         self.w = MetricsWindow()
         #self.w.updatetimedelay(self.timedelay)
+
     def update_metrics_window(self):
-        '''called by the metrics window when opened to get the up-to-date variables'''
+        '''Called by the metrics window when opened to get the up-to-date variables'''
         return self.metrics 
     
-    def showdbwindow(self):
-        '''Open the database connection window.'''
-        inputDlg = DbConnect()
-        inputDlg.updateparameters(self.dbconnect)
-        
     def updatemetrics(self, metrics):
-        '''called when metrics window is closed to update the variables'''
+        '''Called when metrics window is closed to update the variables'''
         self.metrics = metrics
         self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
         print self.option_metrics_A
         
-    def updatedb(self, dbconnect):
-        ''''''
-        #print 'this is: ',dbconnect
+    def updatedb(self, dbconnect, G):
+        '''Updates the stored database connection properties if the connection
+        was successful when the databse options window closes. Called when 
+        DbConnect is closed.'''
         self.dbconnect = dbconnect
+        self.G = G
+    def returndbconnection(self):
+        return self.dbconnect
+        
     def getdbparameters(self):
-        '''Open the GUI for the user to input the database connection 
-        parameters. This needs looking at as works, but not as intended. 
-        Could thus do with cleaning up.'''
-        self.failed = False        
+        '''Opens the GUI for the user to input the database connection 
+        parameters. Also gets the successful working parameters.'''
         dlg = DbConnect()
-        dlg.updateparameters(self.dbconnect)
-        ####the next four lines do not work properly, but get the data anyhow.
         if dlg.exec_():
             dlg.getval()
         else:
-            self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME = dlg.getval()
-        if self.NETNAME == '':
-            self.failed = True
-            return 
-        else:
-            return 
+            pass 
     
-    def getdbnetwork(self):
-        '''Connect to the database and pull the network into the system.'''
+    def getdbnetwork(self, AorB):
+        '''Coordiantes the oppening of teh DbConnect input dialog and then the 
+        populating of the text boxes in the main GUI.'''
         self.getdbparameters()
-        self.failed = False
-        if self.failed == False:           
-            try:
-                #needed to convert the items to strings for the connection
-                self.DBNAME = str(self.DBNAME)
-                self.HOST = str(self.HOST)
-                self.PORT = str(self.PORT)
-                self.USER = str(self.USER)
-                self.PASSWORD = str(self.PASSWORD)
-                self.NETNAME = str(self.NETNAME)              
-                
-                # paramers for a safe conenction that should always work
-                self.DBNAME = 'air'
-                self.HOST = 'localhost'
-                self.PORT = '5433'
-                self.USER = 'postgres'
-                self.PASSWORD = 'aaSD2011'
-                self.NETNAME = 'uk_internal_routes'
-                #connection = 'PG:dbname = air host = localhost port = 5433 user = postgres password = aaSD2011'
-                
-                host = 'localhost'
-                dbname = 'roads'
-                user = 'postgres'
-                password = 'aaSD2011'
-                port = '5433'
-                conn = ogr.Open("PG: host='%s' dbname='%s' user='%s' password='%s' port='%s'" % (host, dbname, user, password, port))
-                #connection = str('PG:dbname = ')+str(self.DBNAME)+str(" host='")+str(self.HOST)+str("' port='")+str(self.PORT)+str("' user='")+str(self.USER)+str("' password='")+str(self.PASSWORD)+str("'")   
-                #connection = str('PG: host= ' )+self.HOST+str(" dbname = '")+self.DBNAME+str("' user= '")+self.USER+str("' password= '")+self.PASSWORD+str("'")
-                print 'connection: ', conn
-                #conn = ogr.Open(connection)
-                print 'connection open'
-                self.G = nx_pgnet.read(conn, 'poewer_line_Edges', 'Power_line_NODES')#load in network from database and create networkx instance
-                print 'G = ', self.G                
-                return self.G
-            except:
-                #QMessageBox.warning(self, 'Error!', "Could not connect to database and find the data. Please check your inputs and try again. The parameters were: \ndbname: "+self.DBNAME+"\nhost: "+self.HOST+"\nuser: "+self.USER+"\nport: " +self.PORT+"\npassword: "+self.PASSWORD+"\nnetwork: "+self.NETNAME,'&OK')
-                QMessageBox.warning(self, 'Error!', "Could not connect to database and find the data. Please check your inputs and try again. The parameters were: \ndbname: "+dbname+"\nhost: "+host+"\nuser: "+user+"\nport: " +port+"\npassword: "+password+"\nnetwork: ",'&OK')                
-                self.G = None           
+        if self.G == None:
+            pass
         else:
-            self.cancel = True
-            self.G = None
-            return
+            if AorB == 'A':
+                self.txtparamA1.setText(str(self.G.nodes()))
+                self.txtparamA2.setText(str(self.G.edges()))
+            elif AorB == 'B':
+                self.txtparamB1.setText(str(self.G.nodes()))
+                self.txtparamB2.setText(str(self.G.edges()))
+            else:
+                QMessageBox.warning(self, 'Error!', "Internal error. Please close the application and re-open it. If this error continue to occur, please report it.",'&OK')
+    
 
     def closeEvent(self, event):
         '''Over rides the automatic close event so can ask user if they 
@@ -1650,16 +2025,17 @@ class Window(QMainWindow):
             event.ignore()
             
     def updateUi(self):
-        '''Called by the finished() signal, thus process the results, handles the visualisations and the completion of the analysis as well as the continument of the full analysis if applicable.'''
-        print 'THE THREAD HAS FINSIHED'
+        '''Called by the finished() signal, thus process the results, handles 
+        the visualisations and the completion of the analysis as well as the 
+        continument of the full analysis if applicable.'''
+        #print 'THE THREAD HAS FINSIHED'
 
         if self.timestep>0:
-            print 'here'
             forthread = self.thread.update()
             self.graphparameters, self.parameters, self.iterate = forthread
         else:
             self.graphparameters, self.parameters, self.iterate = self.forthread
-        print len(self.graphparameters)
+
         #i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
         networks,i,node_list, to_b_nodes, from_a_nodes, basic_metrics_A,basic_metrics_B,option_metrics_A, option_metrics_B,interdependency_metrics,cascading_metrics = self.graphparameters
         GtempA, GtempB, GA, GB = networks
@@ -1670,20 +2046,21 @@ class Window(QMainWindow):
             QApplication.processEvents()
             if self.timestep > -1:
                 print 'the time step is: ', self.timestep
-                #identify removed ndoes adn set as inactive
-                if self.ckbx1.isChecked():
+                #identify removed nodes and set as inactive
+                if self.ckbxSingle.isChecked():
+                    print 'running this section'
                     for node in self.graphvis:
-                        self.graphvis.node[node]['state'] = self.active
-                    removednodes = set(self.graphvis.nodes()) - set(self.G.nodes()) #need to convert to sets as lists cannot be subtracted
+                        self.graphvis.node[node]['state'] = self.active #set all nodes as active
+                    removednodes = set(self.graphvis.nodes()) - set(GA.nodes()) #need to convert to sets as lists cannot be subtracted
                     for node in removednodes:
-                        self.graphvis.node[node]['state'] = self.inactive
+                        self.graphvis.node[node]['state'] = self.inactive #set the removed node(s) as inactive
                 else:
-                    removednodes = set(self.graphvis.nodes()) - set(self.G.nodes()) #need to convert to sets as lists cannot be subtracted
+                    removednodes = set(self.graphvis.nodes()) - set(GA.nodes()) #need to convert to sets as lists cannot be subtracted
                     for node in removednodes: #set the state to inactive for relavant nodes 
                         self.graphvis.node[node]['state'] = self.inactive 
                 self.figureModel, self.timestep = draw(self.graphvis, self.positions, self.figureModel, self.timestep, self.coloractive, self.colorinactive)
                 if self.fullanalysis == True:
-                    QApplication.processEvents() #refresh gui  
+                    QApplication.processEvents() #refresh gui
                     time.sleep(self.timedelay)
             else:
                 self.reset()
@@ -1696,27 +2073,37 @@ class Window(QMainWindow):
             print 'analysis completed'
             self.lbl4.setText('Analysis completed')
             self.lbl4.adjustSize()
-            QApplication.processEvents() #refresh gui
-            self.reset() 
+            QApplication.processEvents() #refresh gui            
             ok = QMessageBox.information(self, 'Information', "Network resileince analysis successfully completed. Do you want to view the metric graphs?" , '&No','&View Graphs')
             if ok == 1: #if the view graph option is clicked
                 self.values = res.outputresults(self.graphparameters, self.parameters)     
+                #print 'passed this point'
                 pl.close()
-                inputdlg = ViewGraphs()
+                #inputdlg = ViewGraphs()
+                self.q = ViewGraphs()
                 self.btnstep.setEnabled(True)#allow the button to be pressed again
                 self.btndraw.setEnabled(True)
+                self.reset()
                 ###below enables the dialog to stay open but brings an error                
-                inputdlg() 
-                
+                #inputdlg()
+            else:
+                pl.close()
+                self.reset()
+            
     def updatevalueset(self):
-        '''Used to transfer the values to the view graphs class. Called on first line oc class.'''        
+        '''Used to transfer the values to the view graphs class. Called on
+        first line of class.'''        
         return self.values
             
     def drawview(self):
-        '''Draws the network without running any anlysis. Initiated by the Draw button and option in the edit menu.'''
+        '''Draws the network without running any anlysis. Initiated by the Draw
+        button and option in the edit menu.'''
         print 'drawing the network'
         if self.G == None:
-            self.buildnetwork()
+            param1 = self.txtparamA1.text()
+            param2 = self.txtparamA2.text()
+            param3 = self.txtparamA3.text()
+            self.G = self.buildnetwork(param1,param2,param3,'A')
             if self.G == None:
                 return
         self.graphvis = self.G.copy()
@@ -1730,8 +2117,9 @@ class Window(QMainWindow):
         self.figureModel, self.timestep = draw(self.graphvis, self.positions, self.figureModel, self.timestep, self.coloractive, self.colorinactive)
             
     def step_analysis(self):
-        ''''Perform the resilience analysis through user control for each node removal process.'''
-        print 'performing step analysis'
+        ''''Perform the resilience analysis through user control for each node
+        removal process.'''
+        #print 'performing step analysis'
         if self.timestep>1:        
             self.forthread = self.thread.update()
             self.graphparameters, self.parameters, self.iterate = self.forthread
@@ -1746,29 +2134,63 @@ class Window(QMainWindow):
             self.lbl4.setText('Intialising')
             self.lbl4.adjustSize()
             QApplication.processEvents()
-            self.buildnetwork()
-            #create copy for visualisation and set active attribute
-            self.graphvis=self.G.copy()
-            for node in self.graphvis.nodes_iter():  
-                self.graphvis.node[node]['state'] = self.active
-            self.parameters = self.getanalysistype()
+            param1 = self.txtparamA1.text()
+            param2 = self.txtparamA2.text()
+            param3 = self.txtparamA3.text()
+            self.G = self.buildnetwork(param1,param2,param3,'A')
+            if self.G <> None:
+                #create copy for visualisation and set active attribute
+                self.graphvis=self.G.copy()
+                for node in self.graphvis.nodes_iter():  
+                    self.graphvis.node[node]['state'] = self.active
+                self.parameters = self.get_analysis_type()   
+            else:
+                self.btnstep.setEnabled(True)
+                self.btndraw.setEnabled(True)
+                self.ckbxviewnet.setEnabled(True)
+                self.enableallckbx()
+                return
+        
+        metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges = self.parameters
+        if self.GnetB == None and STAND_ALONE == False:
+            param1 = self.txtparamB1.text()
+            param2 = self.txtparamB2.text()
+            param3 = self.txtparamB3.text()
+            self.GnetB = self.buildnetwork(param1,param2,param3,'B')
+            if self.GnetB == None:
+                self.btnstep.setEnabled(True)
+                self.btndraw.setEnabled(True)
+                self.ckbxviewnet.setEnabled(True)
+                self.enableallckbx()
+                return
+                
+        if fileName == None:
+            fileName = self.setfilelocation()
+            self.parameters = metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
+
         if self.ckbxviewnet.isChecked() and self.positions==None: 
             selected = self.visselection()
             self.positions = self.getpositions(selected)
         if self.parameters == None: #needed if network is drawn before doing analysis
-            self.parameters = self.getanalysistype()
+            self.parameters = self.get_analysis_type()
         self.lbl4.setText('Processing')
         self.lbl4.adjustSize()
         QApplication.processEvents()
         if self.timestep == 0:
-            self.graphparameters = res.core_analysis(self.G)
+            #temporary until full dependence compatability
+            metrics = self.sort_metrics(self.parameters)
+            #metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges = self.parameters
+            self.parameters = metrics, STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
+            self.GnetB = None #tempory until full compatability for dependency is sorted
+            self.graphparameters = res.core_analysis(self.G, self.GnetB, self.parameters)
             self.forthread = self.graphparameters, self.parameters, self.iterate
             self.updateUi()
         elif self.timestep == 1:            
             self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
         elif self.timestep>1:
             self.forthread = self.graphparameters, self.parameters, self.iterate
-            i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
+            networks,i,node_list, to_b_nodes, from_a_nodes, basic_metrics_A,basic_metrics_B,option_metrics_A, option_metrics_B,interdependency_metrics,cascading_metrics = self.graphparameters
+            GA,GATemp,GB,GBTemp = networks
             self.G = GA    
             self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
         else:
@@ -1776,7 +2198,8 @@ class Window(QMainWindow):
         self.btnstep.setEnabled(True)
         
     def full_analysis(self):
-        '''Runs the analysis of the whole network in one go. Called by the Start button and from the edit menu.'''
+        '''Runs the analysis of the whole network in one go. Called by the 
+        'Start' button and from the edit menu.'''
         print 'performing complete analysis'
         self.btnstart.setText("Pause")
         if self.pause == True:
@@ -1794,7 +2217,10 @@ class Window(QMainWindow):
             self.lbl4.setText('Intialising')
             self.lbl4.adjustSize()
             QApplication.processEvents()
-            self.buildnetwork()
+            param1 = self.txtparamA1.text()
+            param2 = self.txtparamA2.text()
+            param3 = self.txtparamA3.text()
+            self.G = self.buildnetwork(param1,param2,param3,'A')
             if self.G <> None:
                 #create a copy for the vis and adds attribute state
                 self.graphvis=self.G.copy()
@@ -1802,12 +2228,39 @@ class Window(QMainWindow):
                     self.graphvis.node[node]['state'] = self.active
                 self.parameters = self.get_analysis_type()
             if self.G == None:
-                self.reset()
+                #self.reset()
+                self.btnstep.setEnabled(True)
+                self.btndraw.setEnabled(True)
+                self.ckbxviewnet.setEnabled(True)
+                self.enableallckbx()
                 return
+        
+        metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges = self.parameters
+        if self.GnetB == None and STAND_ALONE == False:
+            param1 = self.txtparamB1.text()
+            param2 = self.txtparamB2.text()
+            param3 = self.txtparamB3.text()
+            self.GnetB = self.buildnetwork(param1,param2,param3,'B')
+            if self.GnetB <> None:            
+                print 'net b has ', self.GnetB.number_of_nodes(), ' nodes'
+            else:
+                #self.reset()
+                self.btnstep.setEnabled(True)
+                self.btndraw.setEnabled(True)
+                self.ckbxviewnet.setEnabled(True)
+                self.enableallckbx()
+                return
+                
         if self.parameters == None:
-            self.parameters = self.getanalysistype()
+            print 'this is here for satefy. SHOULD NEVER BE USED'
+            self.parameters = self.get_analysis_type()
+            
+        if fileName == None:
+            fileName = self.setfilelocation()
+            self.parameters = metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
+
         '''get metrics sorted here'''
-        self.metrics = self.sort_metrics()
+        self.metrics = self.sort_metrics(self.parameters)
         ''''''
         self.lbl4.setText('Processing')
         self.lbl4.adjustSize()
@@ -1818,15 +2271,12 @@ class Window(QMainWindow):
         if self.timestep == 0:
             '''this is tempory until we built in the ability to do dependency function'''
             self.Gnet = None
-            print len(self.parameters)
             
-            STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName =self.parameters
-            a_to_b_edges = None #this needs sorting when dependency option sorted
+            #STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName =self.parameters
+            #a_to_b_edges = None #this needs sorting when dependency option sorted
             self.parameters = self.metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName,a_to_b_edges
-            ''''''            
             self.graphparameters = res.core_analysis(self.G, self.Gnet, self.parameters)
             self.forthread = self.graphparameters, self.parameters, self.iterate
-            print 'length of graph parameters is: ', len(self.graphparameters)
             self.updateUi()
         if self.timestep > 0:            
             self.forthread = self.graphparameters, self.parameters, self.iterate               
@@ -1836,8 +2286,12 @@ class Window(QMainWindow):
             self.G = GA     
             self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
         
-    def sort_metrics(self):
-        STAND_ALONE = True
+    def sort_metrics(self, parameters):
+        '''Set the condition of all the posible metrics based on the parameters.'''
+
+        metrics, STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges = parameters
+        #STAND_ALONE = True
+        
         nodes_removed_A = True #nodes removed from network A
         node_count_removed_A = True #count of ndoes removed from network A   
         count_nodes_left_A = True #the number of nodes left in network A
@@ -1911,7 +2365,8 @@ class Window(QMainWindow):
         return metrics
 
     def visselection(self):
-        '''Loads a GUI where the use selects the method of positioning the nodes.'''
+        '''Loads a GUI where the user can select a method for positioning the 
+        nodes when visualised.'''
         if self.graph == 'Database':
             items = 'Circle', 'Random', 'Spring', 'Shell', 'Spectral','Circle Tree (bfs)', 'Circle Tree (dfs)', 'Tree (bfs)', 'Tree (dfs)', 'Geographic'
         else:
@@ -1924,7 +2379,7 @@ class Window(QMainWindow):
         return method  
 
     def getpositions(self, selected):
-        '''Using the selected text from the combo box, calculate the positions
+        '''Uses the selected text from the combo box to calculate the positions
         for the nodes.'''
         'Default(Random)', 'Circle', 'Spring', 'Shell', 'Spectral', 'Circle Tree (bfs)', 'Circle Tree (dfs)', 'Tree (bfs)', 'Tree (dfs)'
         if selected == 'Default(Random)':
@@ -1958,24 +2413,20 @@ class Window(QMainWindow):
     def get_analysis_type(self):
         '''Get the analysis type, the file location and if any of the other 
         options have been selected related to the analysis if the network.'''
-        '''these top three need an interface on the gui'''
-        STAND_ALONE = True
-        DEPENDENCY = False
-        INTERDEPENDENCY = False
 
-        SINGLE = False
-        SEQUENTIAL = False
-        CASCADING = False
-
-        RANDOM = False
-        DEGREE = False
-        BETWEENNESS = False
+        #as default, all are set as false, then changed if requested
+        STAND_ALONE = False;DEPENDENCY = False;INTERDEPENDENCY = False
+        SINGLE = False;SEQUENTIAL = False;CASCADING = False
+        RANDOM = False;DEGREE = False;BETWEENNESS = False
+        REMOVE_SUBGRAPHS = False;REMOVE_ISOLATES = False;NO_ISOLATES = False
         
-        REMOVE_SUBGRAPHS = False
-        REMOVE_ISOLATES = False
-        NO_ISOLATES = False
+        #get the type from the text from the drop down menu
+        if self.analysistype == 'Single': STAND_ALONE = True
+        elif self.analysistype == 'Dependency': DEPENDENCY = True
+        elif self.analysistype == 'Interdependency': INTERDEPENDENCY = True
         
-        fileName = self.setfilelocation()
+        #fileName = self.setfilelocation()
+        fileName = None
         if fileName == "": #if user clicks cancel, exits the routine
             QMessageBox.information(self, 'Information', "Successfully ended process.")
             self.nofilename = True   
@@ -1984,25 +2435,25 @@ class Window(QMainWindow):
             return
         else:
             self.nofilename = False
-            if self.ckbx1.isChecked() and self.ckbx4.isChecked():
+            if self.ckbxSingle.isChecked() and self.ckbxRandom.isChecked():
                 SINGLE = True
                 RANDOM = True
-            elif self.ckbx2.isChecked() and self.ckbx4.isChecked():
+            elif self.ckbxSequential.isChecked() and self.ckbxRandom.isChecked():
                 SEQUENTIAL = True
                 RANDOM = True            
-            elif self.ckbx2.isChecked() and self.ckbx5.isChecked():
+            elif self.ckbxSequential.isChecked() and self.ckbxDegree.isChecked():
                 SEQUENTIAL = True
                 DEGREE = True            
-            elif self.ckbx2.isChecked() and self.ckbx6.isChecked():
+            elif self.ckbxSequential.isChecked() and self.ckbxBetweenness.isChecked():
                 SEQUENTIAL = True
                 BETWEENNESS = True            
-            elif self.ckbx3.isChecked() and self.ckbx4.isChecked():
+            elif self.ckbxCascading.isChecked() and self.ckbxRandom.isChecked():
                 CASCADING = True
                 RANDOM = True            
-            elif self.ckbx3.isChecked() and self.ckbx5.isChecked():
+            elif self.ckbxCascading.isChecked() and self.ckbxDegree.isChecked():
                 CASCADING = True
                 DEGREE = True            
-            elif self.ckbx3.isChecked() and self.ckbx6.isChecked():
+            elif self.ckbxCascading.isChecked() and self.ckbxBetweenness.isChecked():
                 CASCADING = True
                 BETWEENNESS = True
             else:
@@ -2018,15 +2469,20 @@ class Window(QMainWindow):
             if self.ckbxnoisolates.isChecked():
                 NO_ISOLATES = True
                 
-            parameters = STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName
-            return parameters   
+            metrics = None
+            a_to_b_edges = None
+            parameters = metrics, STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
+            return parameters
+            
     def setfilelocation(self):
         '''Set the file location for the output file.'''
+        print 'SELECTING THE LOCATION TO SAVE THE FILE'
         fileName = QFileDialog.getSaveFileName(self, 'Save File', '.txt')  
         return fileName  
+        
     def networkselectionA(self, text):
         '''Alter the interface depending on what is selected in the combo box 
-        for graph type.'''
+        for graph type for network A.'''
         self.graph = text
         if text == 'GNM':
             self.clearA()
@@ -2126,6 +2582,15 @@ class Window(QMainWindow):
             self.txtparamA1.setEnabled(False)
             self.txtparamA2.setEnabled(False)
             self.txtparamA3.setEnabled(False)
+            self.getdbnetwork('A')
+        elif text == 'CSV':
+            self.clearA()
+            self.txtparamA1.setEnabled(False)
+            self.txtparamA2.setEnabled(False)
+            self.txtparamA3.setEnabled(False)
+            self.openfileA()
+            self.txtparamA1.setEnabled(True)
+            self.txtparamA1.setEnabled(True)
         elif text == 'Lists':   
             self.clearA()
             self.txtparamA1.setEnabled(True)
@@ -2138,7 +2603,7 @@ class Window(QMainWindow):
             
     def networkselectionB(self, text):
         '''Alter the interface depending on what is selected in the combo box 
-        for graph type.'''
+        for graph type for network A.'''
         self.graph = text
         if self.graph <> 'None':
             self.cmboxtype.setCurrentIndex(1)
@@ -2207,7 +2672,7 @@ class Window(QMainWindow):
             self.txtparamB2.setValidator(self.validator)
             self.txtparamB3.setInputMask("B.9")
         elif text == 'Hierarchical Random +':
-            self.clearA()
+            self.clearB()
             self.txtparamB1.setEnabled(True)
             self.txtparamB2.setEnabled(True)
             self.txtparamB3.setEnabled(True)
@@ -2246,6 +2711,15 @@ class Window(QMainWindow):
             self.txtparamB1.setEnabled(False)
             self.txtparamB2.setEnabled(False)
             self.txtparamB3.setEnabled(False)
+            self.getdbnetwork('B')
+        elif text == 'CSV':
+            self.clearB()
+            self.txtparamB1.setEnabled(False)
+            self.txtparamB2.setEnabled(False)
+            self.txtparamB3.setEnabled(False)    
+            self.openfileB()
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
         elif text == 'Lists':   
             self.clearB()
             self.txtparamB1.setEnabled(True)
@@ -2258,33 +2732,37 @@ class Window(QMainWindow):
 
             
     #slot to be called when start button is clicekd
-    def buildnetwork(self):
-        '''Builds the network using the user selected option as well as checking for the correct input values. If graph not built, G=None'''
+    def buildnetwork(self, param1,param2,param3, net):
+        '''Builds the network using the user selected option as well as 
+        checking for the correct input values. If graph not built, G = None'''        
+
+        self.lastparam1 = param1
+        self.lastparam2 = param2
+        self.lastparam3 = param3
+
         print 'building network'
-        param1 = self.txtparamA1.text()
-        param2 = self.txtparamA2.text()
-        param3 = self.txtparamA3.text()
-        self.G = None 
+        #self.G = None # this line should be moved to where this is called from allowing for it to clear A or B. In here they are not differentiatied 
+        print 'self.graph when building is: ', self.graph
         #build network
         if self.graph == 'Watts Strogatz': #ws 
             if param1 == '':  
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank for network %s." %(net))
                 return
             if param2 == '':  
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank for network %s." %(net))
                 return
             if param3 == '':  
-                QMessageBox.warning(self, 'Error!', "Input for parameter 3 is blank.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 3 is blank for network %s." %(net))
                 return            
             try:        
                 param1 = int(param1)
             except:        
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1, the number of nodes, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 for network %s, the number of nodes, is in an incorrect format." %(net))
                 return
             try:
                 param2 = int(param2)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2, the number of connected neighbours, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 for network %s, the number of connected neighbours, is in an incorrect format."%(net))
                 return
             try:
                 param3 = float(param3)
@@ -2297,178 +2775,171 @@ class Window(QMainWindow):
             if param3 <0 or param3 >1:
                 QMessageBox.warning(self, 'Error!', "Input for parameter 3 is an incorrect value.")
                 return
-            self.G = nx.watts_strogatz_graph(param1, param2, param3)
-            if nx.is_connected(self.G)==False:
+            tempG = nx.watts_strogatz_graph(param1, param2, param3)
+            if nx.is_connected(tempG)==False:
                 #bring up error message box
                 QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase parameter 2 or decrease parameter 3.", '&OK')                  
                 #would like to put a retry button on the message box, but not sure how we would know how to restart the analysis after doing this, as can be called from two places
                 return #exit sub
         elif self.graph == 'GNM': #gnm
             if param1 == '':  
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank for network %s." %(net))
                 return
             if param2 == '':  
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank for network %s." %(net))
                 return
             try:        
                 param1 = int(param1)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1, the number of nodes, is in an incorrect format.")             
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 for network %s, the number of nodes, is in an incorrect format." %(net))             
                 return        
             try:
                 param2 = int(param2)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2, the nuber of edges, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 for network %s, the nuber of edges, is in an incorrect format." %(net))
                 return
-            '''
-            maxno = (param1)*(param1/2)
-            if maxno < param2:
-                QMessageBox.warning(self, 'Warning!', "Warning. This network may have duplicate edges or edges which begin and end at the same node.")
-                #sys.exitfunc() 
-                return
-            else:
-            '''
-            self.G = nx.gnm_random_graph(param1, param2)
-            if nx.is_connected(self.G)==False:
+            tempG = nx.gnm_random_graph(param1, param2)
+            if nx.is_connected(tempG)==False:
                 #bring up error message box
                 QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase the number of edges.")
-                self.G = None #needs to reset G to none when graph is unconnected                
+                tempG = None #needs to reset G to none when graph is unconnected                
                 self.btnstep.setEnabled(True)#allow the button to be pressed again                            
                 return #exit sub
         elif self.graph == 'Barabasi Albert': #ba
             if param1 == '':  
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blankfor network %s." %(net))
                 return
             if param2 == '':  
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blankfor network %s." %(net))
                 return
             try:        
                 param1 = int(param1)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1, the number of nodes, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 for network %s, the number of nodes, is in an incorrect format." %(net))
                 return           
             try:
                 param2 = int(param2)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2, the nuber of edges, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 for network %s, the nuber of edges, is in an incorrect format." %(net))
                 return
-            self.G = nx.barabasi_albert_graph(param1, param2)
-            if nx.is_connected(self.G)==False:
+            tempG = nx.barabasi_albert_graph(param1, param2)
+            if nx.is_connected(tempG)==False:
                 QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase the number of edges.")
                 return #exit sub
         elif self.graph == 'Erdos Renyi': #er
             if param1 == '':  
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank for network %s." %(net))
                 return
             if param2 == '':  
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blankfor network %s." %(net))
                 return
             try:        
                 param1 = int(param1)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1, the number of nodes, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 for network %s, the number of nodes, is in an incorrect format." %(net))
                 return            
             try:            
                 param2 = float(param2)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2, the nuber of edges, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 for network %s, the nuber of edges, is in an incorrect format." %(net))
                 return
             if param2 <0 or param2 >1:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2 is an incorrect value.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 for network %s is an incorrect value." %(net))
                 return
-            self.G = nx.erdos_renyi_graph(param1, param2)
-            if nx.is_connected(self.G)==False:
+            tempG = nx.erdos_renyi_graph(param1, param2)
+            if nx.is_connected(tempG)==False:
                 #bring up error message box
                 QMessageBox.warning(self, 'Error!', "Graph could not be created. Please try again or increase the number of edges.")
                 return #exit sub
         elif self.graph == 'Database': #database connection  -currently only allows a single network
-            self.getdbnetwork()
-            if self.G == None:
+            #this needs to change - should be a case of the entwork already exisiting or reading in the node and edges lists            
+            #self.getdbnetwork()
+            if tempG == None:
                 return
         elif self.graph == 'Hierarchical Random': #hr
             if param1 == '':  
-                 QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
+                 QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank for network %s." %(net))
                  return
             if param2 == '':  
-                 QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank.")
+                 QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank for network %s." %(net))
                  return
             if param3 == '':  
-                 QMessageBox.warning(self, 'Error!', "Input for parameter 3 is blank.")
+                 QMessageBox.warning(self, 'Error!', "Input for parameter 3 is blank for network %s." %(net))
                  return
             try:        
                 param1 = int(param1)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1, the number of child nodes per parent, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 for network %s, the number of child nodes per parent, is in an incorrect format." %(net))
                 return  
             try:        
                 param2 = int(param2)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2, the number levels, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 for network %s, the number levels, is in an incorrect format." %(net))
                 return 
             try:
                 param3 = float(param3)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 3, the probability of new edges, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 3 for network %s, the probability of new edges, is in an incorrect format." %(net))
                 return
-            self.G = customnets.hr(param1,param2,param3)
+            tempG = customnets.hr(param1,param2,param3)
         elif self.graph =='Hierarchical Random +': #ahr
             if param1 == '':  
-                 QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
+                 QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank for network %s." %(net))
                  return
             if param2 == '':  
-                 QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank.")
+                 QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank for network %s." %(net))
                  return
             if param3 == '':  
-                 QMessageBox.warning(self, 'Error!', "Input for parameter 3 is blank.")
+                 QMessageBox.warning(self, 'Error!', "Input for parameter 3 is blank for network %s." %(net))
                  return                        
             try:          
                 param1 = int(param1)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1, the number of child nodes per parent, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 for network %s, the number of child nodes per parent, is in an incorrect format." %(net))
                 return  
             try:        
                 param2 = int(param2)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2, the number levels, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 for network %s, the number levels, is in an incorrect format." %(net))
                 return 
             try:
                 param3 = float(param3)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 3, the probability of new edges, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 3 for network %s, the probability of new edges, is in an incorrect format." %(net))
                 return
-            self.G = customnets.ahr(param1,param2,param3)
+            tempG = customnets.ahr(param1,param2,param3)
         elif self.graph == 'Hierarchical Communities': #hc
             #param1 = level
             #param2 = square/tri
             if param1 == '':  
-                 QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
+                 QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank for network %s." %(net))
                  return
             if param2 == '':  
-                 QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank.")
+                 QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank for network %s." %(net))
                  return
             try:          
                 param1 = int(param1)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1, the number of levels, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 for network %s, the number of levels, is in an incorrect format." %(net))
                 return  
             try:          
                 param2 = int(param2)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2,the type of sructure, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 for network %s,the type of sructure, is in an incorrect format." %(net))
                 return   
             if param2 >= 2:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2,the type of sructure, is too high. It should be either 0 or 1.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 for network %s,the type of sructure, is too high. It should be either 0 or 1." %(net))
             
             if param2 == 0:
                 if param1 == 0 or param1 >= 6:
-                    QMessageBox.warning(self, 'Error!', "Input for parameter 1, the number of levels, is incorrect. Should be between 1 and 5.")
+                    QMessageBox.warning(self, 'Error!', "Input for parameter 1 for network %s, the number of levels, is incorrect. Should be between 1 and 5." %(net))
                 else:
-                    self.G = customnets.square(param1)
+                    tempG = customnets.square(param1)
             elif param2 == 1:
                 if param1 == 0 or param1 >= 5:
-                    QMessageBox.warning(self, 'Error!', "Input for parameter 1, the number of levels, is incorrect. Should be between 1 and 4.")
+                    QMessageBox.warning(self, 'Error!', "Input for parameter 1 for network %s, the number of levels, is incorrect. Should be between 1 and 4." %(net))
                 else:
-                    self.G = customnets.tri(param1)
+                    tempG = customnets.tri(param1)
             else:
                 print 'There has been an error'
            
@@ -2476,30 +2947,28 @@ class Window(QMainWindow):
             #param 1 is the number of new nodes
             #param 2 is the number of level excluding the source
             if param1 == '':  
-                 QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank.")
+                 QMessageBox.warning(self, 'Error!', "Input for parameter 1 is blank for network %s." %(net))
                  return
             if param2 == '':  
-                 QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank.")
+                 QMessageBox.warning(self, 'Error!', "Input for parameter 2 is blank for network %s." %(net))
                  return
             try:        
                 param1 = int(param1)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 1, the number of child nodes per parent, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 1 for network %s, the number of child nodes per parent, is in an incorrect format." %(net))
                 return  
             try:        
                 param2 = int(param2)
             except:
-                QMessageBox.warning(self, 'Error!', "Input for parameter 2, the number levels, is in an incorrect format.")
+                QMessageBox.warning(self, 'Error!', "Input for parameter 2 for network %s, the number levels, is in an incorrect format." %(net))
                 return  
-            self.G=nx.balanced_tree(param1, param2)
-        elif self.graph == 'Lists': #lists
-            #param1 is a list of nodes  #param2 is a list of egdes
-            #need to convert the input strings to lists with integers in the correct format
+            tempG = nx.balanced_tree(param1, param2)
+        elif self.graph =='CSV':
+            
             if param1 =='' or param2=='':
                 QMessageBox.warning(self, 'Error!', "Graph could not be created. Please enter node and edge lists or select a different option.")
-                                
                 return #exit sub
-            self.G = nx.Graph()
+            tempG = nx.Graph()
             param1 = replace_all(param1, {' ':'','[':'',']':'',')':'','(':''})
             param1 = param1.split(',')
             nodelist=[]            
@@ -2507,9 +2976,9 @@ class Window(QMainWindow):
                 item = int(item)
                 nodelist.append(item)
             try:
-                self.G.add_nodes_from(nodelist)
+                self.tempG.add_nodes_from(nodelist)
             except:
-                QMessageBox.warning(self, 'Error!', "Graph could not be created. The node list does not fit the required format.")
+                QMessageBox.warning(self, 'Error!', "Graph could not be created. The node list for network %s does not fit the required format." %(net))
                 return #exit sub
             param2 = replace_all(param2, {')':'',']':'','[':'',' ':''}) #clean the list
             param2 = param2.split('(') #split the list (also removes them)
@@ -2528,22 +2997,67 @@ class Window(QMainWindow):
                             templist.append(each) #add to the node pair for an edge
                     edgelist.append(templist) #append the node pair list to the edge list
             try:
-                self.G.add_edges_from(edgelist)
+                tempG.add_edges_from(edgelist)
             except:
-                QMessageBox.warning(self, 'Error!', "Graph could not be created. The edge list is not in the correct formart.")            
+                QMessageBox.warning(self, 'Error!', "Graph could not be created. The edge list for network %s is not in the correct formart." %(net))         
                 return #exit sub
+            
+        elif self.graph == 'Lists': #lists
+            #param1 is a list of nodes  #param2 is a list of egdes
+            #need to convert the input strings to lists with integers in the correct format
+            if param1 =='' or param2=='':
+                QMessageBox.warning(self, 'Error!', "Graph could not be created. Please enter node and edge lists or select a different option.")
+                return #exit sub
+            tempG = nx.Graph()
+            param1 = replace_all(param1, {' ':'','[':'',']':'',')':'','(':''})
+            param1 = param1.split(',')
+            nodelist=[]            
+            for item in param1:
+                item = int(item)
+                nodelist.append(item)
+            try:
+                tempG.add_nodes_from(nodelist)
+            except:
+                QMessageBox.warning(self, 'Error!', "Graph could not be created. The node list for network %s does not fit the required format." %(net))
+                return #exit sub
+            param2 = replace_all(param2, {')':'',']':'','[':'',' ':''}) #clean the list
+            param2 = param2.split('(') #split the list (also removes them)
+            edgelist = [] #create the new edges list
+            for item in param2: #for each item in the list
+                if item == "": #if blank, skip
+                    item = item
+                else:
+                    item = item.split(',') #split each itm on the comma
+                    templist = [] #create a temp list to store the nodes for a list
+                    for each in item: #for each node in the list
+                        if each == "":
+                            each = each                              
+                        else:
+                            each = int(each) #convert to integer
+                            templist.append(each) #add to the node pair for an edge
+                    edgelist.append(templist) #append the node pair list to the edge list
+            try:
+                tempG.add_edges_from(edgelist)
+            except:
+                QMessageBox.warning(self, 'Error!', "Graph could not be created. The edge list for network %s is not in the correct formart." %(net))
+                return #exit sub
+        elif self.graph == 'None':
+            QMessageBox.warning(self, 'Error!', "Error! Please try again. No graph method was selected. Self.graph was: %s!" %(self.graph))          
+            return #exit sub
         else: 
-            QMessageBox.warning(self, 'Error!', "Error! Please try again.")          
+            print 'self.graphs is:'
+            print self.graph
+            QMessageBox.warning(self, 'Error!', "Error! Apollogies, the cause is unknown.")          
             return #exit sub
         self.param1 = param1 #make these freely accessable
         self.param2 = param2
         self.param3 = param3
-        if self.G == None:
+        if tempG == None:
             self.cancel = True
             return
         else:
-            print 'built network successfully, has ', self.G.number_of_nodes(), ' nodes'
-        
+            print 'built network successfully, it has ', tempG.number_of_nodes(), ' nodes'
+            return tempG 
         
 class Worker(QThread):
 
@@ -2567,19 +3081,15 @@ class Worker(QThread):
     def run(self):
         '''Runs the analysis by calling the function in the resilience module.'''
         # Note: This is never called directly. Always use .start to start the workthread.
-        print 'running the analysis'
-        print len(self.graphparameters)
+        #print 'running the analysis'
         self.graphparameters, self.iterate = res.step(self.graphparameters, self.parameters, self.iterate)
-        #self.emit(SIGNAL("finished()"),)
-        print 'not here'
+        #self.emit(SIGNAL("finished()")
         self.forthread = self.graphparameters, self.parameters, self.iterate
     def update(self):
         ''''''
-        print 'length of forthread is: ', len(self.forthread)
+        #print 'length of forthread is: ', len(self.forthread)
         #self.graphparameters, self.parameters, self.iterate = self.forthread 
-        print 'gp is: ', self.graphparameters
-        print 'p is: ', self.parameters
-        print 'i is: ', self.iterate
+        #print 'i is: ', self.iterate
         self.forthread = self.graphparameters, self.parameters,self.iterate
         return self.forthread
 
@@ -2631,15 +3141,18 @@ def drawnet(G, positions, timestep, coloractive, colorinactive):
 
     for node in G.nodes_iter():
         if G.node[node]['state'] == 0: #inactive
+            #print 'node marked as inactive'
             inactivenodes.append(node)
             edgelist = G.edges(node)
             nx.draw_networkx_edges(G, positions, edge_width=6.1, edgelist = edgelist, edge_color = str(colorinactive))
         elif G.node[node]['state']== 1: #active
+            #print 'node marked as active'
             activenodes.append(node)
             edgelist = G.edges(node)
             #nx.draw_networkx_edges(G, positions, edgelist = edgelist, edge_width = 7,edge_color = 'r')
             #activeedges.append(G.edges(node))
-
+    print 'active nodes = ', len(activenodes)
+    print 'inactive nodes = ', len(inactivenodes)
     #nx.draw(G,positions,node_size=20,alpha=0.5,node_color="blue", with_labels=False) #this is the original method
     #nx.draw(G, positions, nodelist = activenodes, node_color = 'r')#, with_labels=False)
     #nx.draw(G, positions, nodelist = inactivenodes, node_color = 'b')#, with_labels=False)
@@ -2661,13 +3174,4 @@ if __name__ == "__main__":
     window = Window()
     window.show()
     sys.exit(app.exec_())      
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+    
