@@ -5,36 +5,68 @@ Created on Sun Dec 16 10:34:32 2012
 @author: Craig
 """
 
-def geo(G,dim=2, scale=2):
+def  geo(G,dim=2, scale=2):
     '''Will draw a network stored using the network schema geographically by 
     extracting the coordinates from the attributes of each node.'''
-    print 'in geo'
     try:
-        import networkx as nx
         import numpy as np
     except ImportError:
         raise ImportError("requires numpy")
     #this needs the database connection to be used as well
     'will return the positions for the nodes based on coordinates which are attibutes in the nodes'
     #need to get the attribue coordintes here and reduce them to atual coords which can be used
-    pos=np.asarray(np.random.random((len(G),dim)),dtype=np.float32)#creates array from input gragh for coords
-    #attstring = str(G.node[1]['Wkt'])
-    
-    try:
-        print 'node at zero is: ', G.node[0]
-    except:
-        print 'no node at zero'
     
     #getting errors here as lokking for node zero which does not exist
-    for node in G.nodes_iter():  
-        attstring = G.node[node]['Wkt']
-        attstring = attstring[7:] #removes the first seven characters
-        attstring = attstring[:-1] #removes the final bracket
-        a,b = attstring.split()
+    geo_vis = nx.Graph()
+    k = 1 #counter for the nodes ###why is this one and not zero???
+    #reads the network and create a new one with all nodes and egdes for real vis
+    for o,d in G.edges_iter():
+        #builds networks using the linestrings
+        coordlist = G[o][d]['Wkt']
+        coordlist = coordlist[12:-1]
+        coordlist = coordlist.split(',')
+        j = 0 #iterates through the corrds for the linestring
+        nodes_in_line = []
+        while j < len(coordlist):
+            found = False
+            for nd in geo_vis.nodes_iter():
+                if geo_vis.node[nd]['coord'] == coordlist[j]:
+                    found = True
+                    nodes_in_line.append(nd)
+                    break
+            if found == False:
+                #if node not in network, add to new network
+                geo_vis.add_node(k)
+                geo_vis.node[k]['coord']=coordlist[j]
+                nodes_in_line.append(k)
+                k += 1
+            j += 1
+            
+        #using the list of nodes in the linestring, create the edges
+        ndinline = 0
+        while ndinline < len(nodes_in_line)-1:
+            geo_vis.add_edge(nodes_in_line[ndinline],nodes_in_line[ndinline+1])
+            ndinline+=1
+
+    pos=np.asarray(np.random.random((len(geo_vis),dim)),dtype=np.float32)#creates array from input gragh for coords
+    
+    node_list = G.nodes()
+    u = node_list[0]
+    diff = u - 0
+    
+    for nd in G.nodes_iter():
+        coord = geo_vis.node[nd]['coord']
+        a,b = coord.split(' ')
         temp =np.array([float(a),float(b)])  
-        pos[node-1]=temp
+        pos[u-diff]=temp
+        #pos[u]=temp
+        u +=1
+        
+    #Gpos = dict(zip(G,pos))
+    Gpos = dict(zip(geo_vis,pos))
     pos=_rescale_layout(pos,scale=scale)
-    return dict(zip(G,pos)) #should try/add to all the others so they are the same as the other layouts.
+    return geo_vis, Gpos
+    #return geo_vis, dict(zip(geo_vis,pos)) #should try/add to all the others so they are the same as the other layouts.
     
 def tree_circle(G,bfs,dim=2, scale=2):
     '''Plots a network as a number of circles increasing in size from the 
@@ -208,9 +240,9 @@ def tree(G,bfs,dim=2, scale=2):
     for node in G.nodes():
         loop = True
         while loop == True:
-            print 'node is: ', node
+            #print 'node is: ', node
             n_lvl = G.node[node]["level"] #get the node level
-            print levelnodes[n_lvl][s]
+            #print levelnodes[n_lvl][s]
             if node <> levelnodes[n_lvl][s]: #if the node number matches that in the level at position the required
                 s +=1
             else: #go onto the next node
