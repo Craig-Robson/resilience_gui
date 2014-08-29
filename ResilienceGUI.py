@@ -12,7 +12,7 @@ import networkx as nx
 import pylab as pl
 import matplotlib as mp
 import visalgorithms_v8 as vis
-import interdependency_analysis_v4_5 as res #this one needs updating/changing for the required setup
+import interdependency_analysis_v4_6 as res #this one needs updating/changing for the required setup
 import inhouse_algorithms as customnets
 import time
 #from matplotlib.widgets import CheckButtons
@@ -52,20 +52,21 @@ class pickparameters(QtGui.QDialog):
         self.applybtn = QtGui.QPushButton('Apply', self)
         self.applybtn.move(55, 80)
         self.applybtn.clicked.connect(self.applyclick)
-        self.cancelbtn = QtGui.QPushButton('Cancel', self)
+        self.cancelbtn = QtGui.QPushButton('Close', self)
         self.cancelbtn.move(135, 80)
         self.cancelbtn.clicked.connect(self.cancelclick)
         #just need to sort this out so the variable values can be transfered into this class easily
         #attempt to get the metric values for the graphs from the mian window class
 
         self.values = valueset #converts global valueset into the self.values, which is the metric values to be displayed
-        self.setGeometry(700,500,280,110)#above; vertical place on screen, hoz place on screen, width of window, height of window
+        self.setGeometry(900,500,280,110)#above; vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Graph parameters')  #title of windpw          
         self.show()#show window  
-    
-        self.fig = pl.gcf()
-        self.fig.canvas.set_window_title('Results plot')
+        self.figureGraph = pl.figure()
+        self.figureGraph = pl.gcf()
+        self.figureGraph.canvas.set_window_title('Results plot')
         pl.ion()
+        print 
         pl.show() #this displays a blank plot which I then want the graph to be displayed in
         
     #may have to use a similar methodology to that used when trying to visualise the networks as they fail
@@ -120,10 +121,11 @@ class pickparameters(QtGui.QDialog):
         #pl.legend(bbox_to_anchor=(1.05, 1), loc=2, mode="expand",borderaxespad=0.)
         pl.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)                
         pl.show() #in future have it work dynamically so can pick the results it displays from some check boxes
-
                     
     def cancelclick(self):
         self.close()            
+        pl.close()
+        
     def getval(self):
         return self.metric1, self.metric2
     def identifymetric(self, metric):
@@ -295,8 +297,8 @@ class MainWindow(QtGui.QMainWindow):
         fileMenu.addAction(openAction)
         fileMenu.addAction(exitAction)
   
-        self.lbl4 = QtGui.QLabel("STATE", self)
-        self.lbl4.move(70,145)
+        self.lbl4 = QtGui.QLabel("", self)
+        self.lbl4.move(25,165)
         self.lbl4.adjustSize() 
         fontbold = QtGui.QFont("Calibri", 10, QtGui.QFont.Bold)      
 
@@ -759,14 +761,13 @@ class MainWindow(QtGui.QMainWindow):
         #get a position array to use for the remainder of the analysis
         self.positions = nx.circular_layout(G)
         viewfailure = self.viewfailures, self.stepstate, self.positions          
+        
         #run code here call to external function/module 
-        #result, values = res.main(G,parameters, viewfailure)
-        #result, values = res.core_analysis(G, parameters, viewfailure)   
         '''need to make a few amendmants here so can use a run and step button'''        
         #create a step function in here which can be called when a user clicks a steo button
         #also needs to be useable for running all the analysis in one go
         #to make this work, need to aort out how this GUI will work in terms of controlling the analysis process        
-        #self.values = (12,13,16,12,8,2,2,2,0)
+
         graphparameters = res.core_analysis(G, viewfailure) #sending viewfailure as included in graph parameter packet, but does not need to be really
         iterate = True #this starts as true until no more itterations are to be done, as decided in the step module
 
@@ -774,17 +775,14 @@ class MainWindow(QtGui.QMainWindow):
         self.workThread = WorkThread() #set the name of the thread
         graphparameters = res.core_analysis(G, viewfailure) #sending viewfailure as included in graph parameter packet, but does not need to be really
         while iterate == True:   
-            global valueset, forthread
+            global valueset, forthread #allows the updated iterate variable to be used from the last iteration
             graphparameters, parameters, iterate = forthread
-            #graphparameters, iterate = self.runstep(graphparameters, parameters, iterate)#this runs the step function            
-            #print 'iterate after the global declaration but before the workthread call is: ', iterate            
             if iterate == True:            
                 self.connect(self.workThread, QtCore.SIGNAL("self.forthread[list]"), self.runstep)
                 self.workThread.start()
-                time.sleep(20)
+                time.sleep(10)
             else:
                 print 'the analysis process has finished'
-            print 'ITERATE IN GUI CODE IS ', iterate 
         print 'ITERATE IS ', iterate  
 
         self.values = res.outputresults(graphparameters, parameters)        
@@ -808,7 +806,7 @@ class MainWindow(QtGui.QMainWindow):
         graphparameters, iterate = res.step(graphparameters, parameters, iterate)
         return graphparameters, iterate
         
-    def drawgraph(self, values):
+    def drawgraph(self, values): #this is not used. Superseeded by content in the pickparameters class
         #get the two mtrics to display from the combobox window        
         inputdlg = pickparameters()
         if inputdlg.exec_():
