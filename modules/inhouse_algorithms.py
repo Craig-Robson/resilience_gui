@@ -15,107 +15,243 @@ import random as r
 #HC - may take a bit of working to use both square and triangle structures (which also need checking)
 
 def hr(a,b,p):
-    '''a = number of levels, b = nodes per level, p = probability'''
-    G=nx.balanced_tree(a,b) #generate graph
-    e1=nx.number_of_edges(G)
-    e1 = e1*p
-    round(e1)
-    e1=int(e1)
-    yrand=r.randint(0,(e1))   #generate number of random edges to add                       
+    '''a = number of levels, b = nodes per level, p = total number of edges wanted'''
+    G = nx.balanced_tree(a,b) #generate graph
+    nodes = G.number_of_nodes()
+    e1 = nx.number_of_edges(G)
+    #print 'number of edges is: ', e1
+    #print 'number of edges wanted is: ', p
+    p = p - e1 #subtract the number of edges in G from the number of edges wanted to find how many to add
+    #print 'number of edges to add: ', p
+    #round(e1)
+    #e1=int(e1)                     
     y = 0
-    j = 0
-    
+    yrand = p
     while y<yrand:                    
-        w1=r.randint(0,e1)#generate two random node values
-        w2=r.randint(0,e1)
-        while w1==w2:#need to check not the same value
-            w2=r.randint(0,e1)
+        w1=r.randint(0,nodes) #generate two random node values
+        w2=r.randint(0,nodes)
+        while w1==w2: #need to check not the same value
+            w2=r.randint(0,nodes)
         G.add_edge(w1,w2)
         y+=1
+        
     return G
     
-def ahr(a,b,p):
-    print 'this is to be sorted'
+'''
+def hr(a,b,p):
+    ''a = number of levels, b = nodes per level, p = total number of edges wanted''
+    G = nx.balanced_tree(a,b) #generate graph
+    nodes = G.number_of_nodes()
+    e1 = nx.number_of_edges(G)
+    print 'number of edges is: ', e1
+    print 'number of edges wanted is: ', p
+    e1 = e1*p
+    round(e1)
+    e1=int(e1)                     
+    y = 0
+    yrand = e1
+    while y<yrand:                    
+        w1=r.randint(0,nodes) #generate two random node values
+        w2=r.randint(0,nodes)
+        while w1==w2: #need to check not the same value
+            w2=r.randint(0,nodes)
+        G.add_edge(w1,w2)
+        y+=1
+        
+    return G
+'''
+def ahr(a,b,p, numofedges):
+    '''a = number of levels, b = nodes per level, p = probability, numofedges = total number of edges wanted'''
+    #print 'this has been sorted' #two erros. first was the z value was set to zero, rather than one.
+    #secondly, max node value in both loops was one two hogh in all instances.
     #generate graph
-    G=nx.balanced_tree(a,b)
-    #add them to a list, identofy them through there predecessor being 0, adn then get the node number from a list of nodes
+    G = nx.balanced_tree(a,b)
+    #print 'the number of edges are: ', G.number_of_edges()
+    #print 'the number edges needed is: ', numofedges
+    #print 'number of nodes is: ', G.number_of_nodes() 
+    
+    if G.number_of_edges() > numofedges:
+        print 'IMPOSSIBLE TO CREATE'
+        exit()
+    numofedges = numofedges - G.number_of_edges()
+    #add them to a list, identofy them through there predecessor being 0, adn then get the node number from a list of nodes  
     gnodes=G.nodes()
-    #print gnodes
     level1=[]
-    level2=[]
-    level3=[]
     level0=[0]
     mlevel=[]
+    gno = 0
     mlevel.append(level0)
-    z=0#z will be  the bottom of the range of nodes to add to the level list
+    gno = 1
+    z=1#z will be  the bottom of the range of nodes to add to the level list
     #level1 will be 0 - a - needs nodes 1-2  
     while z <= a:
         level1.append(gnodes[z])
         z=z+1
-    mlevel.append(level1)#0
-    #level 2 
-    a2=a*a+a
-    if a2<=len(gnodes):    
-        while z <= a2:	
-            level2.append(gnodes[z])
-            z=z+1
-        mlevel.append(level2)#1
-    #level3
-    a3=a2*a+a
-    if a3<=len(gnodes):
-        while z <= a3:
-            level3.append(gnodes[z])
-            z=z+1
-        mlevel.append(level3)#2
-    #level4   
-    level4=[]    
-    a4=a3*a+a
-    if a4<=len(gnodes):
-        while z <= a4:
-            level4.append(gnodes[z])
-            z=z+1   
-        mlevel.append(level4)#3
-    #level4   
-    level5=[]    
-    a5=a4*a+a
-    if a5<=len(gnodes):
-        while z <= a5:
-            level5.append(gnodes[z])
-            z=z+1    
-            mlevel.append(level5)#4    
-    f=0
-    while f< len(mlevel): # goes mlevel for each list
-        h=mlevel[f]
-        y=len(h)
-        t=h[0]
-        s=0
-        e=round(p*y)
-        while s<=e:
-            w1=w2=r.randint(t,y+t)#y+t to find the upper most value in list
-            while w1==w2:
-                w2=r.randint(t,y+t)
+    
+    mlevel.append(level1)
+    gno = gno + len(level1)
+    ai = a*(a+1)
+    
+    stop = G.number_of_nodes()
+    while gno <> stop:            
+        temp = []
+        while z <= ai:
+            temp.append(gnodes[z])
+            z += 1
+        mlevel.append(temp)
+        ai = ai *a + a
+        gno = gno + (len(temp))
+    #print 'number of nodes in original tree: ', G.number_of_nodes()
+    #number of edges to add per method
+    prob = r.randint(1,8)/10.0
+    #print prob
+    toadd1 = round(numofedges * prob) #number of nodes to add in the first step
+    #print 'total for 1st addition: ', toadd1
+    toadd2 = numofedges-toadd1
+    #print 'total for 2nd addition: ',toadd2
+    #print 'total added: ', toadd1 + toadd2
+    #print 'final total should be: ', G.number_of_nodes() + toadd1 + toadd2
+    
+    #--calc the numer of new edges per level----------------------------------#
+    #need to split the number of nodes between the levels 
+    numnewedges1 = []
+    numnewedges2 = []
+    f = 1    
+    while f < len(mlevel): #goes mlevel for each list   
+        nodesinlevel = mlevel[f] #get nodes in level
+        numofnodesinlevel = len(nodesinlevel) #get number of nodes in level
+        #calc the new edges to go in each level
+        newedges1 =  r.randint(0, (numofnodesinlevel*(numofnodesinlevel-1)/2))
+        if newedges1 > toadd1:
+            newedges1 = toadd1
+        numnewedges1.append(round(newedges1))
+        if f+1 < len(mlevel):
+            #print 'f +1 here is: ', f+1
+            nodesinnextlevel = mlevel[f+1]
+            numofnodesinnextlevel = len(nodesinnextlevel)
+        
+            newedges2 = r.randint(0, ((numofnodesinlevel-1)*(numofnodesinnextlevel))) #need to change this for the seconf set of new edges as does not work
+            numofnodesinnextlevel = None
+            if newedges2 > toadd2:
+                 newedges2 = toadd2
+            numnewedges2.append(round(newedges2))
+        f+=1
+    
+    #print 'sum edge list1 ', sum(numnewedges1)
+    #print 'sum edge list2 ', sum(numnewedges2)
+    #print 'to add1 = ', toadd1
+    #print 'to add2 = ', toadd2
+    #---------adjust values to get the right amount of edges in total---------#
+    if sum(numnewedges1) > toadd1:
+        newdiff = sum(numnewedges1) - toadd1
+        i = 1
+        while i < newdiff:
+            unit = r.randint(1, len(numnewedges1)-1)
+            unitval = numnewedges1[unit]            
+            while unitval < 1:            
+                unit = r.randint(1, len(numnewedges1)-1)
+                unitval = numnewedges1[unit] 
+            numnewedges1[unit] = numnewedges1[unit] - 1
+            i += 1     
+    if sum(numnewedges2) > toadd2:
+        newdiff = sum(numnewedges2) - toadd2
+        i = 1
+        while i < newdiff:
+            unit = r.randint(1, len(numnewedges2)-1)
+            unitval = numnewedges2[unit]
+            while unitval < 1:            
+                unit = r.randint(1, len(numnewedges2)-1)
+                unitval = numnewedges2[unit] 
+            numnewedges2[unit] = numnewedges2[unit] - 1
+            i += 1     
+            
+    #may need to add some code in here to cope wth tith the limits of each level  
+    if sum(numnewedges1) < toadd1:
+        #print 'adding some extra edges'
+        newdiff = sum(numnewedges1) - toadd1
+        i = 1
+        while i < newdiff:
+            unit = r.randint(1, len(numnewedges1)-1)
+            numnewedges1[unit] = numnewedges1[unit] + 1
+            i += 1     
+    if sum(numnewedges2) < toadd2:
+        #print 'adding some extra edges for 2'
+        newdiff = sum(numnewedges2) - toadd2
+        i = 1
+        while i < newdiff:
+            unit = r.randint(1, len(numnewedges2)-1)
+            numnewedges2[unit] = numnewedges2[unit] + 1
+            i += 1        
+            
+    #print 'new edge list1 ', numnewedges1
+    #print 'new edge list2 ', numnewedges2 
+    
+    
+    #----add first set of edges-----------------------------------------------#
+    f=1
+    #print 'adding first set of edges'
+    while f< len(mlevel): #goes mlevel for each list   
+        #print 'f is: ', f
+        nodesinlevel = mlevel[f] #get nodes in level
+        numofnodesinlevel = len(nodesinlevel) #get number of nodes in level
+        t = nodesinlevel[0] #get the value of the first node in the level
+        s = 0
+        #e=round(p*y)
+        e = numnewedges1[f-1]                
+        nmax = numofnodesinlevel+t
+        midnumofedges = G.number_of_edges()
+        #print 'ADDING ', e, ' edges to tree'
+        total = midnumofedges + e
+        #print 'TOTAL should be: ', midnumofedges + e
+        while G.number_of_edges() <> total:
+            w1 = r.randint(t,nmax-1)#find the upper most value in list
+            w2 = r.randint(t,nmax-1)#find the upper most value in list
+            while w1 == w2:
+                w2 = r.randint(t,nmax-1)
+            #may be check not replicating exsting edges
+            #below checks for adding extra nodes on
+            if w2 == len(G.nodes()) or w1 == len(G.nodes()): #this if statement should not be used now. if so problem with z value likly
+                print 'ERROR!!!!'
             G.add_edge(w1,w2)
-            s=s+1
-        f=f+1
-    #randomly connect nodes in the level below
-    #use the mlevel list as above
-    #use the probability value from above
-    f=0
-    while f+1<len(mlevel):
-        h=mlevel[f]
-        h1=mlevel[f+1]
-        y=len(h)
-        y1=len(h1)
-        t=h[0]
-        t1=h1[0]
-        s=0
-        e=round(p*y)
-        while s<=e:
-            w1=r.randint(t,y+t)#y+t to find the upper most value in list
-            w2=r.randint(t1,y1+t1)
+            s = s+1
+        #print 's is: ',s
+        #print 'TOTAL is actually: ', G.number_of_edges()
+        f = f+1
+
+    #print 'the number of edges after 1 is: ', G.number_of_edges()
+    #print 'the above value should be: ', 585+toadd1   
+    
+    #---------add second set of new edges-------------------------------------#
+    #print 'ADDING 2ND SET OF EDGES'
+    f=1
+    while f+2 <= len(mlevel):
+        #print 'f is: ', f
+        #print 'mlevel is: ', len(mlevel)
+        h = mlevel[f] #get nodes in the level
+        h1 = mlevel[f+1] #get nodes in the next level
+        y = len(h)
+        y1 = len(h1)
+        #print 'nodes in level are: ', y
+        #print 'nodes in lower level are: ', y1
+        t = h[0] #get number of first node in the level
+        t1 = h1[0] #get number of first node in the next level
+        s = 0
+        e = round(p*y) #get the number of new edges to add, based on the probability value and the number of nodes in the top level      
+        e = numnewedges2[f-1]  
+        midnumofedges = G.number_of_edges()
+        #print 'ADDING ', e, ' edges to tree'
+        total = midnumofedges + e
+        #print 'TOTAL should be: ', total
+        while G.number_of_edges() <> total:
+            w1 = r.randint(t,y+t-1)#y+t to find the upper most value in list
+            w2 = r.randint(t1,y1+t1-1)
+            while w1 == w2:
+                w2 = r.randint(t1,y1+t1-1)
             G.add_edge(w1,w2)
-            s=s+1
-        f=f+1
+            s = s+1
+        #print 'TOTAL is actually: ', G.number_of_edges()
+        f = f+1
+    #print 'finally, the number of edges are: ', G.number_of_edges()
     return G
 
 #def hc(level, struc):      
@@ -277,7 +413,7 @@ def tri(level):
         
     def level4(G,a,b,c,d):
         i=0
-        d=G.number_of_nodes()-1#255
+        #d=G.number_of_nodes()-1#255
         c=d-1#254
         b=d-2#253
         a=d-3#252
@@ -288,7 +424,7 @@ def tri(level):
             c=c-64
             d=d-64
             i=i+1         
-        #print 'l4: ' + str(a) 
+        
         a=a+4
         newedges=([a+64,a+128],[a+64,a+192],[a+128,a+192])#edges to connect large clusters together
         G.add_edges_from(newedges)    
@@ -317,11 +453,69 @@ def tri(level):
     
     def level5(G,a,b,c,d):
         ##*****to be done if required/have a bit of spare time******##
+        i=0
+        d=G.number_of_nodes()-1#255
+        print 'LOOK HERE:', G.number_of_nodes()
+        c=d-1#254
+        b=d-2#253
+        a=d-3#252
+        while i<4:         
+            G=level4(G,a,b,c,d)  
+            a=a-256
+            b=b-256
+            c=c-256
+            d=d-256
+            i+=1 
+                        
+        #four level 4 subgraphs now
+        jump = 256      
+        #these connect the three external clusters via their central nodes
+        G.add_edge(jump,jump*2)
+        G.add_edge(jump,jump*3)
+        G.add_edge(jump*2,jump*3)
+        
+        #this block add edges between the external nodes and the central node
+        h = 1
+        number_to_connect = 3
+        centre_node = 0
+        node_c = 256
+        t = 0
+        while t < 3: #this should be 3
+            node_c += 64 #miss the central group
+            h = 1
+            while h < 4: #should be 4
+                node_c += 16 #skip the next 16 at centre of outer group1
+                u = 0
+                while u < 3: #should be 3
+                    print ''
+                    node_c += 4 #skip as at centre of smaller group
+                    j = 0
+                    while j < 3:
+                        k = 0 
+                        node_c += 1 #skip as at centre of 4 
+                        while k < number_to_connect:
+                            G.add_edge(node_c,centre_node)
+                            k += 1
+                            if node_c == 1024:
+                                pass
+                            else:
+                                node_c += 1
+                        j += 1
+                    u += 1
+                h += 1      
+            t += 1
         return G
         
+    #this starts the building of the network
     G = four_cluster(level)
     return G
-  
-
-    
+'''
+G = tri(5)
+print G.number_of_nodes()
+print nx.is_connected(G)
+for g in nx.connected_component_subgraphs(G):
+    print g.number_of_nodes()
+print nx.number_connected_components(G)
+#print G.degree()
+''' 
     
