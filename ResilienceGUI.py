@@ -29,13 +29,13 @@ import networkx as nx
 import pylab as pl
 import matplotlib.pyplot as plt
 import random as r
-sys.path.append("C:/Users/Craig/Dropbox/resilience_module")
-sys.path.append("C:/a8243587_DATA/Dropbox/resilience_module")
-import interdependency_analysis_v5_3_3 as res 
-sys.path.append("support_modules")
+sys.path.append("C:/Users/Craig/GitRepo/resilience")
+sys.path.append("C:/a8243587_DATA/GitRepo/resilience")
+import interdependency_analysis as res 
+sys.path.append("C:/Users/Craig/GitRepo/resilience_gui/modules")
 import inhouse_algorithms as customnets
-import visalgorithms_v10_5 as vis
-import metric_calcs_v_1_0 as mc
+import visalgorithms as vis
+import metric_calcs as mc
 
 class DbConnect(QDialog):  
 #class DbConnect(QMainWindow):
@@ -186,13 +186,9 @@ class DbConnect(QDialog):
             print 'could not import ogr'
         try: 
             sys.path.append('C:/a8243587_DATA/GitRepo/nx_pgnet')
+            sys.path.append('C:/Users/Craig/GitRepo/nx_pgnet')
             import nx_pgnet, nx_pg
         except:
-            try:
-                sys.path.append('C:/Users/Craig/GitRepo/nx_pgnet')
-                import nx_pgnet, nx_pg
-            except:
-                pass
             print 'could not import nx_pgnet'
 
         self.DBNAME = self.txtinput1.text()
