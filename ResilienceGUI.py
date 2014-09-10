@@ -33,6 +33,7 @@ sys.path.append("C:/Users/Craig/GitRepo/resilience")
 sys.path.append("C:/a8243587_DATA/GitRepo/resilience")
 import interdependency_analysis as res 
 sys.path.append("C:/Users/Craig/GitRepo/resilience_gui/modules")
+sys.path.append("C:/a8243587_DATA/GitRepo/resilience_gui/modules")
 import inhouse_algorithms as customnets
 import visalgorithms as vis
 import metric_calcs as mc
@@ -3076,11 +3077,9 @@ class Window(QMainWindow):
     def check_for_changes(self,param1,param2,param3,text):
         '''Checks to see if any of the inputs for a graph have changed. 
         Does not check the network type or the analysis type.'''
-        print 'In check_for_changes'        
           
         #checks for changes in the three inputs
         if text == 'A':
-            print "in text = A"
             self.changedA = False
             if param1 <> self.lastparam1A:
                 self.changedA = True
@@ -3101,6 +3100,7 @@ class Window(QMainWindow):
         else:
             print 'ERROR, text given did not match as required'
             exit()
+        return
         
     def showwindow_options(self):
         '''Open the extra parameter window.'''
@@ -3257,11 +3257,12 @@ class Window(QMainWindow):
             elif forthread == None:
                 QMessageBox.warning(self, 'Error!', "Error.",'&OK')
             else:
-                self.graphparameters, self.parameters, self.iterate = forthread
+                self.graphparameters, self.parameters, self.metrics, self.iterate = forthread
         else:
-            self.graphparameters, self.parameters, self.iterate = self.forthread
+            self.graphparameters, self.parameters, self.metrics, self.iterate = self.forthread
         
-        networks,i,node_list, to_b_nodes, from_a_nodes, basic_metrics_A,basic_metrics_B,option_metrics_A, option_metrics_B,interdependency_metrics,cascading_metrics = self.graphparameters
+        networks,i,node_list, to_b_nodes, from_a_nodes = self.graphparameters
+        #networks,i,node_list, to_b_nodes, from_a_nodes, basic_metrics_A,basic_metrics_B,option_metrics_A, option_metrics_B,interdependency_metrics,cascading_metrics = self.graphparameters
         GtempA, GtempB, GA, GB = networks
         self.G = GtempA  
         
@@ -3332,10 +3333,8 @@ class Window(QMainWindow):
         if self.iterate==False:
             self.iterationsdone+=1
         
-        
         print '-------------------------------'
-        print 'Iterate is %s. %s/%s simulations done.' %(self.iterate,self.iterationsdone,self.numofiterations)
-
+        print '%s/%s simulations done.' %(self.iterationsdone,self.numofiterations)
         #for the continued analysis of a network
         if self.fullanalysis == True and self.iterate==True and self.cancel==False:
             self.full_analysis(self.parameters)                      
@@ -3485,6 +3484,8 @@ class Window(QMainWindow):
                 else:
                     pl.close()
                     self.reset_analysiscompleted()
+                
+
                     
     def runseqmodels(self):
         #unpack the variables
@@ -3768,7 +3769,7 @@ class Window(QMainWindow):
                 a_to_b_edges = self.AtoBEdges()
                 b_to_a_edges = self.BtoAEdges()          
             self.parameters = metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
-        self.metrics = self.sort_metrics(self.parameters)
+        #self.metrics = self.sort_metrics(self.parameters)
         if fileName == None:
             fileName = self.setfilelocation_save()
             if fileName == '': #in case the user clicks cancel or the file cannot be accessed
@@ -3893,17 +3894,19 @@ class Window(QMainWindow):
         #this is needed if the user draws the network first       
         if self.parameters == None:
             self.parameters = self.get_analysis_type()
+
         #-----------------unpack parameters
-        metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges = self.parameters
+        failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length = self.parameters
+        
         #-----------------check network B and build if needed
         
         self.GnetB = self.masterBnet
-        if self.GnetB == None and STAND_ALONE == False:
+        if self.GnetB == None and failure['stand_alone'] == False:
             param1 = self.txtparamB1.text()
             param2 = self.txtparamB2.text()
             param3 = self.txtparamB3.text()
             self.GnetB = self.buildnetwork(param1,param2,param3,'B')
-            DEPENDENCY = True #this is needed if dependency is not selected manually
+            failure['dependency'] = True #this is needed if dependency is not selected manually
             if self.GnetB <> None:            
                 pass
             else:
@@ -3913,20 +3916,23 @@ class Window(QMainWindow):
                 self.enableallckbx()
                 return
         #build edges if needed
-        if DEPENDENCY == True:
+        if failure['dependency'] == True:
             a_to_b_edges = self.AtoBEdges()
             #a_to_b_edges = self.txtparamt1.text()
             print 'a to b edges are: ', a_to_b_edges
-        if INTERDEPENDENCY == True:
+        if failure['interdependency'] == True:
             a_to_b_edges = self.AtoBEdges()
-            b_to_a_edges = self.BtoAEdges()          
-        self.parameters = metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
+            b_to_a_edges = self.BtoAEdges()
+            
+        self.parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
+
         #------------------for safety reasons
         if self.parameters == None:
             print 'this is here for satefy. SHOULD NEVER BE USED'
             self.parameters = self.get_analysis_type()
         #-------------------sort metrics here - this is required when not stand_alone
-        self.metrics = self.sort_metrics(self.parameters)        
+        if self.timestep == 0:
+            self.metrics = self.sort_metrics(self.parameters)        
         #------------------get file name and handle an error arising here
         if fileName == None and self.saveoutputfile == True:
             #print 'asks here as well'
@@ -3947,16 +3953,14 @@ class Window(QMainWindow):
                 self.enableallckbx()
                 self.ckbxviewnet.setEnabled(True)
                 return
-            self.parameters = self.metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
-
+            self.parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
+            
         if self.whenToSave == [] and self.pertimestep > 0:
             self.whenToSave = []
             r = 0    
             while r < self.G.number_of_nodes():
                 self.whenToSave.append(r)
                 r += self.pertimestep
-
-        #print 'about to run the analysis'
                 
         #-------------------run the analysis-----------------------------------
         self.lbl4.setText('Processing')
@@ -3976,32 +3980,38 @@ class Window(QMainWindow):
                 else:
                     self.positions = self.getpositions(selected, G)
                     self.geo_vis = None
-                
+        
+        print 'TIME STEP IS:', self.timestep
         if self.timestep == 0:
             #print 'running first time step'
-            if STAND_ALONE == True: #this is tempory until we built in the ability to do dependency function
+            if failure['stand_alone'] == True: #this is tempory until we built in the ability to do dependency function
                 self.GnetB = None
-            self.parameters = self.metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName,a_to_b_edges
-            self.graphparameters = res.create_containers(self.G, self.GnetB, self.parameters)
-            self.forthread = self.graphparameters, self.parameters, self.iterate
-            print 'CALLING UPDATE UI'
+
+            print '**!!!!!Need to sort out if metrics are stred in parameters are seperate!!!!!**'
+            self.parameters = self.metrics,failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length                
+            self.metrics,self.graphparameters = res.metrics_initial(self.G,self.GnetB,self.metrics, failure, handling_variables, length, a_to_b_edges)
+            print '###### Sucessfuly ran metrics initial, length of metrics is now', len(self.metrics)
+          
+            self.parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
+            print '!!!!Need to sort out the network copies, node_list, to_be_nodes, from_a_nodes and i/self.timestep!!!!'
+          
+            self.forthread = self.graphparameters, self.parameters, self.metrics, self.iterate
             self.updateUi()
-        print 'GOT TO HERE#'
+        
+        
         if self.timestep > 0:
-            print 'running next time step'
-            self.forthread = self.graphparameters, self.parameters, self.iterate               
-            #i, nodes_removed_A, node_count_removed_A, node_count_removed_B, inter_removed_count, GA, GB, GtempA, GtempB,dlist,removed_nodes,subnodes_A, isolated_nodes_A,node_list,nodes_removed_A,to_nodes, from_nodes,numofcomponents, sizeofcomponents, avpathlengthofcomponents, giantcomponentavpathlength, giantcomponentsize, avnodesincomponents, averagedegree, isolated_nodes_B,subnodes_B,path_length_B,subnodes_count_B,isolated_n_count_removed_B,path_length_A,subnodes_count_A,isolated_n_count_removed_A,B_count_nodes_left,inter_removed_nodes, A_count_nodes_left, dead, deadlist, figureModel, isolated_n_count_A, isolated_n_count_B = self.graphparameters
-            networks,i,node_list, to_b_nodes, from_a_nodes, basic_metrics_A,basic_metrics_B,option_metrics_A, option_metrics_B,interdependency_metrics,cascading_metrics = self.graphparameters
+            self.forthread = self.graphparameters, self.parameters, self.metrics, self.iterate               
+
+            networks,i,node_list, to_b_nodes, from_a_nodes = self.graphparameters
             GtempA,GtempB,GA,GB = networks
-            #print 'GA has nodes: ', GA.number_of_nodes()
             self.G = GA     
-            self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
+            self.thread.setup(self.G, self.iterate, self.metrics, self.parameters, self.graphparameters)
         
     def sort_metrics(self, parameters):
         '''Set the condition of all the posible metrics based on the parameters.'''
         #print 'Running SORT metrics'
-        metrics, STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges = parameters
-        
+        failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length = self.parameters
+
         nodes_removed_A = True #nodes removed from network A
         node_count_removed_A = True #count of ndoes removed from network A   
         count_nodes_left_A = True #the number of nodes left in network A
@@ -4009,7 +4019,7 @@ class Window(QMainWindow):
         number_of_components_A = True #number of subgraphs/isolated nodes
         isolated_n_count_A = True
         
-        if STAND_ALONE == False:        
+        if failure['stand_alone'] == False:        
             nodes_removed_B = True #nodes removed from network B
             node_count_removed_B = True #count of ndoes removed from network B   
             count_nodes_left_B = True #the number of nodes left in network B
@@ -4029,6 +4039,7 @@ class Window(QMainWindow):
         av_nodes_in_components_A = False
         isolated_nodes_A = False #THIS MAY NEED TO BE IN THE BASIC SET
         isolated_n_count_removed_A = False
+        isolated_nodes_removed_A = True
         subnodes_A = False
         subnodes_count_A = False   
         path_length_A = False
@@ -4037,13 +4048,15 @@ class Window(QMainWindow):
         giant_component_av_path_length_A = False
         average_degree_A = False
         inter_removed_count_A = False #THIS IS ONLY NEEDED IF INTERDEPENDENCY
+        density_A = False
 
-        if STAND_ALONE == False:
+        if failure['stand_alone'] == False:
              size_of_components_B = False
              giant_component_size_B = False
              av_nodes_in_components_B = False
              isolated_nodes_B = False #THIS MAY NEED TO BE IN THE BASIC SET
              isolated_n_count_removed_B = False
+             isolated_nodes_removed_B = True
              subnodes_B = False
              subnodes_count_B = False   
              path_length_B = False
@@ -4052,12 +4065,14 @@ class Window(QMainWindow):
              giant_component_av_path_length_B = False
              average_degree_B = False
              inter_removed_count_B = True #THIS IS NEEDED IF NOT STAND ALONE
+             density_B = True
         else:
              size_of_components_B = False
              giant_component_size_B = False
              av_nodes_in_components_B = False
              isolated_nodes_B = False #THIS MAY NEED TO BE IN THE BASIC SET
              isolated_n_count_removed_B = False
+             isolated_nodes_removed_B = True
              subnodes_B = False
              subnodes_count_B = False   
              path_length_B = False
@@ -4066,12 +4081,37 @@ class Window(QMainWindow):
              giant_component_av_path_length_B = False
              average_degree_B = False
              inter_removed_count_B = True #THIS IS NEEDED IF NOT STAND ALONE
-     
-        basic_metrics_A = nodes_removed_A,node_count_removed_A,count_nodes_left_A,number_of_edges_A,number_of_components_A,isolated_n_count_A
-        basic_metrics_B = nodes_removed_B,node_count_removed_B,count_nodes_left_B,number_of_edges_B,number_of_components_B,isolated_n_count_B
-        option_metrics_A = size_of_components_A,giant_component_size_A,av_nodes_in_components_A,isolated_nodes_A,isolated_n_count_removed_A,subnodes_A,subnodes_count_A,path_length_A,av_path_length_components_A,giant_component_av_path_length_A,av_path_length_geo_A,average_degree_A,inter_removed_count_A
-        option_metrics_B = size_of_components_B,giant_component_size_B,av_nodes_in_components_B,isolated_nodes_B,isolated_n_count_removed_B,subnodes_B,subnodes_count_B,path_length_B,av_path_length_components_B,giant_component_av_path_length_B,av_path_length_geo_B,average_degree_B,inter_removed_count_B
-        metrics = basic_metrics_A, basic_metrics_B, option_metrics_A, option_metrics_B
+             density_B = False
+        basic_metrics_A = {'nodes_removed':nodes_removed_A,'no_of_nodes_removed':node_count_removed_A,
+                   'no_of_nodes_left':count_nodes_left_A,'number_of_edges':number_of_edges_A,
+                   'number_of_components':number_of_components_A}
+        option_metrics_A = {'size_of_components':size_of_components_A,'giant_component_size':giant_component_size_A,
+                    'avg_nodes_in_components':av_nodes_in_components_A,
+                    'isolated_nodes':isolated_nodes_A,'no_of_isolated_nodes':isolated_n_count_A,
+                    'no_of_isolated_nodes_removed':isolated_n_count_removed_A,'isolated_nodes_removed':isolated_nodes_removed_A,
+                    'subnodes':subnodes_A,'no_of_subnodes':subnodes_count_A,
+                    'path_length':path_length_A,'avg_path_length_of_components':av_path_length_components_A,
+                    'path_length_of_giant_component':giant_component_av_path_length_A,
+                    'path_length_geo':av_path_length_geo_A,'avg_degree':average_degree_A,
+                    'no_of_inter_removed':inter_removed_count_A,'density':density_A}
+        basic_metrics_B = {'nodes_removed':nodes_removed_B,'no_of_nodes_removed':node_count_removed_B,
+                   'no_of_nodes_left':count_nodes_left_B,'number_of_edges':number_of_edges_B,
+                   'number_of_components':number_of_components_B}
+        option_metrics_B = {'size_of_components':size_of_components_B,'giant_component_size':giant_component_size_B,
+                    'avg_nodes_in_components':av_nodes_in_components_B,
+                    'isolated_nodes':isolated_nodes_B,'no_of_isolated_nodes':isolated_n_count_B,
+                    'no_of_isolated_nodes_removed':isolated_n_count_removed_B,'isolated_nodes_removed':isolated_nodes_removed_B,
+                    'subnodes':subnodes_B,'no_of_subnodes':subnodes_count_B,
+                    'path_length':path_length_B,'avg_path_length_of_components':av_path_length_components_B,
+                    'path_length_of_giant_component':giant_component_av_path_length_B,
+                    'path_length_geo':av_path_length_geo_B,'avg_degree':average_degree_B,
+                    'no_of_inter_removed':inter_removed_count_B,'density':density_B}
+        
+        print '!!!!Need to sort interdependency metrics out.This may be done in metrics_initial!!!!'
+        print '!!!!Need to sort cascading metrics out.This may be done in metrics_initial!!!!'
+    
+        # is in basic A, but in above - isolated_n_count_A
+        metrics = basic_metrics_A,basic_metrics_B,option_metrics_A,option_metrics_B
         return metrics
 
     def show_visselection(self):
@@ -4132,15 +4172,17 @@ class Window(QMainWindow):
         options have been selected related to the analysis if the network.'''
 
         #as default, all are set as false, then changed if requested
-        STAND_ALONE = False;DEPENDENCY = False;INTERDEPENDENCY = False
-        SINGLE = False;SEQUENTIAL = False;CASCADING = False
-        RANDOM = False;DEGREE = False;BETWEENNESS = False
-        REMOVE_SUBGRAPHS = False;REMOVE_ISOLATES = False;NO_ISOLATES = False
+        failure = {'stand_alone':False,'dependency':False,'interdependency':False,
+                   'single':False,'sequential':False,'cascading':False,
+                   'random':False,'degree':False,'betweenness':False}
+        handling_variables = {'remove_subgraphs':False,'remove_isolates':False,'no_isolates':False}
+        
         self.analysistype = self.cmboxtype.currentText()
         #get the type from the text from the drop down menu
-        if self.analysistype == 'Single': STAND_ALONE = True
-        elif self.analysistype == 'Dependency': DEPENDENCY = True
-        elif self.analysistype == 'Interdependency': INTERDEPENDENCY = True
+        if self.analysistype == 'Single':failure['stand_alone']=True
+        elif self.analysistype == 'Dependency':failure['dependency']=True
+        elif self.analysistype == 'Interdependency':failure['interdependency']=True
+        
         fileName = None
         if fileName == "": #if user clicks cancel, exits the routine
             QMessageBox.information(self, 'Information', "Successfully ended process.")
@@ -4153,47 +4195,61 @@ class Window(QMainWindow):
         if self.runallseqmodels == False:
             self.nofilename = False
             if self.ckbxSingle.isChecked() and self.ckbxRandom.isChecked():
-                SINGLE = True
-                RANDOM = True
+                failure['single']=True
+                failure['random']=True
             elif self.ckbxSequential.isChecked() and self.ckbxRandom.isChecked():
-                SEQUENTIAL = True
-                RANDOM = True            
+                failure['sequential']=True
+                failure['random']=True
             elif self.ckbxSequential.isChecked() and self.ckbxDegree.isChecked():
-                SEQUENTIAL = True
-                DEGREE = True            
+                failure['sequential']=True
+                failure['degree']=True
             elif self.ckbxSequential.isChecked() and self.ckbxBetweenness.isChecked():
-                SEQUENTIAL = True
-                BETWEENNESS = True            
+                failure['sequential']=True
+                failure['betweenness']=True
             elif self.ckbxCascading.isChecked() and self.ckbxRandom.isChecked():
-                CASCADING = True
-                RANDOM = True            
+                failure['cascading']=True
+                failure['random']=True
             elif self.ckbxCascading.isChecked() and self.ckbxDegree.isChecked():
-                CASCADING = True
-                DEGREE = True            
+                failure['cascading']=True
+                failure['degree']=True
             elif self.ckbxCascading.isChecked() and self.ckbxBetweenness.isChecked():
-                CASCADING = True
-                BETWEENNESS = True
+                failure['cascading']=True
+                failure['betweenness']=True
             else:
                 self.lbl4.setText("Error")
         else:
-            SEQUENTIAL = True
-            RANDOM = True
-            
+            failure['sequential']=True
+            failure['random']=True
+        
         self.lbl4.adjustSize()
         self.lbl4.show()
         QApplication.processEvents() #refresh gui
+        handling_variables = {'remove_subgraphs':False,'remove_isolates':False,'no_isolates':False}
         if self.ckbxsubgraphs.isChecked():
-            REMOVE_SUBGRAPHS = True
+            handling_variables['remove_subgraphs']=True
         if self.ckbxisolates.isChecked():
-            REMOVE_ISOLATES = True
+            handling_variables['remove_isolates']=True
         if self.ckbxnoisolates.isChecked():
-            NO_ISOLATES = True
+            handling_variables['no_isolates']
 
         print 'Analysis type: %s' %(self.analysistype)    
-
-        metrics = None
+        
+        print '!!!!need to add option in gui for write step to db!!!!'        
+        write_step_to_db = False
+        print '!!!!need to add option in gui for write results table!!!!' 
+        write_results_table = False
+        print '!!!!db parameters is undefined here - to be fixed!!!!'        
+        db_parameters = None
+        print '!!!!store_n_e_atts is undefined here, need to add option!!!!'
+        store_n_e_atts = False
+        print '!!!!length is undefined - need to be fixed!!!!'
+        length = None
+        print '!!!!Need to sort a_to_b_edges!!!!'
         a_to_b_edges = None
-        parameters = metrics, STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
+        
+        parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
+
+        #parameters = metrics, STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
         return parameters
     
     def setfilelocation_open(self):
@@ -4822,23 +4878,25 @@ class Worker(QThread):
         QThread.__init__(self, parent)     
         graphparameters = None
         parameters = None
+        metrics = None
         iterate = True
-        self.forthread = graphparameters, parameters, iterate
+        self.forthread = graphparameters, parameters, metrics, iterate
     def __del__(self):
         self.exiting = True
         self.wait() 
-    def setup(self, G, iterate, parameters, graphparameters):
+    def setup(self, G, iterate, metrics, parameters, graphparameters):
         '''Controls the processes run in the work thread and starts it.'''
         self.G = G
         self.iterate = iterate
         self.parameters = parameters
+        self.metrics = metrics
         self.graphparameters = graphparameters
         self.start() 
     def run(self):
         '''Runs the analysis by calling the function in the resilience module.'''
         #Note: This is never called directly. Always use .start to start the workthread.
         logfilepath = None
-        args = res.step(self.graphparameters, self.parameters, self.iterate, logfilepath)
+        args = res.step(self.graphparameters, self.parameters, self.metrics, self.iterate, logfilepath)
         if args == 0001:
             print 'ERROR! - 0001'
             return args
@@ -4846,11 +4904,12 @@ class Worker(QThread):
             print 'ERROR! - None returned'
             return args
         else:
-            self.graphparameters, self.iterate = args
-        self.forthread = self.graphparameters, self.parameters, self.iterate
+            self.graphparameters, self.parameters, self.metrics, self.iterate = args
+                    
+        self.forthread = self.graphparameters, self.parameters, self.metrics, self.iterate
     def update(self):
         ''''''
-        self.forthread = self.graphparameters, self.parameters,self.iterate
+        self.forthread = self.graphparameters, self.parameters, self.metrics, self.iterate
         return self.forthread
 
 def draw(G, positions, figureModel, timestep, coloractive, colorinactive, show, pertimestep,imagedestlocation,whenToSave,selected_vis,geo_vis):
