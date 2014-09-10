@@ -3305,9 +3305,9 @@ class Window(QMainWindow):
                         self.graphvis.node[node]['state'] = self.inactive
                 #get node size
                 self.graphvis = self.get_node_size_metric(GA, self.graphvis, self.nodesizingmeth)   
-                self.graphvis = self.get_edge_size_metric(GA, self.graphvis, self.nodesizingmeth)
+                
                 print '--------------------------'
-                print self.selected_vis
+                #print self.selected_vis
                 print '--------------------------'
                 if self.multiiterations == True:
                     print 'SAVEING IMAGE FOR ITERATION'
@@ -3876,6 +3876,7 @@ class Window(QMainWindow):
                 self.graphvis=self.G.copy()
                 for node in self.graphvis.nodes_iter():  
                     self.graphvis.node[node]['state'] = self.active
+                print 'THIS IS WHERE IT CALLS get analysis type'
                 self.parameters = self.get_analysis_type()
 
             if self.G == None: #reset the interface as network could not be built
@@ -3986,18 +3987,14 @@ class Window(QMainWindow):
             #print 'running first time step'
             if failure['stand_alone'] == True: #this is tempory until we built in the ability to do dependency function
                 self.GnetB = None
-
-            print '**!!!!!Need to sort out if metrics are stred in parameters are seperate!!!!!**'
-            self.parameters = self.metrics,failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length                
-            self.metrics,self.graphparameters = res.metrics_initial(self.G,self.GnetB,self.metrics, failure, handling_variables, length, a_to_b_edges)
-            print '###### Sucessfuly ran metrics initial, length of metrics is now', len(self.metrics)
-          
+            
+            #use metrics initial function to set up metric dicts and graph parameters
+            self.metrics,self.graphparameters = res.metrics_initial(self.G,self.GnetB,self.metrics, failure, handling_variables, length, a_to_b_edges)          
             self.parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
-            print '!!!!Need to sort out the network copies, node_list, to_be_nodes, from_a_nodes and i/self.timestep!!!!'
+            print '!!!!Need to sort out the, to_b_nodes, from_a_nodes!!!!'
           
             self.forthread = self.graphparameters, self.parameters, self.metrics, self.iterate
             self.updateUi()
-        
         
         if self.timestep > 0:
             self.forthread = self.graphparameters, self.parameters, self.metrics, self.iterate               
@@ -4082,6 +4079,7 @@ class Window(QMainWindow):
              average_degree_B = False
              inter_removed_count_B = True #THIS IS NEEDED IF NOT STAND ALONE
              density_B = False
+             
         basic_metrics_A = {'nodes_removed':nodes_removed_A,'no_of_nodes_removed':node_count_removed_A,
                    'no_of_nodes_left':count_nodes_left_A,'number_of_edges':number_of_edges_A,
                    'number_of_components':number_of_components_A}
@@ -4106,9 +4104,6 @@ class Window(QMainWindow):
                     'path_length_of_giant_component':giant_component_av_path_length_B,
                     'path_length_geo':av_path_length_geo_B,'avg_degree':average_degree_B,
                     'no_of_inter_removed':inter_removed_count_B,'density':density_B}
-        
-        print '!!!!Need to sort interdependency metrics out.This may be done in metrics_initial!!!!'
-        print '!!!!Need to sort cascading metrics out.This may be done in metrics_initial!!!!'
     
         # is in basic A, but in above - isolated_n_count_A
         metrics = basic_metrics_A,basic_metrics_B,option_metrics_A,option_metrics_B
@@ -4232,24 +4227,17 @@ class Window(QMainWindow):
         if self.ckbxnoisolates.isChecked():
             handling_variables['no_isolates']
 
-        print 'Analysis type: %s' %(self.analysistype)    
+        db_parameters = self.dbconnect
+        a_to_b_edges = self.AtoBEdges
         
-        print '!!!!need to add option in gui for write step to db!!!!'        
-        write_step_to_db = False
-        print '!!!!need to add option in gui for write results table!!!!' 
-        write_results_table = False
-        print '!!!!db parameters is undefined here - to be fixed!!!!'        
-        db_parameters = None
-        print '!!!!store_n_e_atts is undefined here, need to add option!!!!'
-        store_n_e_atts = False
         print '!!!!length is undefined - need to be fixed!!!!'
         length = None
-        print '!!!!Need to sort a_to_b_edges!!!!'
-        a_to_b_edges = None
+        print '!!!!need to add option in gui for write step to db, write results table and store n e atts. Need to add a new options window to failure menu.!!!!' 
+        write_step_to_db = False 
+        write_results_table = False
+        store_n_e_atts = False
         
         parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
-
-        #parameters = metrics, STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
         return parameters
     
     def setfilelocation_open(self):
@@ -4921,7 +4909,7 @@ def draw(G, positions, figureModel, timestep, coloractive, colorinactive, show, 
         pl.ion()
         if show == True:
             pl.show()
-    print 
+    
     #need this in case the user closes the window 
     try:
         figureModel.canvas.set_window_title('Network View') 
