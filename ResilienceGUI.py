@@ -268,6 +268,24 @@ class DbConnect(QDialog):
             self.txtinput5.setText(self.PASSWORD)         
             self.txtinput6.setText(self.NETNAME)
 
+class FailureOptionWindow(QWidget): # not sure if I will need this after all
+    def __init__(self, parent = None):  
+        QWidget.__init__(self, parent)
+        self.initUI()
+        
+    def initUI(self):
+        fontbold = QFont("Calibri", 10, QFont.Bold)
+        
+        lblnet = QLabel("Network", self)                
+        lblnet.setFont(fontbold)            
+        lblnet.adjustSize()
+        lblnet.move(12,10)
+    def applyandclose():
+        window.updateGUI_foptions()
+        self.close() 
+    def updateoptions():        
+        pass
+        
 class MetricsWindow(QWidget): # not sure if I will need this after all
     def __init__(self, parent = None):  
         QWidget.__init__(self, parent)
@@ -1568,6 +1586,7 @@ class Window(QMainWindow):
         self.PASSWORD = None        
         self.NETNAME = None
         self.dbconnect = self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME    
+        self.write_step_to_db=False,self.write_results_table=False,self.store_n_e_atts=False
         self.parameters = None
         self.running = False
         self.pause = False
@@ -1603,6 +1622,7 @@ class Window(QMainWindow):
         self.runallseqmodels = False
         self.nodesizingmeth = 0
         self.edgesizingmeth = 0
+        print '!!!!Need to check what below does. Not too sureit is needed'
         self.metrics = self.create_metrics(self.parameters)
         self.geo_vis = None
         
@@ -1627,6 +1647,10 @@ class Window(QMainWindow):
         metricsAction.setShortcut('Ctrl+M')
         metricsAction.setStatusTip('Open metrics window')
         metricsAction.triggered.connect(self.showwindow_metrics)
+    
+        failoptionAction = QAction('&Options',self)   
+        failoptionAction.setStatusTip('Option failure options window')
+        failoptionAction.triggered.connect(self.show_fail_option_window)
     
         openAction = QAction('&Open', self)
         openAction.setShortcut('Ctrl+O')
@@ -1731,7 +1755,7 @@ class Window(QMainWindow):
         editMenu.addAction(saveConfigAction)
         editMenu.addAction(openConfigAction)
         foMenu.addAction(RunAction)
-        #foMenu.addAction(optionsAction) 
+        foMenu.addAction(failoptionAction) 
         foMenu.addAction(metricsAction)
         subEdges_menu = foMenu.addMenu('Random Dependency Edges')
         subEdges_menu.addAction(AtoBEdgesAction)
@@ -3101,6 +3125,10 @@ class Window(QMainWindow):
             print 'ERROR, text given did not match as required'
             exit()
         return
+    def show_fail_option_window(self):
+        '''Opens the failure options window sending the state of the vairables.'''
+        self.w = FailureOptionWindow()
+        self.w.updateoptions(self.write_step_to_db,self.write_results_table,self.store_n_e_atts)
         
     def showwindow_options(self):
         '''Open the extra parameter window.'''
@@ -3153,7 +3181,13 @@ class Window(QMainWindow):
         '''Called by the metrics window when opened to get the up-to-date variables'''
         ba,bb,oa,ob = self.metrics
         return self.metrics 
-   
+        
+    def updateGUI_foptions(self,write_step_to_db,write_results_table,store_n_e_atts):
+        '''Called when failure options window is closed via apply button so updates the parameters.'''
+        self.write_step_to_db = write_step_to_db
+        self.write_results_table = write_results_table
+        self.store_n_e_atts = store_n_e_atts
+    
     def updateGUI_metrics(self, metrics):
         '''Called when metrics window is closed to update the variables'''
         self.metrics = metrics
