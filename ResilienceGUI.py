@@ -276,15 +276,74 @@ class FailureOptionWindow(QWidget): # not sure if I will need this after all
     def initUI(self):
         fontbold = QFont("Calibri", 10, QFont.Bold)
         
-        lblnet = QLabel("Network", self)                
-        lblnet.setFont(fontbold)            
+        lbltitle = QLabel("Options when loading networks\nfrom Database", self)
+        lbltitle.setFont(fontbold)
+        lbltitle.adjustSize()
+        lbltitle.move(12,10)
+        
+        lblnet = QLabel("Save copies of networks\nto database at each time step:", self)        
         lblnet.adjustSize()
-        lblnet.move(12,10)
-    def applyandclose():
-        window.updateGUI_foptions()
-        self.close() 
-    def updateoptions():        
-        pass
+        lblnet.move(12,55)
+        
+        self.ckbwritestep = QCheckBox(self)
+        self.ckbwritestep.move(180,60)
+        
+        lblnet = QLabel("Write results to table in database:", self)
+        lblnet.adjustSize()
+        lblnet.move(12,95)
+        
+        self.ckbwritetable = QCheckBox(self)
+        self.ckbwritetable.move(180,96)
+        
+        lblnet = QLabel("Store metrics as node and edge\nattributes:", self)
+        lblnet.adjustSize()
+        lblnet.move(12,125)
+        
+        self.ckbstoreasatts = QCheckBox(self)
+        self.ckbstoreasatts.move(180,131)   
+        
+        self.apply = QPushButton("Apply", self)
+        self.apply.adjustSize()
+        self.apply.move(145,165)
+        self.apply.clicked.connect(self.applyandclose)
+        self.apply.setToolTip("Apply any changes and close the window.")
+        self.closebtn = QPushButton("Close", self)
+        self.closebtn.adjustSize()
+        self.closebtn.move(70,165)
+        self.closebtn.clicked.connect(self.closeclick)
+        self.closebtn.setToolTip("Close the window without saving any changes.")        
+        
+        self.setGeometry(300,180,230,195) #vertical place on screen, hoz place on screen, width of window, height of window
+        self.setWindowTitle('Failure Options') #title of window
+        self.setWindowIcon(QIcon('logo.png'))        
+        
+        self.write_step_to_db,self.write_results_table,self.store_n_e_atts = window.updatefoptions()        
+        self.updateoptions()
+        self.show()        
+        
+    def applyandclose(self):
+        if self.ckbwritestep.isChecked() == True:
+            self.write_step_to_db = True
+        else: self.write_step_to_db = False
+        if self.ckbwritetable.isChecked() == True:
+            self.write_results_table = True
+        else: self.write_results_table = False
+        if self.ckbstoreasatts.isChecked() == True:
+            self.store_n_e_atts = True
+        else: self.store_n_e_atts = False
+        window.updateGUI_foptions(self.write_step_to_db,self.write_results_table,self.store_n_e_atts)
+        self.close()
+        
+    def closeclick(self):
+        self.close()
+        
+    def updateoptions(self):
+        if self.write_step_to_db == True:
+            self.ckbwritestep.setChecked(True)
+        if self.write_results_table == True:
+            self.ckbwritetable.setChecked(True)
+        if self.store_n_e_atts == True:
+            self.ckbstoreasatts.setChecked(True)
         
 class MetricsWindow(QWidget): # not sure if I will need this after all
     def __init__(self, parent = None):  
@@ -926,7 +985,7 @@ class OptionsWindow(QWidget):
         
         self.colactive = None
         self.colinactive = None
-        self.timedelay, self.col1, self.col2, self.destlocation,self.pertimestep,self.saveimage,self.analysistype,self.multiiterations, self.numofiterations,self.saveoutputfile, self.imagedpi,self.nxpglocation,self.runallseqmodels,self.nodesizemeth,self.edgesizemeth= window.updatewindow_options() 
+        self.timedelay, self.col1, self.col2, self.destlocation,self.pertimestep,self.saveimage,self.analysistype,self.multiiterations, self.numofiterations,self.saveoutputfile, self.imagedpi,self.nxpglocation,self.runallseqmodels,self.nodesizemeth,self.edgesizemeth=window.updatewindow_options() 
         self.timedelay = str(self.timedelay)
         
         vpos = 15
@@ -1586,7 +1645,7 @@ class Window(QMainWindow):
         self.PASSWORD = None        
         self.NETNAME = None
         self.dbconnect = self.DBNAME, self.HOST, self.PORT, self.USER, self.PASSWORD, self.NETNAME    
-        self.write_step_to_db=False,self.write_results_table=False,self.store_n_e_atts=False
+        self.write_step_to_db=False;self.write_results_table=False;self.store_n_e_atts=False
         self.parameters = None
         self.running = False
         self.pause = False
@@ -1648,7 +1707,7 @@ class Window(QMainWindow):
         metricsAction.setStatusTip('Open metrics window')
         metricsAction.triggered.connect(self.showwindow_metrics)
     
-        failoptionAction = QAction('&Options',self)   
+        failoptionAction = QAction('&Options',self)
         failoptionAction.setStatusTip('Option failure options window')
         failoptionAction.triggered.connect(self.show_fail_option_window)
     
@@ -3124,12 +3183,35 @@ class Window(QMainWindow):
         else:
             print 'ERROR, text given did not match as required'
             exit()
-        return
+        return      
+    
+    #functions for failure options window
     def show_fail_option_window(self):
-        '''Opens the failure options window sending the state of the vairables.'''
+        '''Opens the failure options window.'''
         self.w = FailureOptionWindow()
-        self.w.updateoptions(self.write_step_to_db,self.write_results_table,self.store_n_e_atts)
+    def updatefoptions(self):
+        '''Called by the fail options window to get the state of teh variables.'''
+        return self.write_step_to_db,self.write_results_table,self.store_n_e_atts
+    def updateGUI_foptions(self,write_step_to_db,write_results_table,store_n_e_atts):
+        '''Called when failure options window is closed via apply button so updates the parameters.'''
+        self.write_step_to_db = write_step_to_db
+        self.write_results_table = write_results_table
+        self.store_n_e_atts = store_n_e_atts 
         
+    #functions for metrics window
+    def showwindow_metrics(self):
+        '''Open the metrics window.'''
+        self.w = MetricsWindow()
+    def updatewindow_metrics(self):
+        '''Called by the metrics window when opened to get the up-to-date variables'''
+        ba,bb,oa,ob = self.metrics
+        return self.metrics 
+    def updateGUI_metrics(self, metrics):
+        '''Called when metrics window is closed to update the variables'''
+        self.metrics = metrics
+        self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
+    
+    #functions for options window
     def showwindow_options(self):
         '''Open the extra parameter window.'''
         self.w = OptionsWindow()
@@ -3173,26 +3255,8 @@ class Window(QMainWindow):
         self.nodesizingmeth = nodesizingmeth
         self.edgesizingmeth = edgesizingmeth
     
-    def showwindow_metrics(self):
-        '''Open the metrics window.'''
-        self.w = MetricsWindow()
-
-    def updatewindow_metrics(self):
-        '''Called by the metrics window when opened to get the up-to-date variables'''
-        ba,bb,oa,ob = self.metrics
-        return self.metrics 
-        
-    def updateGUI_foptions(self,write_step_to_db,write_results_table,store_n_e_atts):
-        '''Called when failure options window is closed via apply button so updates the parameters.'''
-        self.write_step_to_db = write_step_to_db
-        self.write_results_table = write_results_table
-        self.store_n_e_atts = store_n_e_atts
+    #functions for db connect window  
     
-    def updateGUI_metrics(self, metrics):
-        '''Called when metrics window is closed to update the variables'''
-        self.metrics = metrics
-        self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
-
     def showwindow_db(self):
         '''Opens the GUI for the user to input the database connection 
         parameters. Also gets the successful working parameters.'''
@@ -3255,6 +3319,7 @@ class Window(QMainWindow):
             else:
                 QMessageBox.warning(self, 'Error!', "Internal error. Please close the application and re-open it. If this error continue to occur, please report it.",'&OK')
     
+    #functions for view graphs window
     def updatewindow_viewgraphs(self):
         '''Used to transfer the values to the view graphs class. Called on
         first line of class.'''
