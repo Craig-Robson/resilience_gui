@@ -1685,7 +1685,7 @@ class Window(QMainWindow):
         self.metrics = self.create_metrics(self.parameters)
         self.geo_vis = None
         
-        #create actions for file menu
+        #create actions for menues
         RunAction = QAction('&Run',self)
         RunAction.setShortcut('Ctrl+R')
         RunAction.setStatusTip('Run the selected analysis')
@@ -2205,15 +2205,18 @@ class Window(QMainWindow):
         #here node a way of asking of want to use geo
         if self.G.number_of_nodes > 0:
             if self.graph == 'Database':
+                #allows length attribute to be specified
                 text, ok = QInputDialog.getText(self, 'Path length option', 
                 'If you want to calculate the geographic average \npath length enter the attribute below. \nOtherwise leave blank.')
-            if ok:
-                whole_graph, subgraphs = mc.AveragePathLength_Calc(self.G, str(text))
-                QMessageBox.information(self, "Computation Results: Average path length", 'whole graph: \t%s \nper subgraph: \n%s' %(whole_graph,subgraphs), QMessageBox.Ok)
+                if ok:
+                    whole_graph, subgraphs = mc.GeoAveragePathLength_Calc(self.G, str(text))
+                    QMessageBox.information(self, "Computation Results: Average Georaphic path length", 'Whole graph: \t%s \nPer subgraph: \n%s' %(whole_graph,subgraphs), QMessageBox.Ok)
             else:
-                return()
+                #calc path topological path length
+                whole_graph, subgraphs = mc.AveragePathLength_Calc(self.G)
+                QMessageBox.information(self, "Computation Results: Average path length", 'Whole graph: \t%s \nPer subgraph: \n%s' %(whole_graph,subgraphs), QMessageBox.Ok)
         else:
-            QMessageBox.information(self, "Computation Results: Average path length", 'The graph created had no nodes. No calculations could be performed.')        
+            QMessageBox.information(self, "Computation Results: Average path length", 'The graph created had no nodes. No calculations could be performed.')
         return changedA
         
     def calcCycleBasis(self, changedA):
@@ -2289,7 +2292,7 @@ class Window(QMainWindow):
             maxValCC, minValCC, averageValCC, nodeValCC = mc.Clustering_Calc(self.G)
             maxValCS, minValCS, averageValCS, nodeValCS = mc.ClusteringSQ_Calc(self.G)
             maxValBC, minValBC, averageValBC, nodeValBC = mc.Betweenness_Calc(self.G)
-            whole_graph, subgraphs = mc.AveragePathLength_Calc(self.G)
+            whole_graph, subgraphs = mc.AveragePathLength_Calc(self.G, changedA)
             val  = mc.Assortativity_Calc(self.G)
             #need code here which writes the full set of results to a textfile
             #will have to open the file dialog 
@@ -2310,7 +2313,7 @@ class Window(QMainWindow):
     def export(self, changedA):
         '''This will export some detailed metric results. Export the nodes and 
         edges of the network along with the chosen metrics in one text file.'''
-        QMessageBox.information(self, "Information", 'This has no functionality as yet.')
+        #QMessageBox.information(self, "Information", 'This has no functionality as yet.')
 
         param1 = self.txtparamA1.text()
         param2 = self.txtparamA2.text()
@@ -2358,6 +2361,8 @@ class Window(QMainWindow):
         f.write('Whole graph: %s\n' %(whole_graph))
         f.write('Per subgraph: %s\n' %(subgraphs))
         f.close()
+        QMessageBox.information(self, "Information", 'Successfully saved metric results to text file.')
+
         return changedA
         
     def saveConfig(self):
@@ -2703,8 +2708,8 @@ class Window(QMainWindow):
             pass
         return
         
-    def AtoBEdges(self, changedA, changedB):
-        '''Function to check the contents of teh input dependency edges box, 
+    def AtoBEdges(self, changedA=False, changedB=False):
+        '''Function to check the contents of the input dependency edges box, 
         and randomly create a set of edges which conenct network B 
         to A if there are none entered. Otherwise will read these in. 
         Parameters for networks must be entered already and user is 
@@ -2925,6 +2930,8 @@ class Window(QMainWindow):
             self.cmboxB.setCurrentIndex(1)
             self.cmboxB.setEnabled(True)
             self.networkselectionB('GNM')
+            self.txtparamB1.setEnabled(True)
+            self.txtparamB2.setEnabled(True)
             self.ckbxviewnet.setEnabled(False)
         elif self.analysistype == 'Interdependency':
             self.txtparamt1.setEnabled(True)
@@ -4941,8 +4948,7 @@ class Window(QMainWindow):
             self.reset_failed_build()
             return #exit sub
         else: 
-            print 'self.graphs is:'
-            print self.graph
+            print 'self.graphs is:', self.graph
             QMessageBox.warning(self, 'Error!', "Error! Apollogies, the cause is unknown.")          
             self.reset_failed_build()
             return #exit sub

@@ -60,8 +60,18 @@ def CycleBasis_Calc(G):
     return count, basis
 
 
-def AveragePathLength_Calc(G, text):
-    #text = 'length'
+def AveragePathLength_Calc(G):
+    subgraphs = []
+    whole_graph = 0.0
+    for g in nx.connected_component_subgraphs(G):
+        #print g.edges()
+        tempresult = nx.average_shortest_path_length(g)
+        subgraphs.append(tempresult)
+        whole_graph += tempresult
+    whole_graph = whole_graph/nx.number_connected_components(G)
+    return whole_graph, subgraphs
+
+def GeoAveragePathLength_Calc(G, text):
     subgraphs = []
     whole_graph = 0.0
     for g in nx.connected_component_subgraphs(G):
@@ -70,9 +80,8 @@ def AveragePathLength_Calc(G, text):
         subgraphs.append(tempresult)
         whole_graph += tempresult
     whole_graph = whole_graph/nx.number_connected_components(G)
-    return whole_graph, subgraphs
-    
-    
+    return whole_graph, subgraphs  
+  
 def Degree(G):
     averageDegree = 0.0
     maxDegree = 0
