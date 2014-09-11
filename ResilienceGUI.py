@@ -3106,6 +3106,9 @@ class Window(QMainWindow):
         self.ckbxviewnet.setEnabled(True) #view graph checkbox  
         self.clearDependencyEdges()
         self.whenToSave = []
+        self.write_step_to_db = False
+        self.write_results_table = False
+        self.store_n_e_atts = False
         #self.clearAll()
         self.graph = 'GNM'
         #pl.close()
@@ -4331,10 +4334,10 @@ class Window(QMainWindow):
         
         print '!!!!length is undefined - need to be fixed!!!!'
         length = None
-        print '!!!!need to add option in gui for write step to db, write results table and store n e atts. Need to add a new options window to failure menu.!!!!' 
-        write_step_to_db = False 
-        write_results_table = False
-        store_n_e_atts = False
+
+        write_step_to_db = self.write_step_to_db
+        write_results_table = self.write_results_table
+        store_n_e_atts = self.store_n_e_atts
         
         parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
         return parameters
