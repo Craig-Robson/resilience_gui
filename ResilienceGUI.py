@@ -675,64 +675,115 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         '''Updates check boxs on startup based on previuos selections. The 
         previous selections are stored in memory in the window function are 
         retrieved upon launch of the window.'''
-        self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
-        self.size_of_components_A,self.giant_component_size_A,self.av_nodes_in_components_A,self.isolated_nodes_A,self.isolated_n_count_removed_A,self.subnodes_A,self.subnodes_count_A,self.path_length_A,self.av_path_length_components_A,self.av_path_length_geo_A,self.giant_component_av_path_length_A,self.average_degree_A,self.inter_removed_count_A = self.option_metrics_A
-        if self.option_metrics_B == None:
-            pass
-        else:        
-            self.size_of_components_B,self.giant_component_size_B,self.av_nodes_in_components_B,self.isolated_nodes_B,self.isolated_n_count_removed_B,self.subnodes_B,self.subnodes_count_B,self.path_length_B,self.av_path_length_components_B,self.av_path_length_geo_B,self.giant_component_av_path_length_B,self.average_degree_B,self.inter_removed_count_B = self.option_metrics_B
-            
-        if self.size_of_components_A == False:
+
+        basicA, basicB, optionA, optionB = metrics
+        
+        print 'option A:', optionA
+        
+        if optionA['size_of_components'] == False:
             self.ckbsizeofcomponents_A.setChecked(False)
         else: self.ckbsizeofcomponents_A.setChecked(True)
         
-        if self.giant_component_size_A == False:
+        if optionA['giant_component_size'] == False:
             self.ckbgiantcomponentsize_A.setChecked(False)
         else: self.ckbgiantcomponentsize_A.setChecked(True)
         
-        if self.av_nodes_in_components_A == False:
+        if optionA['avg_size_of_components'] == False:
             self.ckbavnodesincomponents_A.setChecked(False)
         else: self.ckbavnodesincomponents_A.setChecked(True)
         
-        if self.isolated_nodes_A == False:
+        if optionA['isolated_nodes'] == False:
             self.ckbisolatednodes_A.setChecked(False)
         else: self.ckbisolatednodes_A.setChecked(True)
         
-        if self.isolated_n_count_removed_A== False:
+        if optionA['no_of_isolated_nodes_removed'] == False:
             self.ckbisolatedncountremoved_A.setChecked(False)
         else: self.ckbisolatedncountremoved_A.setChecked(True)
         
-        if self.subnodes_A== False:
+        if optionA['subnodes'] == False:
             self.ckbsubnodes_A.setChecked(False)
         else: self.ckbsubnodes_A.setChecked(True)
         
-        if self.subnodes_count_A== False:
+        if optionA['no_of_subnodes'] == False:
             self.ckbsubnodescount_A.setChecked(False)
         else: self.ckbsubnodescount_A.setChecked(True)
         
-        if self.path_length_A== False:
+        if optionA['avg_path_length'] == False:
             self.ckbavpathlength_A.setChecked(False)
         else: self.ckbavpathlength_A.setChecked(True)
         
-        if self.av_path_length_components_A== False:
+        if optionA['avg_path_length_of_components'] == False:
             self.ckbavpathlengthcomp_A.setChecked(False)
         else: self.ckbavpathlengthcomp_A.setChecked(True)
         
-        if self.av_path_length_geo_A== False:
+        if optionA['avg_path_length_of_giant_component'] == False:
+            self.ckbavgpathlengthofgiantcomponent_A.setChecked(False)
+        else: self.ckbavgpathlengthofgiantcomponent_A.setChecked(True)
+        
+        if optionA['avg_geo_path_length'] == False:
             self.ckbavpathlengthgeo_A.setChecked(False)
         else: self.ckbavpathlengthgeo_A.setChecked(True)
         
-        if self.giant_component_av_path_length_A== False:
-            self.ckbgiantcompavpathlength_A.setChecked(False)
-        else: self.ckbgiantcompavpathlength_A.setChecked(True)
+        if optionA['avg_geo_path_length_of_components'] == False:
+            self.ckbavggeopathlengthofcomponents_A.setChecked(False)
+        else: self.ckbavggeopathlengthofcomponents_A.setChecked(True)
         
-        if self.average_degree_A== False:
+        if optionA['avg_geo_path_length_of_giant_component'] == False:
+            self.ckbavggeopathlengthofgiantcomponent_A.setChecked(False)
+        else: self.ckbavggeopathlengthofgiantcomponent_A.setChecked(True)
+        
+        if optionA['avg_degree'] == False:
             self.ckbavdegree_A.setChecked(False)
         else: self.ckbavdegree_A.setChecked(True)
         
-        if self.inter_removed_count_A == False:
-            self.ckbinterremovedcount_A.setChecked(False)
-        else: self.ckbinterremovedcount_A.setChecked(True)
+        if optionA['density'] == False:
+            self.ckbdensity_A.setChecked(False)
+        else: self.ckbdensity_A.setChecked(True)
+        
+        if optionA['maximum_betweenness_centrality'] == False:
+            self.ckbmaxbetweennesscentrality_A.setChecked(False)
+        else: self.ckbmaxbetweennesscentrality_A.setChecked(True)
+        
+        if optionA['avg_betweenness_centrality'] == False:
+            self.ckbavgbetweennesscentrality_A.setChecked(False)
+        else: self.ckbavgbetweennesscentrality_A.setChecked(True)
+        
+        if optionA['assortativity_coefficient'] == False:
+            self.ckbassortativitycoefficient_A.setChecked(False)
+        else: self.ckbassortativitycoefficient_A.setChecked(True)
+        
+        if optionA['clustering_coefficient'] == False:
+            self.ckbclusteringcoefficient_A.setChecked(False)
+        else: self.ckbclusteringcoefficient_A.setChecked(True)
+        
+        if optionA['transitivity'] == False:
+            self.ckbtransitivity_A.setChecked(False)
+        else: self.ckbtransitivity_A.setChecked(True)
+        
+        if optionA['square_clustering'] == False:
+            self.ckbsquareclustering_A.setChecked(False)
+        else: self.ckbsquareclustering_A.setChecked(True)
+        
+        if optionA['avg_neighbor_degree'] == False:
+            self.ckbavgneighbordegree_A.setChecked(False)
+        else: self.ckbavgneighbordegree_A.setChecked(True)
+        
+        if optionA['avg_degree_connectivty'] == False:
+            self.ckbavgdegreeconnectivity_A.setChecked(False)
+        else: self.ckbavgdegreeconnectivity_A.setChecked(True)
+        
+        if optionA['avg_degree_centrality'] == False:
+            self.ckbavgdegreecentrality_A.setChecked(False)
+        else: self.ckbavgdegreecentrality_A.setChecked(True)
+        
+        if optionA['avg_closeness_centrality'] == False:
+            self.ckbavgclosenesscentrality_A.setChecked(False)
+        else: self.ckbavgclosenesscentrality_A.setChecked(True)
+        
+        if optionA['diameter'] == False:
+            self.ckbdiameter_A.setChecked(False)
+        else: self.ckbdiameter_A.setChecked(True)
+        
         if self.option_metrics_B <> None:
             if self.size_of_components_B == False:
                 self.ckbsizeofcomponents_B.setChecked(False)
@@ -1682,7 +1733,7 @@ class Window(QMainWindow):
         self.nodesizingmeth = 0
         self.edgesizingmeth = 0
         print '!!!!Need to check what below does. Not too sureit is needed'
-        self.metrics = self.create_metrics(self.parameters)
+        self.metrics = self.sort_metrics(self.parameters)
         self.geo_vis = None
         
         #create actions for menues
@@ -2846,59 +2897,7 @@ class Window(QMainWindow):
             #this runs on startup
             STAND_ALONE = True
         
-        #basic metrics A
-        self.nodes_removed_A = True
-        self.node_count_removed_A = True
-        self.count_nodes_left_A = True
-        self.number_of_edges_A = True
-        self.number_of_components_A = True
-        self.isolated_n_count_A = True
-        self.basic_metrics_A = self.nodes_removed_A,self.node_count_removed_A,self.count_nodes_left_A,self.number_of_edges_A,self.number_of_components_A,self.isolated_n_count_A    
         
-        #optional metrics A
-        self.size_of_components_A = False 
-        self.giant_component_size_A = False
-        self.av_nodes_in_components_A = False
-        self.isolated_nodes_A = False #THIS MAY NEEDS TO BE IN THE BASIC SET and TRUE
-        self.isolated_n_count_removed_A = False
-        self.subnodes_A = False
-        self.subnodes_count_A = False   
-        self.path_length_A = False
-        self.av_path_length_components_A = False
-        self.av_path_length_geo_A = False
-        self.giant_component_av_path_length_A = False
-        self.average_degree_A = False
-        self.inter_removed_count_A = False #THIS IS ONLY NEEDED IF INTERDEPENDENCY     
-        self.option_metrics_A = self.size_of_components_A,self.giant_component_size_A,self.av_nodes_in_components_A,self.isolated_nodes_A,self.isolated_n_count_removed_A,self.subnodes_A,self.subnodes_count_A,self.path_length_A,self.av_path_length_components_A,self.av_path_length_geo_A,self.giant_component_av_path_length_A,self.average_degree_A,self.inter_removed_count_A
-        
-        if STAND_ALONE == False:
-            #basic metrics B
-            self.nodes_removed_B = False
-            self.node_count_removed_B = False
-            self.count_nodes_left_B = False
-            self.number_of_edges_B = False
-            self.number_of_components_B = False
-            self.isolated_n_count_B = False
-            self.basic_metrics_B =self.nodes_removed_B,self.node_count_removed_B,self.count_nodes_left_B,self.number_of_edges_B,self.number_of_components_B,self.isolated_n_count_B    
-                
-            #optional metrics B
-            self.size_of_components_B = False 
-            self.giant_component_size_B = False
-            self.av_nodes_in_components_B = False
-            self.isolated_nodes_B = False #THIS MAY NEED TO BE IN THE BASIC SET
-            self.isolated_n_count_removed_B = False
-            self.subnodes_B = False
-            self.subnodes_count_B = False   
-            self.path_length_B = False
-            self.av_path_length_components_B = False
-            self.av_path_length_geo_B = False
-            self.giant_component_av_path_length_B = False
-            self.average_degree_B = False
-            self.inter_removed_count_B = False #THIS IS ONLY NEEDED IF INTERDEPENDENCY    
-            self.option_metrics_B = self.size_of_components_B,self.giant_component_size_B,self.av_nodes_in_components_B,self.isolated_nodes_B,self.isolated_n_count_removed_B,self.subnodes_B,self.subnodes_count_B,self.path_length_B,self.av_path_length_components_B,self.av_path_length_geo_B,self.giant_component_av_path_length_B,self.average_degree_B,self.inter_removed_count_B
-        else:
-            self.basic_metrics_B = None
-            self.option_metrics_B = None
         self.metrics = self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B
         return self.metrics        
 
@@ -3214,7 +3213,6 @@ class Window(QMainWindow):
         self.w = MetricsWindow()
     def updatewindow_metrics(self):
         '''Called by the metrics window when opened to get the up-to-date variables'''
-        ba,bb,oa,ob = self.metrics
         return self.metrics 
     def updateGUI_metrics(self, metrics):
         '''Called when metrics window is closed to update the variables'''
@@ -4041,8 +4039,8 @@ class Window(QMainWindow):
             print 'this is here for satefy. SHOULD NEVER BE USED'
             self.parameters = self.get_analysis_type()
         #-------------------sort metrics here - this is required when not stand_alone
-        if self.timestep == 0:
-            self.metrics = self.sort_metrics(self.parameters)        
+        #if self.timestep == 0:
+            #self.metrics = self.sort_metrics(self.parameters)        
         #------------------get file name and handle an error arising here
         if fileName == None and self.saveoutputfile == True:
             #print 'asks here as well'
@@ -4116,7 +4114,7 @@ class Window(QMainWindow):
     def sort_metrics(self, parameters):
         '''Set the condition of all the posible metrics based on the parameters.'''
         #print 'Running SORT metrics'
-        failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length = self.parameters
+        #failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length = self.parameters
         basic_metrics_A = {'nodes_removed':True,'no_of_nodes_removed':True,'no_of_nodes':True,
                    'no_of_edges':True,'no_of_components':True,
                    'no_of_isolated_nodes':True,'isolated_nodes_removed':True,
