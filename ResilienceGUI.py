@@ -4117,104 +4117,40 @@ class Window(QMainWindow):
         '''Set the condition of all the posible metrics based on the parameters.'''
         #print 'Running SORT metrics'
         failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length = self.parameters
-
-        nodes_removed_A = True #nodes removed from network A
-        node_count_removed_A = True #count of ndoes removed from network A   
-        count_nodes_left_A = True #the number of nodes left in network A
-        number_of_edges_A = True #number of edges in the network
-        number_of_components_A = True #number of subgraphs/isolated nodes
-        isolated_n_count_A = True
+        basic_metrics_A = {'nodes_removed':True,'no_of_nodes_removed':True,'no_of_nodes':True,
+                   'no_of_edges':True,'no_of_components':True,
+                   'no_of_isolated_nodes':True,'isolated_nodes_removed':True,
+                   'nodes_selected_to_fail':True}
+        option_metrics_A = {'size_of_components':   False,                    
+                    'giant_component_size':         False,
+                    'avg_size_of_components':       False,
+                    'isolated_nodes':               False,
+                    'no_of_isolated_nodes_removed': False,
+                    'subnodes':                     False,
+                    'no_of_subnodes':               False,
+                    'avg_path_length':              False,
+                    'avg_path_length_of_components':False,
+                    'avg_path_length_of_giant_component':   False,
+                    'avg_geo_path_length':                  False,
+                    'avg_geo_path_length_of_components':    False,
+                    'avg_geo_path_length_of_giant_component':False,
+                    'avg_degree':                   False,
+                    'density':                      False,
+                    'maximum_betweenness_centrality':False,
+                    'avg_betweenness_centrality':   False,
+                    'assortativity_coefficient':    False,
+                    'clustering_coefficient':       False,
+                    'transitivity':                 False,
+                    'square_clustering':            False,
+                    'avg_neighbor_degree':          False,
+                    'avg_degree_connectivity':      False,
+                    'avg_degree_centrality':        False,
+                    'avg_closeness_centrality':     False,
+                    'diameter':                     False}
         
-        if failure['stand_alone'] == False:        
-            nodes_removed_B = True #nodes removed from network B
-            node_count_removed_B = True #count of ndoes removed from network B   
-            count_nodes_left_B = True #the number of nodes left in network B
-            number_of_edges_B = True #number of edges in the network
-            number_of_components_B = True #number of subgraphs/isolated nodes
-            isolated_n_count_B = True
-        else: 
-            nodes_removed_B = False #nodes removed from network B
-            node_count_removed_B = False #count of ndoes removed from network B   
-            count_nodes_left_B = False #the number of nodes left in network B
-            number_of_edges_B = False #number of edges in the network
-            number_of_components_B = False #number of subgraphs/isolated nodes
-            isolated_n_count_B = False
-            
-        size_of_components_A = False
-        giant_component_size_A = False
-        av_nodes_in_components_A = False
-        isolated_nodes_A = False #THIS MAY NEED TO BE IN THE BASIC SET
-        isolated_n_count_removed_A = False
-        isolated_nodes_removed_A = True
-        subnodes_A = False
-        subnodes_count_A = False   
-        path_length_A = False
-        av_path_length_components_A = False
-        av_path_length_geo_A = False
-        giant_component_av_path_length_A = False
-        average_degree_A = False
-        inter_removed_count_A = False #THIS IS ONLY NEEDED IF INTERDEPENDENCY
-        density_A = False
-
-        if failure['stand_alone'] == False:
-             size_of_components_B = False
-             giant_component_size_B = False
-             av_nodes_in_components_B = False
-             isolated_nodes_B = False #THIS MAY NEED TO BE IN THE BASIC SET
-             isolated_n_count_removed_B = False
-             isolated_nodes_removed_B = True
-             subnodes_B = False
-             subnodes_count_B = False   
-             path_length_B = False
-             av_path_length_components_B = False
-             av_path_length_geo_B = False
-             giant_component_av_path_length_B = False
-             average_degree_B = False
-             inter_removed_count_B = True #THIS IS NEEDED IF NOT STAND ALONE
-             density_B = True
-        else:
-             size_of_components_B = False
-             giant_component_size_B = False
-             av_nodes_in_components_B = False
-             isolated_nodes_B = False #THIS MAY NEED TO BE IN THE BASIC SET
-             isolated_n_count_removed_B = False
-             isolated_nodes_removed_B = True
-             subnodes_B = False
-             subnodes_count_B = False   
-             path_length_B = False
-             av_path_length_components_B = False
-             av_path_length_geo_B = False
-             giant_component_av_path_length_B = False
-             average_degree_B = False
-             inter_removed_count_B = True #THIS IS NEEDED IF NOT STAND ALONE
-             density_B = False
-             
-        basic_metrics_A = {'nodes_removed':nodes_removed_A,'no_of_nodes_removed':node_count_removed_A,
-                   'no_of_nodes_left':count_nodes_left_A,'number_of_edges':number_of_edges_A,
-                   'number_of_components':number_of_components_A}
-        option_metrics_A = {'size_of_components':size_of_components_A,'giant_component_size':giant_component_size_A,
-                    'avg_nodes_in_components':av_nodes_in_components_A,
-                    'isolated_nodes':isolated_nodes_A,'no_of_isolated_nodes':isolated_n_count_A,
-                    'no_of_isolated_nodes_removed':isolated_n_count_removed_A,'isolated_nodes_removed':isolated_nodes_removed_A,
-                    'subnodes':subnodes_A,'no_of_subnodes':subnodes_count_A,
-                    'path_length':path_length_A,'avg_path_length_of_components':av_path_length_components_A,
-                    'path_length_of_giant_component':giant_component_av_path_length_A,
-                    'path_length_geo':av_path_length_geo_A,'avg_degree':average_degree_A,
-                    'no_of_inter_removed':inter_removed_count_A,'density':density_A}
-        basic_metrics_B = {'nodes_removed':nodes_removed_B,'no_of_nodes_removed':node_count_removed_B,
-                   'no_of_nodes_left':count_nodes_left_B,'number_of_edges':number_of_edges_B,
-                   'number_of_components':number_of_components_B}
-        option_metrics_B = {'size_of_components':size_of_components_B,'giant_component_size':giant_component_size_B,
-                    'avg_nodes_in_components':av_nodes_in_components_B,
-                    'isolated_nodes':isolated_nodes_B,'no_of_isolated_nodes':isolated_n_count_B,
-                    'no_of_isolated_nodes_removed':isolated_n_count_removed_B,'isolated_nodes_removed':isolated_nodes_removed_B,
-                    'subnodes':subnodes_B,'no_of_subnodes':subnodes_count_B,
-                    'path_length':path_length_B,'avg_path_length_of_components':av_path_length_components_B,
-                    'path_length_of_giant_component':giant_component_av_path_length_B,
-                    'path_length_geo':av_path_length_geo_B,'avg_degree':average_degree_B,
-                    'no_of_inter_removed':inter_removed_count_B,'density':density_B}
+        basic_metrics_B = basic_metrics_A.copy()
+        option_metrics_B = option_metrics_A.copy()
     
-        # is in basic A, but in above - isolated_n_count_A
         metrics = basic_metrics_A,basic_metrics_B,option_metrics_A,option_metrics_B
         return metrics
 
