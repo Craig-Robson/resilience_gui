@@ -1182,7 +1182,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         else: optionA['size_of_componets']=False
         
         if self.ckbgiantcomponentsize_A.isChecked():
-            otpionA['giant_component_size']=True
+            optionA['giant_component_size']=True
         else: optionA['giant_component_size']=False            
                   
         if self.ckbavnodesincomponents_A.isChecked():
@@ -1287,7 +1287,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         else: optionB['size_of_componets']=False
         
         if self.ckbgiantcomponentsize_A.isChecked():
-            otpionB['giant_component_size']=True
+            optionB['giant_component_size']=True
         else: optionB['giant_component_size']=False            
                   
         if self.ckbavnodesincomponents_B.isChecked():
@@ -1738,20 +1738,18 @@ class ViewGraphs(QDialog):
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
         
-        self.valueset = window.updatewindow_viewgraphs() #gets the metrics values        
-        basic_metrics_A, basic_metrics_B, option_metrics_A, option_metrics_B = self.valueset
-        nodes_removed_A,node_count_removed_A,count_nodes_left_A,number_of_edges_A,number_of_components_A,isolated_n_count_A = basic_metrics_A
-        size_of_components_A,giant_component_size_A,av_nodes_in_components_A,isolated_nodes_A,isolated_n_count_removed_A,subnodes_A,subnodes_count_A,path_length_A,av_path_length_components_A,giant_component_av_path_length_A,av_path_length_geo_A,average_degree_A,inter_removed_count_A = option_metrics_A
-        self.valuesetA = node_count_removed_A,count_nodes_left_A,number_of_edges_A,number_of_components_A,size_of_components_A,giant_component_size_A,av_nodes_in_components_A,isolated_nodes_A,isolated_n_count_A,isolated_n_count_removed_A,subnodes_A,subnodes_count_A,path_length_A,av_path_length_components_A,av_path_length_geo_A,giant_component_av_path_length_A,average_degree_A,inter_removed_count_A
-        
-        if basic_metrics_B <> None:
-            nodes_removed_B,node_count_removed_B,count_nodes_left_B,number_of_edges_B,number_of_components_B,isolated_n_count_B = basic_metrics_B
-            size_of_components_B,giant_component_size_B,av_nodes_in_components_B,isolated_nodes_B,isolated_n_count_removed_B,subnodes_B,subnodes_count_B,path_length_B,av_path_length_components_B,giant_component_av_path_length_B,av_path_length_geo_B,average_degree_B,inter_removed_count_B = option_metrics_B
-            self.valuesetB = node_count_removed_B,count_nodes_left_B,number_of_edges_B,number_of_components_B,size_of_components_B,giant_component_size_B,av_nodes_in_components_B,isolated_nodes_B,isolated_n_count_B,isolated_n_count_removed_B,subnodes_B,subnodes_count_B,path_length_B,av_path_length_components_B,av_path_length_geo_B,giant_component_av_path_length_B,average_degree_B,inter_removed_count_B
+        self.metrics, self.failure = window.updatewindow_viewgraphs() #gets the metrics value
+        basicA, basicB, optionA, optionB = self.metrics
+        self.valuesA = basicA,optionA
+        #self.valuesetA = node_count_removed_A,count_nodes_left_A,number_of_edges_A,number_of_components_A,size_of_components_A,giant_component_size_A,av_nodes_in_components_A,isolated_nodes_A,isolated_n_count_A,isolated_n_count_removed_A,subnodes_A,subnodes_count_A,path_length_A,av_path_length_components_A,av_path_length_geo_A,giant_component_av_path_length_A,average_degree_A,inter_removed_count_A
+        self.valuesB = basicB,optionB
+        #self.valuesetB = node_count_removed_B,count_nodes_left_B,number_of_edges_B,number_of_components_B,size_of_components_B,giant_component_size_B,av_nodes_in_components_B,isolated_nodes_B,isolated_n_count_B,isolated_n_count_removed_B,subnodes_B,subnodes_count_B,path_length_B,av_path_length_components_B,av_path_length_geo_B,giant_component_av_path_length_B,average_degree_B,inter_removed_count_B
             
         #self.metriclist = ['Number of nodes removed', 'Number of nodes left', 'Number of edges left', 'Number of components', 'None']
-        self.metriclist = self.makemetriclist(basic_metrics_A, option_metrics_A)  
-        if basic_metrics_B <> None:
+        self.metriclist = self.makemetriclist(basicA, optionA)
+        print 'self.metriclist is:', self.metriclist
+        exit()
+        if self.failure['stand_alone'] == False:
             net_list = ['A','B']
         else:
             net_list = ['A']
@@ -1852,21 +1850,10 @@ class ViewGraphs(QDialog):
                 #print 'found a match'
                 return index
             index += 1
-                    
-    def networkchanged(self,text):
-        '''Switch between the metric lists for data when the netwrok is 
-        changed.'''
-        #print 'CHANGED'
-        #print text
-    
+                        
     def applyclick(self):
-        '''Runs the code to identify the metrics requested for the visualisation.'''
-        #this bit now needs changing        
-        self.metric1 = self.identifymetric(self.option1cbx.currentText())
-        self.metric2 = self.identifymetric(self.option2cbx.currentText())
+        '''Runs the code to identify the metrics requested for the visualisation.'''   
         self.valuenames = 'Node count removed', 'Count nodes left', 'Number of edges left', 'Number of components', 'None','','','','','','','','','','','','','','','','','','','',''
-        
-        self.valueset = list(self.valueset)  
         
         if self.figureGraph == None or self.figureGraph.canvas.manager.window == None: #if figure model window has not been opened yet
             self.figureGraph = pl.figure()
@@ -1879,38 +1866,41 @@ class ViewGraphs(QDialog):
             self.figureGraph = None
             self.figureGraph = pl.figure()
             self.figureGraph.canvas.set_window_title('Results plot') 
-         
+        #top plot
         pl.subplot(211)
         pl.cla() #clear the plot   
         if self.net1cbx.currentText() == 'A':
-            pl.plot(self.valuesetA[self.metric1], 'b', linewidth=2, label=self.valuenames[self.metric1])
-        else: 
-            pl.plot(self.valuesetB[self.metric1], 'b', linewidth=2, label=self.valuenames[self.metric1])
+            #if network A selected
+            values = self.identifymetric(self.option1cbx.currentText(),self.valuesA)
+            pl.plot(values, 'b', linewidth=2, label=self.option1cbx.currentText())
+        else:
+            #if network B selected
+            values = self.identifymetric(self.option1cbx.currentText(),self.valuesB)
+            pl.plot(values, 'b', linewidth=2, label=self.option1cbx.currentText())
         pl.xlabel('Number of nodes removed')
-        pl.ylabel(self.option1cbx.currentText())
         pl.ylim(ymin=0)
         if self.net1cbx.currentText() == 'A':
-            ymax =max(self.valuesetA[self.metric1])
+            ymax =max(values)
         else:
-            ymax =max(self.valuesetB[self.metric1])
-        pl.ylim(ymax=ymax+0.5)  
-        pl.xlim(xmin=0)
-        pl.subplot(212)
-        pl.cla()
-        if self.metric2<>99:
-            if  self.net2cbx.currentText() == 'A':
-                pl.plot(self.valuesetA[self.metric2], 'r', linewidth=2, label=self.valuenames[self.metric2])
-            else:
-                pl.plot(self.valuesetB[self.metric2], 'r', linewidth=2, label=self.valuenames[self.metric2])
+            ymax =max(values)
+        pl.ylim(ymax=ymax+0.5);pl.xlim(xmin=0)
+        
+        #secnd plot
+        pl.subplot(212);pl.cla()
+        if  self.net2cbx.currentText() == 'A':
+            values = self.identifymetric(self.option2cbx.currentText(),self.valuesA)
+            pl.plot(values, 'b', linewidth=2, label=self.option2cbx.currentText())
+        else:
+            values = self.identifymetric(self.option2cbx.currentText(),self.valuesB)
+            pl.plot(values, 'b', linewidth=2, label=self.option2cbx.currentText())
+                
         pl.xlabel('Number of nodes removed')
-        pl.ylabel(self.option2cbx.currentText())
         pl.ylim(ymin=0)
         if self.net2cbx.currentText() == 'A':
-            ymax =max(self.valuesetA[self.metric2])
+            ymax =max(values)
         else:
-            ymax =max(self.valuesetB[self.metric2])
-        pl.ylim(ymax=ymax+0.5)  
-        pl.xlim(xmin=0)            
+            ymax =max(values)
+        pl.ylim(ymax=ymax+0.5);pl.xlim(xmin=0)
         pl.show() #show the window 
 
     def cancelclick(self):
@@ -1927,46 +1917,65 @@ class ViewGraphs(QDialog):
         '''Closes the windows.'''
         pl.close()
 
-    def identifymetric(self, metric):
+    def identifymetric(self, metric,values):
         '''Method to idenitfy the metric requested, and assign the correct 
         value for the position of its data in the lists of lists.'''
         #print 'IN Identify metric'
+        print 'METRIC IS:', metric
+        basic, option = values
         if metric == 'Number of nodes removed':
-            metric = 0
-        elif metric == 'Number of nodes left':
-            metric = 1
-        elif metric == 'Number of edges left':
-            metric = 2
+            metric = basic['no_of_nodes_removed']
+        elif metric == 'Number of nodes':
+            metric = basic['no_of_nodes']
+        elif metric == 'Number of edges':
+            metric = basic['no_of_edges']
         elif metric == 'Number of components':
-            metric = 3
-        elif metric == 'Size of components': #not suitable
-            metric = 4
-        elif metric == 'Giant component size':
-            metric = 5
-        elif metric == 'Mean number of nodes in components':
-            metric = 6
-        elif metric == 'Isolated nodes': #not suitable
-            metric = 7
+            metric = basic['no_of_components']
         elif metric == 'Number of isolated nodes':
-            metric = 8
+            metric = basic['no_of_isolated_nodes']
+        #------option metrics-------------------------------
+        elif metric == 'Giant component size':
+            metric = option['giant_component_size']
+        elif metric == 'Average number of nodes in components':
+            metric = option['avg_size_of_components']
         elif metric == 'Number of isolates removed':
-            metric = 9
-        elif metric == 'Subnodes': #not suitable
-            metric = 10
+            metric = option['no_of_isolated_nodes_removed']
         elif metric == 'Number of subgraph nodes':
-            metric = 11
-        elif metric == 'Mean path length':
-            metric = 12
-        elif metric == 'Mean path length per component':
-            metric = 13
-        elif metric == 'Mean path length geo':
-            metric = 14
-        elif metric == 'Mean path length of giant component':
-            metric = 15
-        elif metric == 'Mean node degree': #this is known to be correct  - don't know where the error is though.
-            metric = 16
-        elif metric == 'inter_removed_count':
-            metric = 17      
+            metric = option['no_of_subnodes']
+        elif metric == 'Average path length':
+            metric = option['avg_path_length']
+        elif metric == 'Average path length of giant component':
+            metric = option['avg_path_length_of_giant_component']
+        elif metric == 'Average geo path length':
+            metric = option['avg_geo_path_length']
+        elif metric == 'Average geo path length of giant component':
+            metric = option['avg_geo_path_length_of_giant_component']     
+        elif metric == 'Average node degree':
+            metric = option['avg_degree']
+        elif metric == 'Density':
+            metric = option['density']
+        elif metric == 'Maximum betweenness centrality':
+            metric = option['maximum_betweenness_centrality']
+        elif metric == 'Avgerage betweenness centrality':
+            metric = option['avg_betweenness_centrality']
+        elif metric == 'Assortativity coefficient':
+            metric = option['assortativity coefficient']
+        elif metric == 'Clustering coefficient':
+            metric = option['clustering_coefficient']
+        elif metric == 'Transitivity':
+            metric = option['transitivity']
+        elif metric == 'Square clustering':
+            metric = option['square_clustering']
+        elif metric == 'Average neighbor degree':
+            metric = option['avg_neighbor_degree']
+        elif metric == 'Average degree connectivity':
+            metric = option['avg_degree_connectivity']
+        elif metric == 'Average degree centrality':
+            metric = option['avg_degree_centrality']
+        elif metric == 'Average closeness centrality':
+            metric = option['avg_closeness_centrality']
+        elif metric == 'Diameter':
+            metric = option['diameter']
         elif metric == 'None': 
             metric = 99
         else:
@@ -1974,59 +1983,60 @@ class ViewGraphs(QDialog):
             print 'Uncategorised'
         return metric
 
-    def makemetriclist(self,basic,options):
+    def makemetriclist(self,basic,option):
         '''This checks which metrics are true and false and creates a list from 
         them for the metric list in the dialog window.'''
-        nodes_removed_A,node_count_removed_A,count_nodes_left_A,number_of_edges_A,number_of_components_A,isolated_n_count = basic
-        size_of_components,giant_component_size,av_nodes_in_components,isolated_nodes,isolated_n_count_removed,subnodes,subnodes_count,path_length,av_path_length_components,giant_component_av_path_length,av_path_length_geo,average_degree,inter_removed_count = options
-        #basic_metrics = 'node_count_removed','count_nodes_left','number_of_edges','number_of_components'
-        #node_count_removed_A = True #count of ndoes removed from network B   
-        #count_nodes_left_A = True #the number of nodes left in network B
-        #number_of_edges_A = True #number of edges in the network
-        #number_of_components_A = True #number of subgraphs/isolated nodes
         
         metric_list = []
         metric_list.append('Number of nodes removed')
-        metric_list.append('Number of nodes left')
-        metric_list.append('Number of edges left')
+        metric_list.append('Number of nodes')
+        metric_list.append('Number of edges')
         metric_list.append('Number of components')
         metric_list.append('Number of isolated nodes')
-        if size_of_components <> False:
-            #not suitable for graphing            
-            pass
-            #metric_list.append('Size of components')
-        if giant_component_size <> False:
+        
+        if option['giant_component_size'] <> False:
             metric_list.append('Giant component size')
-        if av_nodes_in_components <> False:
-            metric_list.append('Mean number of nodes in components')
-        if isolated_nodes <> False: #THIS MAY NEED TO BE IN THE BASIC SET
-            #not suitable for graphing
-            pass
-            #metric_list.append('Isolated nodes')
-            
-        if isolated_n_count_removed <> False:
+        if option['avg_size_of_components'] <> False:
+            metric_list.append('Average number of nodes in components')
+        if option['no_of_isolated_nodes_removed'] <> False:
             metric_list.append('Number of isolates removed')
-        if subnodes <> False:
-            #not suitable for graphing            
-            pass
-            #metric_list.append('Subnodes')
-        if subnodes_count <> False:
+        if option['no_of_subnodes'] <> False:
             metric_list.append('Number of subgraph nodes')
-        if path_length <> False:
-            metric_list.append('Mean path length')
-        if av_path_length_components <> False:
-            metric_list.append('Mean path length per component')
-        if av_path_length_geo <> False:
-            metric_list.append('Mean path length geo')
-        if giant_component_av_path_length <> False:
-            metric_list.append('Mean path length of giant component')
-        if average_degree <> False:
-            metric_list.append('Mean node degree')
-        if inter_removed_count <> False: #THIS IS ONLY NEEDED IF INTERDEPENDENCY
-            #this is not needed yet            
-            pass
-            #metric_list.append('inter_removed_count')
-        #print 'at end the list is: ', metric_list
+        if option['avg_path_length'] <> False:
+            metric_list.append('Average path length')
+        if option['avg_path_length_of_giant_component'] <> False:
+            metric_list.append('Average path length of giant component')
+        if option['avg_geo_path_length'] <> False:            
+            metric_list.append('Average geo path length')
+        if option['avg_geo_path_length_of_giant_component'] <> False:
+            metric_list.append('Average geo path length of giant component')
+        if option['avg_degree'] <> False:
+            metric_list.append('Average node degree')
+        if option['density'] <> False:
+            metric_list.append('Density')
+        if option['maximum_betweenness_centrality'] <> False:
+            metric_list.append('Maximum betweenness centrality')
+        if option['avg_betweenness_centrality'] <> False:
+            metric_list.append('Avgerage betweenness centrality')
+        if option['assortativity coefficient'] <> False:
+            metric_list.append('Assortativity coefficient')
+        if option['clustering_coefficient'] <> False:
+            metric_list.append('Clustering coefficient')
+        if option['transitivity'] <> False:
+            metric_list.append('Transitivity')
+        if option['square_clustering'] <> False:
+            metric_list.append('Square clustering')
+        if option['avg_neighbor_degree'] <> False:
+            metric_list.append('Average neighbor degree')
+        if option['avg_degree_connectivity'] <> False:
+            metric_list.append('Average degree connectivity')
+        if option['avg_degree_centrality'] <> False:
+            metric_list.append('Average degree centrality')
+        if option['avg_closeness_centrality'] <> False:
+            metric_list.append('Average closeness centrality')
+        if option['diameter'] <> False:
+            metric_list.append('Diameter')
+        
         return metric_list
        
 class Window(QMainWindow):
@@ -3699,7 +3709,9 @@ class Window(QMainWindow):
     def updatewindow_viewgraphs(self):
         '''Used to transfer the values to the view graphs class. Called on
         first line of class.'''
-        return self.values
+        print '--------------------------'
+        print self.parameters
+        return self.values, self.parameters[0]
         
     def closeEvent(self, event):
         '''Over rides the automatic close event so can ask user if they 
@@ -3820,7 +3832,8 @@ class Window(QMainWindow):
             QApplication.processEvents() #refresh gui            
             ok = QMessageBox.information(self, 'Information', "Network resileince analysis successfully completed. Do you want to view the metric graphs?" , '&No','&View Graphs')
             if ok == 1: #if the view graph option is clicked
-                self.values = res.outputresults(self.graphparameters, self.parameters)
+                print 'when sending, self.metrics is:', self.metrics 
+                self.values = res.outputresults(self.graphparameters, self.parameters, self.metrics)
                 pl.close()
                 self.q = ViewGraphs()
                 self.btnstep.setEnabled(True) #allow the button to be pressed again
