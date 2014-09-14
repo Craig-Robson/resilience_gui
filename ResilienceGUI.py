@@ -385,9 +385,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         
         #----------------------basic metrics----------------------------------
         self.height += 20        
-        self.lblnodesremoved_A = QLabel("nodes removed", self)
-        self.lblnodesremoved_A.adjustSize()
-        self.lblnodesremoved_A.move(12,self.height)       
+        lblnodesremoved_A = QLabel("nodes removed", self)
+        lblnodesremoved_A.adjustSize()
+        lblnodesremoved_A.move(12,self.height)       
         self.ckbnodesremoved_A = QCheckBox(self)
         self.ckbnodesremoved_A.move(180,self.height)
         networkAbasicgroup.addButton(self.ckbnodesremoved_A) 
@@ -400,9 +400,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbnodesremoved_B.setEnabled(False)
         
         self.height += 20
-        self.lblnodecountremoved_A = QLabel("number of nodes removed", self)
-        self.lblnodecountremoved_A.adjustSize()
-        self.lblnodecountremoved_A.move(12,self.height)       
+        lblnodecountremoved_A = QLabel("number of nodes removed", self)
+        lblnodecountremoved_A.adjustSize()
+        lblnodecountremoved_A.move(12,self.height)       
         self.ckbnodecountremoved_A = QCheckBox(self)
         self.ckbnodecountremoved_A.move(180,self.height)
         networkAbasicgroup.addButton(self.ckbnodecountremoved_A)
@@ -415,9 +415,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbnodecountremoved_B.setEnabled(False)
                 
         self.height += 20       
-        self.lblcountnodesleft_A = QLabel("number of nodes", self)
-        self.lblcountnodesleft_A.adjustSize()
-        self.lblcountnodesleft_A.move(12,self.height)       
+        lblcountnodesleft_A = QLabel("number of nodes", self)
+        lblcountnodesleft_A.adjustSize()
+        lblcountnodesleft_A.move(12,self.height)       
         self.ckbcountnodesleft_A = QCheckBox(self)
         self.ckbcountnodesleft_A.move(180,self.height)
         networkAbasicgroup.addButton(self.ckbcountnodesleft_A)
@@ -430,9 +430,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbcountnodesleft_B.setEnabled(False)
         
         self.height += 20
-        self.lblnumberofedges_A = QLabel("number of edges", self)
-        self.lblnumberofedges_A.adjustSize()
-        self.lblnumberofedges_A.move(12,self.height)       
+        lblnumberofedges_A = QLabel("number of edges", self)
+        lblnumberofedges_A.adjustSize()
+        lblnumberofedges_A.move(12,self.height)       
         self.ckbnumberofedges_A = QCheckBox(self)
         self.ckbnumberofedges_A.move(180,self.height)
         networkAbasicgroup.addButton(self.ckbnumberofedges_A)
@@ -445,9 +445,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbnumberofedges_B.setEnabled(False)
         
         self.height += 20
-        self.lblnumberofcomponents_A = QLabel("number of components", self)
-        self.lblnumberofcomponents_A.adjustSize()
-        self.lblnumberofcomponents_A.move(12,self.height)       
+        lblnumberofcomponents_A = QLabel("number of components", self)
+        lblnumberofcomponents_A.adjustSize()
+        lblnumberofcomponents_A.move(12,self.height)       
         self.ckbnumberofcomponents_A = QCheckBox(self)
         self.ckbnumberofcomponents_A.move(180,self.height)    
         networkAbasicgroup.addButton(self.ckbnumberofedges_A)
@@ -460,9 +460,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbnumberofcomponents_B.setEnabled(False)
         
         self.height += 20
-        self.lblisolatedncount_A = QLabel("number of isolated nodes", self)
-        self.lblisolatedncount_A.adjustSize()
-        self.lblisolatedncount_A.move(12,self.height)
+        lblisolatedncount_A = QLabel("number of isolated nodes", self)
+        lblisolatedncount_A.adjustSize()
+        lblisolatedncount_A.move(12,self.height)
         self.ckbisolatedncount_A = QCheckBox(self)
         self.ckbisolatedncount_A.move(180,self.height)
         networkAbasicgroup.addButton(self.ckbisolatedncount_A)
@@ -507,9 +507,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         lblmetrics.move(12,self.height) 
   
         self.height += 20
-        self.lblsizeofcomponents_A = QLabel("size of components*", self)
-        self.lblsizeofcomponents_A.adjustSize()
-        self.lblsizeofcomponents_A.move(12,self.height)
+        lblsizeofcomponents_A = QLabel("size of components*", self)
+        lblsizeofcomponents_A.adjustSize()
+        lblsizeofcomponents_A.move(12,self.height)
         self.ckbsizeofcomponents_A = QCheckBox(self)
         self.ckbsizeofcomponents_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbsizeofcomponents_A)                
@@ -518,9 +518,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbsizeofcomponents_B)
         
         self.height += 20
-        self.lblgiantcomponentsize_A = QLabel("giant component size", self)
-        self.lblgiantcomponentsize_A.adjustSize()
-        self.lblgiantcomponentsize_A.move(12,self.height)
+        lblgiantcomponentsize_A = QLabel("giant component size", self)
+        lblgiantcomponentsize_A.adjustSize()
+        lblgiantcomponentsize_A.move(12,self.height)
         self.ckbgiantcomponentsize_A = QCheckBox(self)
         self.ckbgiantcomponentsize_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbgiantcomponentsize_A)
@@ -529,9 +529,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbgiantcomponentsize_B)
   
         self.height += 20
-        self.lblavnodesincomponents_A = QLabel("average size of components", self)
-        self.lblavnodesincomponents_A.adjustSize()
-        self.lblavnodesincomponents_A.move(12,self.height)
+        lblavnodesincomponents_A = QLabel("average size of components", self)
+        lblavnodesincomponents_A.adjustSize()
+        lblavnodesincomponents_A.move(12,self.height)
         self.ckbavnodesincomponents_A = QCheckBox(self)
         self.ckbavnodesincomponents_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavnodesincomponents_A)
@@ -540,9 +540,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavnodesincomponents_B)
   
         self.height += 20
-        self.lblisolatednodes_A = QLabel("isolated nodes*", self)
-        self.lblisolatednodes_A.adjustSize()
-        self.lblisolatednodes_A.move(12,self.height)
+        lblisolatednodes_A = QLabel("isolated nodes*", self)
+        lblisolatednodes_A.adjustSize()
+        lblisolatednodes_A.move(12,self.height)
         self.ckbisolatednodes_A = QCheckBox(self)
         self.ckbisolatednodes_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbisolatednodes_A)
@@ -551,9 +551,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbisolatednodes_B)
   
         self.height += 20
-        self.lblisolatedncountremoved_A = QLabel("number if isolated nodes removed", self)
-        self.lblisolatedncountremoved_A.adjustSize()
-        self.lblisolatedncountremoved_A.move(12,self.height)
+        lblisolatedncountremoved_A = QLabel("number if isolated nodes removed", self)
+        lblisolatedncountremoved_A.adjustSize()
+        lblisolatedncountremoved_A.move(12,self.height)
         self.ckbisolatedncountremoved_A = QCheckBox(self)
         self.ckbisolatedncountremoved_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbisolatedncountremoved_A)
@@ -562,9 +562,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbisolatedncountremoved_B)
   
         self.height += 20
-        self.lblsubnodes_A = QLabel("subnodes*", self)
-        self.lblsubnodes_A.adjustSize()
-        self.lblsubnodes_A.move(12,self.height)
+        lblsubnodes_A = QLabel("subnodes*", self)
+        lblsubnodes_A.adjustSize()
+        lblsubnodes_A.move(12,self.height)
         self.ckbsubnodes_A = QCheckBox(self)
         self.ckbsubnodes_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbsubnodes_A)
@@ -573,9 +573,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbsubnodes_B)
   
         self.height += 20        
-        self.lblsubnodescount_A = QLabel("number of subnodes", self)
-        self.lblsubnodescount_A.adjustSize()
-        self.lblsubnodescount_A.move(12,self.height)
+        lblsubnodescount_A = QLabel("number of subnodes", self)
+        lblsubnodescount_A.adjustSize()
+        lblsubnodescount_A.move(12,self.height)
         self.ckbsubnodescount_A = QCheckBox(self)
         self.ckbsubnodescount_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbsubnodescount_A)
@@ -584,9 +584,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbsubnodescount_B)
   
         self.height += 20
-        self.lblavpathlength_A = QLabel("average path length", self)
-        self.lblavpathlength_A.adjustSize()
-        self.lblavpathlength_A.move(12,self.height)
+        lblavpathlength_A = QLabel("average path length", self)
+        lblavpathlength_A.adjustSize()
+        lblavpathlength_A.move(12,self.height)
         self.ckbavpathlength_A = QCheckBox(self)
         self.ckbavpathlength_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavpathlength_A)
@@ -595,9 +595,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavpathlength_B)  
                                
         self.height += 20
-        self.lblavpathlengthcomp_A = QLabel("avg path length components", self)
-        self.lblavpathlengthcomp_A.adjustSize()
-        self.lblavpathlengthcomp_A.move(12,self.height)
+        lblavpathlengthcomp_A = QLabel("avg path length components", self)
+        lblavpathlengthcomp_A.adjustSize()
+        lblavpathlengthcomp_A.move(12,self.height)
         self.ckbavpathlengthcomp_A = QCheckBox(self)
         self.ckbavpathlengthcomp_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavpathlengthcomp_A)
@@ -606,9 +606,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavpathlengthcomp_B)
 
         self.height += 20        
-        self.lblgiantcompavpathlength_A = QLabel("ag path length of giant component", self)
-        self.lblgiantcompavpathlength_A.adjustSize()
-        self.lblgiantcompavpathlength_A.move(12,self.height)
+        lblgiantcompavpathlength_A = QLabel("ag path length of giant component", self)
+        lblgiantcompavpathlength_A.adjustSize()
+        lblgiantcompavpathlength_A.move(12,self.height)
         self.ckbgiantcompavpathlength_A = QCheckBox(self)
         self.ckbgiantcompavpathlength_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbgiantcompavpathlength_A)
@@ -617,9 +617,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbgiantcompavpathlength_B)
 
         self.height += 20
-        self.lblavpathlengthgeo_A = QLabel("avg geographic path length", self)
-        self.lblavpathlengthgeo_A.adjustSize()
-        self.lblavpathlengthgeo_A.move(12,self.height)
+        lblavpathlengthgeo_A = QLabel("avg geographic path length", self)
+        lblavpathlengthgeo_A.adjustSize()
+        lblavpathlengthgeo_A.move(12,self.height)
         self.ckbavpathlengthgeo_A = QCheckBox(self)
         self.ckbavpathlengthgeo_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavpathlengthgeo_A)
@@ -628,9 +628,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavpathlengthgeo_B)
 
         self.height += 20
-        self.lblavggeocomponentspathlength_A = QLabel("avg geo path of length of components", self)
-        self.lblavggeocomponentspathlength_A.adjustSize()
-        self.lblavggeocomponentspathlength_A.move(12,self.height)
+        lblavggeocomponentspathlength_A = QLabel("avg geo path of length of components", self)
+        lblavggeocomponentspathlength_A.adjustSize()
+        lblavggeocomponentspathlength_A.move(12,self.height)
         self.ckbavggeopathlengthcomponents_A = QCheckBox(self)
         self.ckbavggeopathlengthcomponents_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavggeopathlengthcomponents_A)
@@ -639,9 +639,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavggeopathlengthcomponents_B)
 
         self.height += 20
-        self.lblavggeopathlengthgiantcomponent_A = QLabel("avg geo path length of giant component", self)
-        self.lblavggeopathlengthgiantcomponent_A.adjustSize()
-        self.lblavggeopathlengthgiantcomponent_A.move(12,self.height)
+        lblavggeopathlengthgiantcomponent_A = QLabel("avg geo path length of giant component", self)
+        lblavggeopathlengthgiantcomponent_A.adjustSize()
+        lblavggeopathlengthgiantcomponent_A.move(12,self.height)
         self.ckbavggeopathlengthgiantcomponent_A = QCheckBox(self)
         self.ckbavggeopathlengthgiantcomponent_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavggeopathlengthgiantcomponent_A)
@@ -650,9 +650,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavggeopathlengthgiantcomponent_B)
 
         self.height += 20
-        self.lblavdegree_A = QLabel("average degree", self)
-        self.lblavdegree_A.adjustSize()
-        self.lblavdegree_A.move(12,self.height)
+        lblavdegree_A = QLabel("average degree", self)
+        lblavdegree_A.adjustSize()
+        lblavdegree_A.move(12,self.height)
         self.ckbavdegree_A = QCheckBox(self)
         self.ckbavdegree_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavdegree_A)
@@ -661,9 +661,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavdegree_B) 
 
         self.height += 20
-        self.lbldensity_A = QLabel("density", self)
-        self.lbldensity_A.adjustSize()
-        self.lbldensity_A.move(12,self.height)
+        lbldensity_A = QLabel("density", self)
+        lbldensity_A.adjustSize()
+        lbldensity_A.move(12,self.height)
         self.ckbdensity_A = QCheckBox(self)
         self.ckbdensity_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbdensity_A)  
@@ -672,9 +672,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbdensity_B)
         
         self.height += 20
-        self.lblmaxbetweennesscentrality_A = QLabel("maximum betweenness centrality", self)
-        self.lblmaxbetweennesscentrality_A.adjustSize()
-        self.lblmaxbetweennesscentrality_A.move(12,self.height)
+        lblmaxbetweennesscentrality_A = QLabel("maximum betweenness centrality", self)
+        lblmaxbetweennesscentrality_A.adjustSize()
+        lblmaxbetweennesscentrality_A.move(12,self.height)
         self.ckbmaxbetweennesscentrality_A = QCheckBox(self)
         self.ckbmaxbetweennesscentrality_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbmaxbetweennesscentrality_A)  
@@ -683,9 +683,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbmaxbetweennesscentrality_B)
         
         self.height += 20
-        self.lblavgbetweennesscentrality_A = QLabel("avg betweenness centrality", self)
-        self.lblavgbetweennesscentrality_A.adjustSize()
-        self.lblavgbetweennesscentrality_A.move(12,self.height)
+        lblavgbetweennesscentrality_A = QLabel("avg betweenness centrality", self)
+        lblavgbetweennesscentrality_A.adjustSize()
+        lblavgbetweennesscentrality_A.move(12,self.height)
         self.ckbavgbetweennesscentrality_A = QCheckBox(self)
         self.ckbavgbetweennesscentrality_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavgbetweennesscentrality_A)
@@ -694,9 +694,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavgbetweennesscentrality_B)
 
         self.height += 20
-        self.lblassortativitycoefficient_A = QLabel("assortativity coefficient", self)
-        self.lblassortativitycoefficient_A.adjustSize()
-        self.lblassortativitycoefficient_A.move(12,self.height)
+        lblassortativitycoefficient_A = QLabel("assortativity coefficient", self)
+        lblassortativitycoefficient_A.adjustSize()
+        lblassortativitycoefficient_A.move(12,self.height)
         self.ckbassortativitycoefficient_A = QCheckBox(self)
         self.ckbassortativitycoefficient_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbassortativitycoefficient_A)
@@ -705,9 +705,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbassortativitycoefficient_B)
 
         self.height += 20
-        self.lblclusteringcoefficient_A = QLabel("clustering coefficient", self)
-        self.lblclusteringcoefficient_A.adjustSize()
-        self.lblclusteringcoefficient_A.move(12,self.height)
+        lblclusteringcoefficient_A = QLabel("clustering coefficient", self)
+        lblclusteringcoefficient_A.adjustSize()
+        lblclusteringcoefficient_A.move(12,self.height)
         self.ckbclusteringcoefficient_A = QCheckBox(self)
         self.ckbclusteringcoefficient_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbclusteringcoefficient_A)
@@ -716,9 +716,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbclusteringcoefficient_B)
  
         self.height += 20
-        self.lbltransitivity_A = QLabel("transitivity", self)
-        self.lbltransitivity_A.adjustSize()
-        self.lbltransitivity_A.move(12,self.height)
+        lbltransitivity_A = QLabel("transitivity", self)
+        lbltransitivity_A.adjustSize()
+        lbltransitivity_A.move(12,self.height)
         self.ckbtransitivity_A = QCheckBox(self)
         self.ckbtransitivity_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbtransitivity_A)
@@ -727,9 +727,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbtransitivity_B)
  
         self.height += 20
-        self.lblsquareclustering_A = QLabel("square clustering", self)
-        self.lblsquareclustering_A.adjustSize()
-        self.lblsquareclustering_A.move(12,self.height)
+        lblsquareclustering_A = QLabel("square clustering", self)
+        lblsquareclustering_A.adjustSize()
+        lblsquareclustering_A.move(12,self.height)
         self.ckbsquareclustering_A = QCheckBox(self)
         self.ckbsquareclustering_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbsquareclustering_A)
@@ -738,9 +738,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbsquareclustering_B)
  
         self.height += 20
-        self.lblavgneighbordegree_A = QLabel("avg neighbor degree", self)
-        self.lblavgneighbordegree_A.adjustSize()
-        self.lblavgneighbordegree_A.move(12,self.height)
+        lblavgneighbordegree_A = QLabel("avg neighbor degree", self)
+        lblavgneighbordegree_A.adjustSize()
+        lblavgneighbordegree_A.move(12,self.height)
         self.ckbavgneighbordegree_A = QCheckBox(self)
         self.ckbavgneighbordegree_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavgneighbordegree_A)
@@ -749,9 +749,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavgneighbordegree_B)
  
         self.height += 20
-        self.lblavgdegreeconnectivity_A = QLabel("avg degree connectivity", self)
-        self.lblavgdegreeconnectivity_A.adjustSize()
-        self.lblavgdegreeconnectivity_A.move(12,self.height)
+        lblavgdegreeconnectivity_A = QLabel("avg degree connectivity", self)
+        lblavgdegreeconnectivity_A.adjustSize()
+        lblavgdegreeconnectivity_A.move(12,self.height)
         self.ckbavgdegreeconnectivity_A = QCheckBox(self)
         self.ckbavgdegreeconnectivity_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavgdegreeconnectivity_A)
@@ -760,9 +760,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavgdegreeconnectivity_B)
 
         self.height += 20
-        self.lblavgdegreecentrality_A = QLabel("avg degree centrality", self)
-        self.lblavgdegreecentrality_A.adjustSize()
-        self.lblavgdegreecentrality_A.move(12,self.height)
+        lblavgdegreecentrality_A = QLabel("avg degree centrality", self)
+        lblavgdegreecentrality_A.adjustSize()
+        lblavgdegreecentrality_A.move(12,self.height)
         self.ckbavgdegreecentrality_A = QCheckBox(self)
         self.ckbavgdegreecentrality_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavgdegreecentrality_A)
@@ -771,9 +771,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavgdegreecentrality_B)
 
         self.height += 20
-        self.lblavgclosenesscentrality_A = QLabel("avg closeness centrality", self)
-        self.lblavgclosenesscentrality_A.adjustSize()
-        self.lblavgclosenesscentrality_A.move(12,self.height)
+        lblavgclosenesscentrality_A = QLabel("avg closeness centrality", self)
+        lblavgclosenesscentrality_A.adjustSize()
+        lblavgclosenesscentrality_A.move(12,self.height)
         self.ckbavgclosenesscentrality_A = QCheckBox(self)
         self.ckbavgclosenesscentrality_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbavgclosenesscentrality_A)
@@ -782,9 +782,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbavgclosenesscentrality_B)
 
         self.height += 20
-        self.lbldiameter_A = QLabel("diameter", self)
-        self.lbldiameter_A.adjustSize()
-        self.lbldiameter_A.move(12,self.height)
+        lbldiameter_A = QLabel("diameter", self)
+        lbldiameter_A.adjustSize()
+        lbldiameter_A.move(12,self.height)
         self.ckbdiameter_A = QCheckBox(self)
         self.ckbdiameter_A.move(180,self.height)
         networkAoptionalgroup.addButton(self.ckbdiameter_A)
@@ -834,7 +834,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         #    selectallBbtn.setEnabled(False)            
         #    unselectallBbtn.setEnabled(False)
 
-        self.setGeometry(300,180,250,self.height+30) #vertical place on screen, hoz place on screen, width of window, height of window
+        self.setGeometry(300,100,250,self.height+30) #vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Metrics Window') #title of window
         self.setWindowIcon(QIcon('logo.png'))
         self.show()
@@ -1062,16 +1062,28 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbgiantcomponentsize_A.setChecked(True)
         self.ckbavnodesincomponents_A.setChecked(True)
         self.ckbisolatednodes_A.setChecked(True)
-        self.ckbisolatedncount_A.setChecked(True)
         self.ckbisolatedncountremoved_A.setChecked(True)
         self.ckbsubnodes_A.setChecked(True)
         self.ckbsubnodescount_A.setChecked(True)
         self.ckbavpathlength_A.setChecked(True)
         self.ckbavpathlengthcomp_A.setChecked(True)
-        self.ckbavpathlengthgeo_A.setChecked(True)
         self.ckbgiantcompavpathlength_A.setChecked(True)
+        self.ckbavpathlengthgeo_A.setChecked(True)
+        self.ckbavggeopathlengthcomponents_A.setChecked(True)
+        self.ckbavggeopathlengthgiantcomponent_A.setChecked(True)
         self.ckbavdegree_A.setChecked(True)
-        self.ckbinterremovedcount_A.setChecked(True)
+        self.ckbdensity_A.setChecked(True)
+        self.ckbmaxbetweennesscentrality_A.setChecked(True)
+        self.ckbavgbetweennesscentrality_A.setChecked(True)
+        self.ckbassortativitycoefficient_A.setChecked(True)
+        self.ckbclusteringcoefficient_A.setChecked(True)
+        self.ckbtransitivity_A.setChecked(True)
+        self.ckbsquareclustering_A.setChecked(True)
+        self.ckbavgneighbordegree_A.setChecked(True)
+        self.ckbavgdegreeconnectivity_A.setChecked(True)
+        self.ckbavgdegreecentrality_A.setChecked(True)
+        self.ckbavgclosenesscentrality_A.setChecked(True)
+        self.ckbdiameter_A.setChecked(True)
         
     def selectallB(self):
         '''Selects all text box's for network B.'''
@@ -1079,16 +1091,28 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbgiantcomponentsize_B.setChecked(True)
         self.ckbavnodesincomponents_B.setChecked(True)
         self.ckbisolatednodes_B.setChecked(True)
-        self.ckbisolatedncount_B.setChecked(True)
         self.ckbisolatedncountremoved_B.setChecked(True)
         self.ckbsubnodes_B.setChecked(True)
         self.ckbsubnodescount_B.setChecked(True)
         self.ckbavpathlength_B.setChecked(True)
         self.ckbavpathlengthcomp_B.setChecked(True)
-        self.ckbavpathlengthgeo_B.setChecked(True)
         self.ckbgiantcompavpathlength_B.setChecked(True)
+        self.ckbavpathlengthgeo_B.setChecked(True)
+        self.ckbavggeopathlengthcomponents_B.setChecked(True)
+        self.ckbavggeopathlengthgiantcomponent_B.setChecked(True)
         self.ckbavdegree_B.setChecked(True)
-        self.ckbinterremovedcount_B.setChecked(True)
+        self.ckbdensity_B.setChecked(True)
+        self.ckbmaxbetweennesscentrality_B.setChecked(True)
+        self.ckbavgbetweennesscentrality_B.setChecked(True)
+        self.ckbassortativitycoefficient_B.setChecked(True)
+        self.ckbclusteringcoefficient_B.setChecked(True)
+        self.ckbtransitivity_B.setChecked(True)
+        self.ckbsquareclustering_B.setChecked(True)
+        self.ckbavgneighbordegree_B.setChecked(True)
+        self.ckbavgdegreeconnectivity_B.setChecked(True)
+        self.ckbavgdegreecentrality_B.setChecked(True)
+        self.ckbavgclosenesscentrality_B.setChecked(True)
+        self.ckbdiameter_B.setChecked(True)
 
     def unselectallA(self):
         '''Selects all text box's for network A.'''
@@ -1096,16 +1120,28 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbgiantcomponentsize_A.setChecked(False)
         self.ckbavnodesincomponents_A.setChecked(False)
         self.ckbisolatednodes_A.setChecked(False)
-        self.ckbisolatedncount_A.setChecked(False)
         self.ckbisolatedncountremoved_A.setChecked(False)
         self.ckbsubnodes_A.setChecked(False)
         self.ckbsubnodescount_A.setChecked(False)
         self.ckbavpathlength_A.setChecked(False)
         self.ckbavpathlengthcomp_A.setChecked(False)
-        self.ckbavpathlengthgeo_A.setChecked(False)
         self.ckbgiantcompavpathlength_A.setChecked(False)
+        self.ckbavpathlengthgeo_A.setChecked(False)
+        self.ckbavggeopathlengthcomponents_A.setChecked(False)
+        self.ckbavggeopathlengthgiantcomponent_A.setChecked(False)
         self.ckbavdegree_A.setChecked(False)
-        self.ckbinterremovedcount_A.setChecked(False)
+        self.ckbdensity_A.setChecked(False)
+        self.ckbmaxbetweennesscentrality_A.setChecked(False)
+        self.ckbavgbetweennesscentrality_A.setChecked(False)
+        self.ckbassortativitycoefficient_A.setChecked(False)
+        self.ckbclusteringcoefficient_A.setChecked(False)
+        self.ckbtransitivity_A.setChecked(False)
+        self.ckbsquareclustering_A.setChecked(False)
+        self.ckbavgneighbordegree_A.setChecked(False)
+        self.ckbavgdegreeconnectivity_A.setChecked(False)
+        self.ckbavgdegreecentrality_A.setChecked(False)
+        self.ckbavgclosenesscentrality_A.setChecked(False)
+        self.ckbdiameter_A.setChecked(False)
         
     def unselectallB(self):
         '''Selects all text box's for network B.'''
@@ -1113,109 +1149,245 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbgiantcomponentsize_B.setChecked(False)
         self.ckbavnodesincomponents_B.setChecked(False)
         self.ckbisolatednodes_B.setChecked(False)
-        self.ckbisolatedncount_B.setChecked(False)
         self.ckbisolatedncountremoved_B.setChecked(False)
         self.ckbsubnodes_B.setChecked(False)
         self.ckbsubnodescount_B.setChecked(False)
         self.ckbavpathlength_B.setChecked(False)
         self.ckbavpathlengthcomp_B.setChecked(False)
-        self.ckbavpathlengthgeo_B.setChecked(False)
         self.ckbgiantcompavpathlength_B.setChecked(False)
+        self.ckbavpathlengthgeo_B.setChecked(False)
+        self.ckbavggeopathlengthcomponents_B.setChecked(False)
+        self.ckbavggeopathlengthgiantcomponent_B.setChecked(False)
         self.ckbavdegree_B.setChecked(False)
-        self.ckbinterremovedcount_B.setChecked(False)
+        self.ckbdensity_B.setChecked(False)
+        self.ckbmaxbetweennesscentrality_B.setChecked(False)
+        self.ckbavgbetweennesscentrality_B.setChecked(False)
+        self.ckbassortativitycoefficient_B.setChecked(False)
+        self.ckbclusteringcoefficient_B.setChecked(False)
+        self.ckbtransitivity_B.setChecked(False)
+        self.ckbsquareclustering_B.setChecked(False)
+        self.ckbavgneighbordegree_B.setChecked(False)
+        self.ckbavgdegreeconnectivity_B.setChecked(False)
+        self.ckbavgdegreecentrality_B.setChecked(False)
+        self.ckbavgclosenesscentrality_B.setChecked(False)
+        self.ckbdiameter_B.setChecked(False)
         
     def check_checkbxs(self, metrics):
         '''Checks the check boxes to identify those which have been checked or 
-        are not checked. Then packages the all metrics into the correct metric 
-        containers.'''
-        self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = metrics
-                
+        are not checked.'''
+        basicA, basicB, optionA, optionB = metrics
+        
         if self.ckbsizeofcomponents_A.isChecked():
-            self.size_of_components_A = True 
-        else: self.size_of_components_A = False
+            optionA['size_of_components']=True
+        else: optionA['size_of_componets']=False
+        
         if self.ckbgiantcomponentsize_A.isChecked():
-            self.giant_component_size_A = True
-        else: self.giant_component_size_A = False
-        if self.ckbavnodesincomponents_A.isChecked():            
-            self.av_nodes_in_components_A = True
-        else: self.av_nodes_in_components_A = False
+            otpionA['giant_component_size']=True
+        else: optionA['giant_component_size']=False            
+                  
+        if self.ckbavnodesincomponents_A.isChecked():
+            optionA['avg_size_of_components']=True
+        else: optionA['avg_size_of_components']=False
+        
         if self.ckbisolatednodes_A.isChecked():
-            self.isolated_nodes_A = True #THIS NEEDS TO BE IN THE BASIC SET
-        else: self.isolated_nodes_A = False
-        if self.ckbisolatedncountremoved_A.isChecked():
-            self.isolated_n_count_removed_A = True
-        else: self.isolated_n_count_removed_A = False
-        if self.ckbsubnodes_A.isChecked():
-            self.subnodes_A = True
-        else: self.subnodes_A = False
-        if self.ckbsubnodescount_A.isChecked():
-            self.subnodes_count_A = True
-        else: self.subnodes_count_A = False
-        if self.ckbavpathlength_A.isChecked():
-            self.path_length_A = True
-        else: self.path_length_A = False
-        if self.ckbavpathlengthcomp_A.isChecked():
-            self.av_path_length_components_A = True
-        else: self.av_path_length_components_A = False
-        if self.ckbavpathlengthgeo_A.isChecked():
-            self.av_path_length_geo_A = True
-        else: self.av_path_length_geo_A = False
-        if self.ckbgiantcompavpathlength_A.isChecked():     
-            self.giant_component_av_path_length_A = True
-        else: self.giant_component_av_path_length_A = False
-        if self.ckbavdegree_A.isChecked():      
-            self.average_degree_A = True
-        else: self.average_degree_A = False
-        if self.ckbinterremovedcount_A.isChecked():
-            self.inter_removed_count_A = True #THIS IS ONLY NEEDED IF INTERDEPENDENCY    
-        else: self.inter_removed_count_A = False
-        
-        self.option_metrics_A = self.size_of_components_A,self.giant_component_size_A,self.av_nodes_in_components_A,self.isolated_nodes_A,self.isolated_n_count_removed_A,self.subnodes_A,self.subnodes_count_A,self.path_length_A,self.av_path_length_components_A,self.av_path_length_geo_A,self.giant_component_av_path_length_A,self.average_degree_A,self.inter_removed_count_A
-        
-        if self.option_metrics_B <> None:
-            if self.ckbsizeofcomponents_B.isChecked():        
-                self.size_of_components_B = True 
-            else: self.size_of_components_B = False #need to put these everywhere
-            if self.ckbgiantcomponentsize_B.isChecked():
-                self.giant_component_size_B = True
-            else: self.giant_component_size_B = False
-            if self.ckbavnodesincomponents_B.isChecked():            
-                self.av_nodes_in_components_B = True
-            else: self.av_nodes_in_components_B = False
-            if self.ckbisolatednodes_B.isChecked():
-                self.isolated_nodes_B = True #THIS NEEDS TO BE IN THE BASIC SET
-            else: self.isolated_nodes_B = False
-            if self.ckbisolatedncountremoved_B.isChecked():
-                self.isolated_n_count_removed_B = True
-            else: self.isolated_n_count_removed_B = False
-            if self.ckbsubnodes_B.isChecked():
-                self.subnodes_B = True
-            else: self.subnodes_B = False
-            if self.ckbsubnodescount_B.isChecked():
-                self.subnodes_count_B = True
-            else: self.subnodes_count_B = False
-            if self.ckbavpathlength_B.isChecked():
-                self.path_length_B = True
-            else: self.path_length_B = False
-            if self.ckbavpathlengthcomp_B.isChecked():
-                self.av_path_length_components_B = True
-            else: self.av_path_length_components_B = False
-            if self.ckbavpathlengthgeo_B.isChecked():
-                self.av_path_length_geo_B = True
-            else: self.av_path_length_geo_B = False
-            if self.ckbgiantcompavpathlength_B.isChecked():     
-                self.giant_component_av_path_length_B = True
-            else: self.giant_component_av_path_length_B = False
-            if self.ckbavdegree_B.isChecked():            
-                self.average_degree_B = True
-            else: self.average_degree_B = False
-            if self.ckbinterremovedcount_B.isChecked():
-                self.inter_removed_count_B = True #THIS IS ONLY NEEDED IF INTERDEPENDENCY
-            else: self.inter_removed_count_B = False
-            self.option_metrics_B = self.size_of_components_B,self.giant_component_size_B,self.av_nodes_in_components_B,self.isolated_nodes_B,self.isolated_n_count_removed_B,self.subnodes_B,self.subnodes_count_B,self.path_length_B,self.av_path_length_components_B,self.av_path_length_geo_B,self.giant_component_av_path_length_B,self.average_degree_B,self.inter_removed_count_B = self.option_metrics_B
+            optionA['isolated_nodes']=True
+        else: optionA['isoalted_nodes']=False
 
-        print 'after checking the boxs ',self.option_metrics_B
-        self.metrics = self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B
+        if self.ckbisolatedncountremoved_A.isChecked():
+            optionA['no_of_isoalted_nodes_removed']=True
+        else: optionA['no+of_isolated_nodes_removed']=False
+        
+        if self.ckbsubnodes_A.isChecked():
+            optionA['subnodes']=True
+        else: optionA['subnodes']=False
+        
+        if self.ckbsubnodescount_A.isChecked():
+            optionA['no_of_subnodes']=True
+        else: optionA['no_of_subnodes']=False
+        
+        if self.ckbavpathlength_A.isChecked():
+            optionA['avg_path_length']=True
+        else: optionA['avg_path_length']=False
+        
+        if self.ckbavpathlengthcomp_A.isChecked():
+            optionA['avg_path_length_of_components']=True
+        else: optionA['avg_path_length_of_components']=False
+        
+        if self.ckbgiantcompavpathlength_A.isChecked():
+            optionA['avg_path_length_of_giant_component']=True
+        else: optionA['avg_path_length_of_giant_component']=False
+        
+        if self.ckbavpathlengthgeo_A.isChecked():
+            optionA['avg_geo_path_length']=True
+        else: optionA['avg_geo_path_length']=False
+        
+        if self.ckbavggeopathlengthcomponents_A.isChecked():
+            optionA['avg_geo_path_length_of_components']=True
+        else: optionA['avg_geo_path_length_of_components']=False
+        
+        if self.ckbavggeopathlengthgiantcomponent_A.isChecked():
+            optionA['avg_geo_path_length_of_giant_component']=True
+        else: optionA['avg_geo_path_length_of_giant_component']=False
+        
+        if self.ckbavdegree_A.isChecked():
+            optionA['avg_degree']=True
+        else: optionA['avg_degree']=False
+        
+        if self.ckbdensity_A.isChecked():
+            optionA['density']=True
+        else: optionA['density']=False
+        
+        if self.ckbmaxbetweennesscentrality_A.isChecked():
+            optionA['maximum_betweenness_centrality']=True
+        else: optionA['maximum_betweenness_centrality']=False
+        
+        if self.ckbavgbetweennesscentrality_A.isChecked():
+            optionA['avg_betweenness_centrality']=True
+        else: optionA['avg_betweenness_centrality']=False
+        
+        if self.ckbassortativitycoefficient_A.isChecked():
+            optionA['assortativity_coefficient']=True
+        else: optionA['assortativity_coefficient']=False
+        
+        if self.ckbclusteringcoefficient_A.isChecked():
+            optionA['clustering_coefficient']=True
+        else: optionA['clustering_coefficient']=False
+        
+        if self.ckbtransitivity_A.isChecked():
+            optionA['transitivity']=True
+        else: optionA['transitivity']=False
+        
+        if self.ckbsquareclustering_A.isChecked():
+            optionA['square_clustering']=True
+        else: optionA['square_clustering']=False
+        
+        if self.ckbavgneighbordegree_A.isChecked():
+            optionA['avg_neighbor_degree']=True
+        else: optionA['avg_neighbor_degree']=False
+        
+        if self.ckbavgdegreeconnectivity_A.isChecked():
+            optionA['avg_degree_connectivity']=True
+        else: optionA['avg_degree_connectivity']=False
+        
+        if self.ckbavgdegreecentrality_A.isChecked():
+            optionA['avg_degree_centrality']=True
+        else: optionA['avg_degree_centrality']=False
+        
+        if self.ckbavgclosenesscentrality_A.isChecked():
+            optionA['avg_closenes_centrality']=True
+        else: optionA['avg_closeness_centrality']=False
+        
+        if self.ckbdiameter_A.isChecked():
+            optionA['diameter']=True
+        else: optionA['diameter']=False
+  
+        #-----------for network B--------------------------------------------
+        if self.ckbsizeofcomponents_B.isChecked():
+            optionB['size_of_components']=True
+        else: optionB['size_of_componets']=False
+        
+        if self.ckbgiantcomponentsize_A.isChecked():
+            otpionB['giant_component_size']=True
+        else: optionB['giant_component_size']=False            
+                  
+        if self.ckbavnodesincomponents_B.isChecked():
+            optionB['avg_size_of_components']=True
+        else: optionB['avg_size_of_components']=False
+        
+        if self.ckbisolatednodes_B.isChecked():
+            optionB['isolated_nodes']=True
+        else: optionB['isoalted_nodes']=False
+
+        if self.ckbisolatedncountremoved_B.isChecked():
+            optionB['no_of_isoalted_nodes_removed']=True
+        else: optionB['no+of_isolated_nodes_removed']=False
+        
+        if self.ckbsubnodes_B.isChecked():
+            optionB['subnodes']=True
+        else: optionB['subnodes']=False
+        
+        if self.ckbsubnodescount_B.isChecked():
+            optionB['no_of_subnodes']=True
+        else: optionB['no_of_subnodes']=False
+        
+        if self.ckbavpathlength_B.isChecked():
+            optionB['avg_path_length']=True
+        else: optionB['avg_path_length']=False
+        
+        if self.ckbavpathlengthcomp_B.isChecked():
+            optionB['avg_path_length_of_components']=True
+        else: optionB['avg_path_length_of_components']=False
+        
+        if self.ckbgiantcompavpathlength_B.isChecked():
+            optionB['avg_path_length_of_giant_component']=True
+        else: optionB['avg_path_length_of_giant_component']=False
+        
+        if self.ckbavpathlengthgeo_B.isChecked():
+            optionB['avg_geo_path_length']=True
+        else: optionB['avg_geo_path_length']=False
+        
+        if self.ckbavggeopathlengthcomponents_B.isChecked():
+            optionB['avg_geo_path_length_of_components']=True
+        else: optionB['avg_geo_path_length_of_components']=False
+        
+        if self.ckbavggeopathlengthgiantcomponent_B.isChecked():
+            optionB['avg_geo_path_length_of_giant_component']=True
+        else: optionB['avg_geo_path_length_of_giant_component']=False
+        
+        if self.ckbavdegree_B.isChecked():
+            optionB['avg_degree']=True
+        else: optionB['avg_degree']=False
+        
+        if self.ckbdensity_B.isChecked():
+            optionB['density']=True
+        else: optionB['density']=False
+        
+        if self.ckbmaxbetweennesscentrality_B.isChecked():
+            optionB['maximum_betweenness_centrality']=True
+        else: optionB['maximum_betweenness_centrality']=False
+        
+        if self.ckbavgbetweennesscentrality_B.isChecked():
+            optionB['avg_betweenness_centrality']=True
+        else: optionB['avg_betweenness_centrality']=False
+        
+        if self.ckbassortativitycoefficient_B.isChecked():
+            optionB['assortativity_coefficient']=True
+        else: optionB['assortativity_coefficient']=False
+        
+        if self.ckbclusteringcoefficient_B.isChecked():
+            optionB['clustering_coefficient']=True
+        else: optionB['clustering_coefficient']=False
+        
+        if self.ckbtransitivity_B.isChecked():
+            optionB['transitivity']=True
+        else: optionB['transitivity']=False
+        
+        if self.ckbsquareclustering_B.isChecked():
+            optionB['square_clustering']=True
+        else: optionB['square_clustering']=False
+        
+        if self.ckbavgneighbordegree_B.isChecked():
+            optionB['avg_neighbor_degree']=True
+        else: optionB['avg_neighbor_degree']=False
+        
+        if self.ckbavgdegreeconnectivity_B.isChecked():
+            optionB['avg_degree_connectivity']=True
+        else: optionB['avg_degree_connectivity']=False
+        
+        if self.ckbavgdegreecentrality_B.isChecked():
+            optionB['avg_degree_centrality']=True
+        else: optionB['avg_degree_centrality']=False
+        
+        if self.ckbavgclosenesscentrality_B.isChecked():
+            optionB['avg_closenes_centrality']=True
+        else: optionB['avg_closeness_centrality']=False
+        
+        if self.ckbdiameter_B.isChecked():
+            optionB['diameter']=True
+        else: optionB['diameter']=False
+        
+        
+        self.metrics = basicA, basicB, optionA, optionB
         return self.metrics
 
     def applyandclose(self):
