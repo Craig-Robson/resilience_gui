@@ -2113,8 +2113,7 @@ class Window(QMainWindow):
         self.runallseqmodels = False
         self.nodesizingmeth = 0
         self.edgesizingmeth = 0
-        print '!!!!Need to check what below does. Not too sureit is needed'
-        self.metrics = self.sort_metrics(self.parameters)
+        self.metrics = self.sort_metrics()
         self.geo_vis = None
         
         #create actions for menues
@@ -3268,19 +3267,7 @@ class Window(QMainWindow):
             except:
                 print  'Error! Incorrect value entered. It must be an integer.'
         else:
-            return False
-        
-    def create_metrics(self, parameters):
-        '''Creates the metrics and thier respective data containers based on 
-        the parameters for the analysis'''
-        
-        if parameters == None:
-            #this runs on startup
-            STAND_ALONE = True
-        
-        
-        self.metrics = self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B
-        return self.metrics        
+            return False     
 
     def startorpause(self):
         ''''''
@@ -3513,7 +3500,7 @@ class Window(QMainWindow):
         #self.colorinactive = 'red'
         #self.imagedestlocation = ''
         #self.pertimestep = 1
-        self.metrics = self.create_metrics(self.parameters)           
+        self.metrics = self.sort_metrics()           
         
         print 'GUI reset'
         
@@ -4296,7 +4283,6 @@ class Window(QMainWindow):
         if self.timestep == 0:
             #temporary until full dependence compatability
             #metrics = self.sort_metrics(self.parameters)
-            #metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges = self.parameters
             self.parameters = self.metrics, STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
             if STAND_ALONE == True:
                 self.GnetB = None 
@@ -4492,7 +4478,7 @@ class Window(QMainWindow):
             self.G = GA     
             self.thread.setup(self.G, self.iterate, self.metrics, self.parameters, self.graphparameters)
         
-    def sort_metrics(self, parameters):
+    def sort_metrics(self):
         '''Set the condition of all the posible metrics based on the parameters.'''
         #print 'Running SORT metrics'
         #failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length = self.parameters
