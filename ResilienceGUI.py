@@ -1741,14 +1741,9 @@ class ViewGraphs(QDialog):
         self.metrics, self.failure = window.updatewindow_viewgraphs() #gets the metrics value
         basicA, basicB, optionA, optionB = self.metrics
         self.valuesA = basicA,optionA
-        #self.valuesetA = node_count_removed_A,count_nodes_left_A,number_of_edges_A,number_of_components_A,size_of_components_A,giant_component_size_A,av_nodes_in_components_A,isolated_nodes_A,isolated_n_count_A,isolated_n_count_removed_A,subnodes_A,subnodes_count_A,path_length_A,av_path_length_components_A,av_path_length_geo_A,giant_component_av_path_length_A,average_degree_A,inter_removed_count_A
         self.valuesB = basicB,optionB
-        #self.valuesetB = node_count_removed_B,count_nodes_left_B,number_of_edges_B,number_of_components_B,size_of_components_B,giant_component_size_B,av_nodes_in_components_B,isolated_nodes_B,isolated_n_count_B,isolated_n_count_removed_B,subnodes_B,subnodes_count_B,path_length_B,av_path_length_components_B,av_path_length_geo_B,giant_component_av_path_length_B,average_degree_B,inter_removed_count_B
-            
-        #self.metriclist = ['Number of nodes removed', 'Number of nodes left', 'Number of edges left', 'Number of components', 'None']
         self.metriclist = self.makemetriclist(basicA, optionA)
-        print 'self.metriclist is:', self.metriclist
-        exit()
+
         if self.failure['stand_alone'] == False:
             net_list = ['A','B']
         else:
@@ -1779,8 +1774,9 @@ class ViewGraphs(QDialog):
         cancelbtn.move(124, 80)
         cancelbtn.clicked.connect(self.cancelclick)
         
-        self.net1cbx.activated[str].connect(self.networkchanged)        
-        self.net2cbx.activated[str].connect(self.networkchanged)
+        print 'These may need re-activating'
+        #self.net1cbx.activated[str].connect(self.networkchanged)        
+        #self.net2cbx.activated[str].connect(self.networkchanged)
         
         self.option1cbx.activated.connect(self.option1changed)             
         self.option2cbx.activated.connect(self.option2changed)
@@ -1877,14 +1873,15 @@ class ViewGraphs(QDialog):
             #if network B selected
             values = self.identifymetric(self.option1cbx.currentText(),self.valuesB)
             pl.plot(values, 'b', linewidth=2, label=self.option1cbx.currentText())
+        
         pl.xlabel('Number of nodes removed')
+        pl.ylabel(self.option1cbx.currentText())
         pl.ylim(ymin=0)
         if self.net1cbx.currentText() == 'A':
             ymax =max(values)
         else:
             ymax =max(values)
         pl.ylim(ymax=ymax+0.5);pl.xlim(xmin=0)
-        
         #secnd plot
         pl.subplot(212);pl.cla()
         if  self.net2cbx.currentText() == 'A':
@@ -1895,6 +1892,7 @@ class ViewGraphs(QDialog):
             pl.plot(values, 'b', linewidth=2, label=self.option2cbx.currentText())
                 
         pl.xlabel('Number of nodes removed')
+        pl.ylabel(self.option2cbx.currentText())
         pl.ylim(ymin=0)
         if self.net2cbx.currentText() == 'A':
             ymax =max(values)
@@ -1949,7 +1947,7 @@ class ViewGraphs(QDialog):
         elif metric == 'Average geo path length':
             metric = option['avg_geo_path_length']
         elif metric == 'Average geo path length of giant component':
-            metric = option['avg_geo_path_length_of_giant_component']     
+            metric = option['avg_geo_path_length_of_giant_component']  
         elif metric == 'Average node degree':
             metric = option['avg_degree']
         elif metric == 'Density':
@@ -2006,10 +2004,18 @@ class ViewGraphs(QDialog):
             metric_list.append('Average path length')
         if option['avg_path_length_of_giant_component'] <> False:
             metric_list.append('Average path length of giant component')
-        if option['avg_geo_path_length'] <> False:            
-            metric_list.append('Average geo path length')
+        if option['avg_geo_path_length'] <> False:    
+            metric = option['avg_geo_path_length']
+            for val in metric:
+                if val == None: metric = 99; break
+            if metric == 99: pass
+            else: metric_list.append('Average geo path length')
         if option['avg_geo_path_length_of_giant_component'] <> False:
-            metric_list.append('Average geo path length of giant component')
+            metric = option['avg_geo_path_length_of_giant_component']  
+            for val in metric:
+                if val == None: metric = 99; break
+            if metric == 99: pass
+            else: metric_list.append('Average geo path length of giant component')
         if option['avg_degree'] <> False:
             metric_list.append('Average node degree')
         if option['density'] <> False:
@@ -2018,7 +2024,7 @@ class ViewGraphs(QDialog):
             metric_list.append('Maximum betweenness centrality')
         if option['avg_betweenness_centrality'] <> False:
             metric_list.append('Avgerage betweenness centrality')
-        if option['assortativity coefficient'] <> False:
+        if option['assortativity_coefficient'] <> False:
             metric_list.append('Assortativity coefficient')
         if option['clustering_coefficient'] <> False:
             metric_list.append('Clustering coefficient')
