@@ -845,9 +845,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         retrieved upon launch of the window.'''
 
         basicA, basicB, optionA, optionB = metrics
-        
-        print 'option A:', optionA
-        
+               
         if optionA['size_of_components'] == False:
             self.ckbsizeofcomponents_A.setChecked(False)
         else: self.ckbsizeofcomponents_A.setChecked(True)
@@ -951,70 +949,113 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         if optionA['diameter'] == False:
             self.ckbdiameter_A.setChecked(False)
         else: self.ckbdiameter_A.setChecked(True)
-        '''
-        if self.option_metrics_B <> None:
-            if self.size_of_components_B == False:
-                self.ckbsizeofcomponents_B.setChecked(False)
-            else: self.ckbsizeofcomponents_B.setChecked(True)
-            if self.giant_component_size_B== False:
-                self.ckbgiantcomponentsiz_B.setChecked(False)
-            else: self.ckbgiantcomponentsize_B.setChecked(True)
-            if self.av_nodes_in_components_B== False:
-                self.ckbavnodesincomponents_B.setChecked(False)
-            else: self.ckbavnodesincomponents_B.setChecked(True)
-            if self.isolated_nodes_B == False:
-                self.ckbisolatednodes_B.setChecked(False)
-            else: self.ckbisolatednodes_B.setChecked(True)
-            if self.isolated_n_count_removed_B== False:
-                self.ckbisolatedncountremoved_B.setChecked(False)
-            else: self.ckbisolatedncountremoved_B.setChecked(True)
-            if self.subnodes_B== False:
-                self.ckbsubnodes_B.setChecked(False)
-            else: self.ckbsubnodes_B.setChecked(True)
-            if self.subnodes_count_B== False:
-                self.ckbsubnodescount_B.setChecked(False)
-            else: self.ckbsubnodescount_B.setChecked(True)
-            if self.path_length_B== False:
-                self.ckbavpathlength_B.setChecked(False)
-            else: self.ckbavpathlength_B.setChecked(True)
-            if self.av_path_length_components_B== False:
-                self.ckbavpathlengthcomp_B.setChecked(False)
-            else: self.ckbavpathlengthcomp_B.setChecked(True)
-            if self.av_path_length_geo_B== False:
-                self.ckbavpathlengthgeo_B.setChecked(False)
-            else: self.ckbavpathlengthgeo_B.setChecked(True)
-            if self.giant_component_av_path_length_B== False:
-                self.ckbgiantcompavpathlength_B.setChecked(False)
-            else: self.ckbgiantcompavpathlength_B.setChecked(True)
-            if self.average_degree_B== False:
-                self.ckbavdegree_B.setChecked(False)
-            else: self.ckbavdegree_B.setChecked(True)
-            if self.inter_removed_count_B == False:
-                self.ckbinterremovedcount_B.setChecked(False)
-            else: self.ckbinterremovedcount_B.setChecked(True)
-        elif self.option_metrics_B == None:
-            #uncheck the tick boxes for the basic metrics
-            self.ckbnodesremoved_B.setChecked(False)              
-            self.ckbnodecountremoved_B.setChecked(False)
-            self.ckbcountnodesleft_B.setChecked(False)
-            self.ckbnumberofedges_B.setChecked(False)
-            self.ckbnumberofcomponents_B.setChecked(False)
-            self.ckbisolatedncount_B.setChecked(False)
-            #disable the rest of the tick boxes
-            self.ckbsizeofcomponents_B.setEnabled(False)
-            self.ckbgiantcomponentsize_B.setEnabled(False)
-            self.ckbavnodesincomponents_B.setEnabled(False)
-            self.ckbisolatednodes_B.setEnabled(False)
-            self.ckbisolatedncountremoved_B.setEnabled(False)
-            self.ckbsubnodes_B.setEnabled(False)
-            self.ckbsubnodescount_B.setEnabled(False)
-            self.ckbavpathlength_B.setEnabled(False)
-            self.ckbavpathlengthcomp_B.setEnabled(False)
-            self.ckbavpathlengthgeo_B.setEnabled(False)
-            self.ckbgiantcompavpathlength_B.setEnabled(False)
-            self.ckbavdegree_B.setEnabled(False)
-            self.ckbinterremovedcount_B.setEnabled(False)
-        '''
+        
+        #-------------------for network B------------------------------------
+        if optionB['size_of_components'] == False:
+            self.ckbsizeofcomponents_B.setChecked(False)
+        else: self.ckbsizeofcomponents_B.setChecked(True)
+        
+        if optionB['giant_component_size'] == False:
+            self.ckbgiantcomponentsize_B.setChecked(False)
+        else: self.ckbgiantcomponentsize_B.setChecked(True)
+        
+        if optionB['avg_size_of_components'] == False:
+            self.ckbavnodesincomponents_B.setChecked(False)
+        else: self.ckbavnodesincomponents_B.setChecked(True)
+        
+        if optionB['isolated_nodes'] == False:
+            self.ckbisolatednodes_B.setChecked(False)
+        else: self.ckbisolatednodes_B.setChecked(True)
+        
+        if optionB['no_of_isolated_nodes_removed'] == False:
+            self.ckbisolatedncountremoved_B.setChecked(False)
+        else: self.ckbisolatedncountremoved_B.setChecked(True)
+        
+        if optionB['subnodes'] == False:
+            self.ckbsubnodes_B.setChecked(False)
+        else: self.ckbsubnodes_B.setChecked(True)
+        
+        if optionB['no_of_subnodes'] == False:
+            self.ckbsubnodescount_B.setChecked(False)
+        else: self.ckbsubnodescount_B.setChecked(True)
+        
+        if optionB['avg_path_length'] == False:
+            self.ckbavpathlength_B.setChecked(False)
+        else: self.ckbavpathlength_B.setChecked(True)
+        
+        if optionB['avg_path_length_of_components'] == False:
+            self.ckbavpathlengthcomp_B.setChecked(False)
+        else: self.ckbavpathlengthcomp_B.setChecked(True)
+        
+        if optionB['avg_path_length_of_giant_component'] == False:
+            self.ckbgiantcompavpathlength_B.setChecked(False)
+        else: self.ckbgiantcompavpathlength_B.setChecked(True)
+        
+        if optionB['avg_geo_path_length'] == False:
+            self.ckbavpathlengthgeo_B.setChecked(False)
+        else: self.ckbavpathlengthgeo_B.setChecked(True)
+        
+        if optionB['avg_geo_path_length_of_components'] == False:
+            self.ckbavggeopathlengthcomponents_B.setChecked(False)
+        else: self.ckbavggeopathlengthcomponents_B.setChecked(True)
+        
+        if optionB['avg_geo_path_length_of_giant_component'] == False:
+            self.ckbavggeopathlengthgiantcomponent_B.setChecked(False)
+        else: self.ckbavggeopathlengthgiantcomponent_B.setChecked(True)
+        
+        if optionB['avg_degree'] == False:
+            self.ckbavdegree_B.setChecked(False)
+        else: self.ckbavdegree_B.setChecked(True)
+        
+        if optionB['density'] == False:
+            self.ckbdensity_B.setChecked(False)
+        else: self.ckbdensity_B.setChecked(True)
+        
+        if optionB['maximum_betweenness_centrality'] == False:
+            self.ckbmaxbetweennesscentrality_B.setChecked(False)
+        else: self.ckbmaxbetweennesscentrality_B.setChecked(True)
+        
+        if optionB['avg_betweenness_centrality'] == False:
+            self.ckbavgbetweennesscentrality_B.setChecked(False)
+        else: self.ckbavgbetweennesscentrality_B.setChecked(True)
+        
+        if optionB['assortativity_coefficient'] == False:
+            self.ckbassortativitycoefficient_B.setChecked(False)
+        else: self.ckbassortativitycoefficient_B.setChecked(True)
+        
+        if optionB['clustering_coefficient'] == False:
+            self.ckbclusteringcoefficient_B.setChecked(False)
+        else: self.ckbclusteringcoefficient_B.setChecked(True)
+        
+        if optionB['transitivity'] == False:
+            self.ckbtransitivity_B.setChecked(False)
+        else: self.ckbtransitivity_B.setChecked(True)
+        
+        if optionB['square_clustering'] == False:
+            self.ckbsquareclustering_B.setChecked(False)
+        else: self.ckbsquareclustering_B.setChecked(True)
+        
+        if optionB['avg_neighbor_degree'] == False:
+            self.ckbavgneighbordegree_B.setChecked(False)
+        else: self.ckbavgneighbordegree_B.setChecked(True)
+        
+        if optionB['avg_degree_connectivity'] == False:
+            self.ckbavgdegreeconnectivity_B.setChecked(False)
+        else: self.ckbavgdegreeconnectivity_B.setChecked(True)
+        
+        if optionB['avg_degree_centrality'] == False:
+            self.ckbavgdegreecentrality_B.setChecked(False)
+        else: self.ckbavgdegreecentrality_B.setChecked(True)
+        
+        if optionB['avg_closeness_centrality'] == False:
+            self.ckbavgclosenesscentrality_B.setChecked(False)
+        else: self.ckbavgclosenesscentrality_B.setChecked(True)
+        
+        if optionB['diameter'] == False:
+            self.ckbdiameter_B.setChecked(False)
+        else: self.ckbdiameter_B.setChecked(True)
+        
+       
     def selectallA(self):
         '''Selects all text box's for network A.'''
         self.ckbsizeofcomponents_A.setChecked(True)
