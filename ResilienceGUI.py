@@ -383,7 +383,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup = QButtonGroup(self)  
         networkBoptionalgroup.setExclusive(False)
         
-        '''basic metrics'''
+        #----------------------basic metrics----------------------------------
         self.height += 20        
         self.lblnodesremoved_A = QLabel("nodes removed", self)
         self.lblnodesremoved_A.adjustSize()
@@ -400,7 +400,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbnodesremoved_B.setEnabled(False)
         
         self.height += 20
-        self.lblnodecountremoved_A = QLabel("node count removed", self)
+        self.lblnodecountremoved_A = QLabel("number of nodes removed", self)
         self.lblnodecountremoved_A.adjustSize()
         self.lblnodecountremoved_A.move(12,self.height)       
         self.ckbnodecountremoved_A = QCheckBox(self)
@@ -415,7 +415,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbnodecountremoved_B.setEnabled(False)
                 
         self.height += 20       
-        self.lblcountnodesleft_A = QLabel("count nodes left", self)
+        self.lblcountnodesleft_A = QLabel("number of nodes", self)
         self.lblcountnodesleft_A.adjustSize()
         self.lblcountnodesleft_A.move(12,self.height)       
         self.ckbcountnodesleft_A = QCheckBox(self)
@@ -473,6 +473,31 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         self.ckbisolatedncount_A.setEnabled(False)
         self.ckbisolatedncount_B.setChecked(True)
         self.ckbisolatedncount_B.setEnabled(False)
+        
+        self.height += 20
+        lblisolatednodesremoved_A = QLabel("isolated nodes removed", self)
+        lblisolatednodesremoved_A.adjustSize()
+        lblisolatednodesremoved_A.move(12,self.height)
+        ckbisolatednodesremoved_A = QCheckBox(self)
+        ckbisolatednodesremoved_A.move(180,self.height)
+        networkAoptionalgroup.addButton(ckbisolatednodesremoved_A)
+        ckbisolatednodesremoved_B = QCheckBox(self)
+        ckbisolatednodesremoved_B.move(200,self.height)
+        networkBoptionalgroup.addButton(ckbisolatednodesremoved_B)
+        ckbisolatednodesremoved_A.setChecked(True)
+        ckbisolatednodesremoved_A.setEnabled(False)
+        ckbisolatednodesremoved_B.setChecked(True)
+        ckbisolatednodesremoved_B.setEnabled(False)
+        
+        self.height += 20
+        lblnodesselectedtofail_A = QLabel("nodes selected to fail", self)
+        lblnodesselectedtofail_A.adjustSize()
+        lblnodesselectedtofail_A.move(12,self.height)
+        ckbnodesselectedtofail_A = QCheckBox(self)
+        ckbnodesselectedtofail_A.move(180,self.height)
+        networkAoptionalgroup.addButton(ckbnodesselectedtofail_A)        
+        ckbnodesselectedtofail_A.setChecked(True)
+        ckbnodesselectedtofail_A.setEnabled(False)
         
         #-----------------------basic above, optional below--------------------
         self.height += 20
