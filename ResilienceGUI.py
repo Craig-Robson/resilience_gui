@@ -1882,7 +1882,8 @@ class ViewGraphs(QDialog):
         else:
             ymax =max(values)
         pl.ylim(ymax=ymax+0.5);pl.xlim(xmin=0)
-        #secnd plot
+        
+        #lower plot
         pl.subplot(212);pl.cla()
         if  self.net2cbx.currentText() == 'A':
             values = self.identifymetric(self.option2cbx.currentText(),self.valuesA)
@@ -4258,10 +4259,10 @@ class Window(QMainWindow):
                 self.enableallckbx()
                 return
             if DEPENDENCY == True:
-                a_to_b_edges = self.AtoBEdges()
+                a_to_b_edges, changedA, changedB = self.AtoBEdges()
             if INTERDEPENDENCY == True:
-                a_to_b_edges = self.AtoBEdges()
-                b_to_a_edges = self.BtoAEdges()          
+                a_to_b_edges, changedA, changedB = self.AtoBEdges()
+                b_to_a_edges, changedA, changedB = self.BtoAEdges()          
             self.parameters = metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
         #self.metrics = self.sort_metrics(self.parameters)
         if fileName == None:
@@ -4411,12 +4412,10 @@ class Window(QMainWindow):
                 return
         #build edges if needed
         if failure['dependency'] == True:
-            a_to_b_edges = self.AtoBEdges()
-            #a_to_b_edges = self.txtparamt1.text()
-            print 'a to b edges are: ', a_to_b_edges
+            a_to_b_edges, changedA, changedB = self.AtoBEdges()
         if failure['interdependency'] == True:
-            a_to_b_edges = self.AtoBEdges()
-            b_to_a_edges = self.BtoAEdges()
+            a_to_b_edges, changedA, changedB = self.AtoBEdges()
+            b_to_a_edges, changedA, changedB = self.BtoAEdges()
             
         self.parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
 
