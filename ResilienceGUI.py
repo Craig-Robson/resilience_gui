@@ -1783,7 +1783,7 @@ class ViewGraphs(QDialog):
 
         self.setGeometry(900,500,300,110)#vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Graph parameters')  #title of windpw          
-        self.setWindowIcon(QIcon('logo.png'))
+        self.setWindowIcon(QIcon('modules/logo.png'))
         self.show()#show GUI window  
         self.option1value = 0
         self.option2value = 1
@@ -2521,7 +2521,7 @@ class Window(QMainWindow):
             self.can_use_db = True
         except:
             self.can_use_db = False    
-        
+    
     def calcClustering(self, changedA):
         '''Calculates clustering related values for a network. If no network 
         exists, or the inputs for network A have changed it will build the 
