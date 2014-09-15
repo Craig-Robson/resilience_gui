@@ -2052,28 +2052,39 @@ class Window(QMainWindow):
     def __init__(self, parent = None):
     
         QWidget.__init__(self, parent)
+        
+       
         #Check  networkx files can be loaded
         try:
             import networkx as nx
         except:
             QMessageBox.warning(self, 'Import Error', 'Could not import networkx. The application will now close.')
             qApp.quit
+       
         #Check the files for the database connection can be loaded.
         try:
             import osgeo.ogr as ogr
         except:
             QMessageBox.warning(self,'Import Error!', "Could not import the osgeo.ogr library. There will be no database connectivity as a result.")
-
+        
         try:
             try: 
                 sys.path.append('C:/a8243587_DATA/GitRepo/nx_pgnet')
-                import nx_pgnet #,nx_pg
+                import nx_pgnet
             except:
                 pass
-                #sys.path.append('C:/Users/Craig/Documents/GitRepo/nx_pgnet')
         except:
             QMessageBox.warning(self, 'Import Error!', 'Could not import the nx_pgnet or nx_pg modules. This will not allow the database conection to work.')
         
+        try:
+            try:
+                sys.path.append('C:/a8243587_DATA/GitRepo/resilience')
+                import interdependency_analysis
+            except:
+                pass
+        except:
+            QMessageBox.warning(self, 'Import Error!', 'Could not import the resilience module. This will result in you not being able to run any failure analysis.')
+
         #set initial location and call the function to import the module        
         self.nxpglocation = 'C:/a8243587_DATA/GitRepo/nx_pgnet'
         #self.try_nxpg_import()
