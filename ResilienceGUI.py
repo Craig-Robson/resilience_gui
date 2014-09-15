@@ -551,7 +551,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.addButton(self.ckbisolatednodes_B)
   
         self.height += 20
-        lblisolatedncountremoved_A = QLabel("number if isolated nodes removed", self)
+        lblisolatedncountremoved_A = QLabel("number of isolated nodes removed", self)
         lblisolatedncountremoved_A.adjustSize()
         lblisolatedncountremoved_A.move(12,self.height)
         self.ckbisolatedncountremoved_A = QCheckBox(self)
@@ -843,9 +843,14 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         '''Updates check boxs on startup based on previuos selections. The 
         previous selections are stored in memory in the window function are 
         retrieved upon launch of the window.'''
-
-        basicA, basicB, optionA, optionB = metrics
-               
+        
+        basicA, basicB, optionA, optionB, dependency, cascading = metrics
+        
+        print '#########################'
+        print 'Intermitant error exists. Check below are correct (nominally falase)'
+        print 'size of components A is:',optionA['size_of_components']
+        print 'isolated nodes A is:',optionA['isolated_nodes']
+        print '#########################'
         if optionA['size_of_components'] == False:
             self.ckbsizeofcomponents_A.setChecked(False)
         else: self.ckbsizeofcomponents_A.setChecked(True)
@@ -1175,7 +1180,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
     def check_checkbxs(self, metrics):
         '''Checks the check boxes to identify those which have been checked or 
         are not checked.'''
-        basicA, basicB, optionA, optionB = metrics
+        basicA, basicB, optionA, optionB, dependency, cascading = metrics
         
         if self.ckbsizeofcomponents_A.isChecked():
             optionA['size_of_components']=True
@@ -1194,8 +1199,8 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         else: optionA['isoalted_nodes']=False
 
         if self.ckbisolatedncountremoved_A.isChecked():
-            optionA['no_of_isoalted_nodes_removed']=True
-        else: optionA['no+of_isolated_nodes_removed']=False
+            optionA['no_of_isolated_nodes_removed']=True
+        else: optionA['no_of_isolated_nodes_removed']=False
         
         if self.ckbsubnodes_A.isChecked():
             optionA['subnodes']=True
@@ -1274,7 +1279,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         else: optionA['avg_degree_centrality']=False
         
         if self.ckbavgclosenesscentrality_A.isChecked():
-            optionA['avg_closenes_centrality']=True
+            optionA['avg_closeness_centrality']=True
         else: optionA['avg_closeness_centrality']=False
         
         if self.ckbdiameter_A.isChecked():
@@ -1286,7 +1291,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
             optionB['size_of_components']=True
         else: optionB['size_of_componets']=False
         
-        if self.ckbgiantcomponentsize_A.isChecked():
+        if self.ckbgiantcomponentsize_B.isChecked():
             optionB['giant_component_size']=True
         else: optionB['giant_component_size']=False            
                   
@@ -1299,8 +1304,8 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         else: optionB['isoalted_nodes']=False
 
         if self.ckbisolatedncountremoved_B.isChecked():
-            optionB['no_of_isoalted_nodes_removed']=True
-        else: optionB['no+of_isolated_nodes_removed']=False
+            optionB['no_of_isolated_nodes_removed']=True
+        else: optionB['no_of_isolated_nodes_removed']=False
         
         if self.ckbsubnodes_B.isChecked():
             optionB['subnodes']=True
@@ -1379,7 +1384,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         else: optionB['avg_degree_centrality']=False
         
         if self.ckbavgclosenesscentrality_B.isChecked():
-            optionB['avg_closenes_centrality']=True
+            optionB['avg_closeness_centrality']=True
         else: optionB['avg_closeness_centrality']=False
         
         if self.ckbdiameter_B.isChecked():
@@ -1387,7 +1392,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         else: optionB['diameter']=False
         
         
-        self.metrics = basicA, basicB, optionA, optionB
+        self.metrics = basicA, basicB, optionA, optionB, dependency, cascading
         return self.metrics
 
     def applyandclose(self):
@@ -1395,17 +1400,12 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         packages up the containers into a single container. The single container 
         then replaces the latest version in the window class.'''
         self.metrics = self.check_checkbxs(self.metrics)
-        self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
         window.updateGUI_metrics(self.metrics)
         self.close() 
 
     def closeclick(self):
         '''Closes the window when initiated via the close button.'''
         self.close()
-    def get_metrics(self, metrics):
-        '''Does not do anything.'''    
-        self.metrics = metrics
-        basic_metrics_A, basic_metrics_B, option_metrics_A, option_metrics_B
                  
 class OptionsWindow(QWidget):
     def __init__(self, parent = None):  
@@ -1739,7 +1739,7 @@ class ViewGraphs(QDialog):
         QDialog.__init__(self, parent)
         
         self.metrics, self.failure = window.updatewindow_viewgraphs() #gets the metrics value
-        basicA, basicB, optionA, optionB = self.metrics
+        basicA, basicB, optionA, optionB, dependency, cascading = self.metrics
         self.valuesA = basicA,optionA
         self.valuesB = basicB,optionB
         self.metriclist = self.makemetriclist(basicA, optionA)
@@ -1868,6 +1868,7 @@ class ViewGraphs(QDialog):
         if self.net1cbx.currentText() == 'A':
             #if network A selected
             values = self.identifymetric(self.option1cbx.currentText(),self.valuesA)
+            print '1 values is:', values
             pl.plot(values, 'b', linewidth=2, label=self.option1cbx.currentText())
         else:
             #if network B selected
@@ -1887,6 +1888,7 @@ class ViewGraphs(QDialog):
         pl.subplot(212);pl.cla()
         if  self.net2cbx.currentText() == 'A':
             values = self.identifymetric(self.option2cbx.currentText(),self.valuesA)
+            print '3 values is:', values
             pl.plot(values, 'b', linewidth=2, label=self.option2cbx.currentText())
         else:
             values = self.identifymetric(self.option2cbx.currentText(),self.valuesB)
@@ -3428,59 +3430,16 @@ class Window(QMainWindow):
         self.btndraw.setEnabled(True) #draw button
         self.btnstep.setEnabled(True) #allow the button to be pressed again
         self.btnstart.setEnabled(True)
-        self.ckbxviewnet.setEnabled(True) #view graph checkbox  
-        
-        '''
-        self.parameters = None
-        self.running = False
-        self.pause = False
-        self.changedA = True
-        self.changedB = True
-        self.lastparam1A = None;self.lastparam2A = None;self.lastparam3A = None
-        self.lastparam1B = None;self.lastparam2B = None;self.lastparam3B = None
-        self.first = True
-        self.figureModel = None
-        self.iterate = True
-        self.timestep = -1
-        self.cancel = False
-        self.positions = None
-        self.G = None; self.GnetB = None
-        self.masterAnet = None; self.masterBnet = None
-        self.graphvis = None
-        self.analysistype = 'Single'
-        self.fullanalysis = False
-        self.active = 1
-        self.inactive = 0
-        self.timedelay = 2
-        self.coloractive = 'green'
-        self.colorinactive = 'red'
-        self.imagedestlocation = ''
-        self.pertimestep = 1
-        self.whenToSave = []
-        self.saveimage = False
-        self.multiiterations = False
-        self.numofiterations = 1 
-        self.iterationsdone = 0
-        self.saveoutputfile = True
-        '''
+        self.ckbxviewnet.setEnabled(True) #view graph checkbox
+        self.resetmetrics()
+  
     def reset(self):
         '''Reset all the appropriate variables, enable/disable the appropriate 
         buttons and check boxes and reset any text.'''
         
-        #self.G = None
-        #self.GnetB = None
-        #self.cmboxA.setCurrentIndex(0)
-        #self.networkselectionA('GNM') #this clears the text boxes - dont really want it too though
-        #self.cmboxB.setCurrentIndex(0)
-        #self.networkselectionB('None') #this clears the text boxes - dont really want it too though
-        #self.cmboxtype.setCurrentIndex(0)        
-        #self.txtparamt1.setEnabled(False)
-        #self.txtparamt2.setEnabled(False)
-        #self.positions = None
         self.cancel = False
         self.timestep = -1
         self.graphvis = None
-        #self.figureModel = None
         self.iterate = True
         self.fullanalysis = False
         self.lbl4.setText('Ready')
@@ -3500,27 +3459,20 @@ class Window(QMainWindow):
         self.write_step_to_db = False
         self.write_results_table = False
         self.store_n_e_atts = False
-        #self.clearAll()
         self.graph = 'GNM'
-        #pl.close()
-        
+        #self.resetemetrics()         
+         
         self.changedA = True
         self.changedB = True
-        #self.lastparam1A = None;self.lastparam2A = None;self.lastparam3A = None
-        #self.lastparam1B = None;self.lastparam2B = None;self.lastparam3B = None
-        #self.first = True
-
-        #self.active = 1
-        #self.inactive = 0
-        #self.timedelay = 2
-        #self.coloractive = 'green'
-        #self.colorinactive = 'red'
-        #self.imagedestlocation = ''
-        #self.pertimestep = 1
-        self.metrics = self.sort_metrics()           
         
-        print 'GUI reset'
-        
+    def resetemetrics(self):
+        ''''''
+        for dictionary in metrics:
+            if dictionary <> None:
+                for key in dictionary.keys():
+                    if dictionary[key]<>False: dictionary[key]=True
+            else:
+                print '!!!!! NEED TO SORT THIS. DICTIONARY COULD NOT BE RESET FOR THE NEXT ANALYSIS !!!!!'
         
     def clearAll(self):
         '''Clear all the QLinEdit/input text boxes for both networks A and B. 
@@ -3602,7 +3554,7 @@ class Window(QMainWindow):
     def updateGUI_metrics(self, metrics):
         '''Called when metrics window is closed to update the variables'''
         self.metrics = metrics
-        self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B = self.metrics
+        #self.basic_metrics_A, self.basic_metrics_B, self.option_metrics_A, self.option_metrics_B, self.depen = self.metrics
     
     #functions for options window
     def showwindow_options(self):
@@ -3716,8 +3668,12 @@ class Window(QMainWindow):
     def updatewindow_viewgraphs(self):
         '''Used to transfer the values to the view graphs class. Called on
         first line of class.'''
+        print 'LOOK HERE'
         print '--------------------------'
-        print self.parameters
+        print self.values
+        print len(self.values)
+        print self.values[0]
+        print '--------------------------'
         return self.values, self.parameters[0]
         
     def closeEvent(self, event):
@@ -3831,7 +3787,7 @@ class Window(QMainWindow):
         print '%s/%s simulations done.' %(self.iterationsdone,self.numofiterations)
         #for the continued analysis of a network
         if self.fullanalysis == True and self.iterate==True and self.cancel==False:
-            self.full_analysis(self.parameters)                      
+            self.full_analysis(self.parameters)
         #for the end of a single iteration network analysis
         elif self.iterate==False and self.multiiterations == False:
             self.lbl4.setText('Analysis completed')
@@ -3839,7 +3795,6 @@ class Window(QMainWindow):
             QApplication.processEvents() #refresh gui            
             ok = QMessageBox.information(self, 'Information', "Network resileince analysis successfully completed. Do you want to view the metric graphs?" , '&No','&View Graphs')
             if ok == 1: #if the view graph option is clicked
-                print 'when sending, self.metrics is:', self.metrics 
                 self.values = res.outputresults(self.graphparameters, self.parameters, self.metrics)
                 pl.close()
                 self.q = ViewGraphs()
@@ -3849,6 +3804,7 @@ class Window(QMainWindow):
                 self.reset()
             else:
                 pl.close()
+                self.iterationsdone = 0
                 self.reset()    
                
         #for the end of an iteration of a multiple simulation analysis
@@ -3971,7 +3927,7 @@ class Window(QMainWindow):
                     print '---------------------------'                    
                     print 'Outputting results'
                     pl.close()
-                    self.q = ViewGraphs()
+                    self.q = ViewGraphs(self.metrics)
                     self.btnstep.setEnabled(True)#allow the button to be pressed again
                     self.btndraw.setEnabled(True)
                     self.ckbxviewnet.setEnabled(True)
@@ -4500,11 +4456,11 @@ class Window(QMainWindow):
         '''Set the condition of all the posible metrics based on the parameters.'''
         #print 'Running SORT metrics'
         #failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length = self.parameters
-        basic_metrics_A = {'nodes_removed':True,'no_of_nodes_removed':True,'no_of_nodes':True,
+        basicA = {'nodes_removed':True,'no_of_nodes_removed':True,'no_of_nodes':True,
                    'no_of_edges':True,'no_of_components':True,
                    'no_of_isolated_nodes':True,'isolated_nodes_removed':True,
                    'nodes_selected_to_fail':True}
-        option_metrics_A = {'size_of_components':   False,                    
+        optionA = {'size_of_components':   False,                    
                     'giant_component_size':         False,
                     'avg_size_of_components':       False,
                     'isolated_nodes':               False,
@@ -4531,10 +4487,15 @@ class Window(QMainWindow):
                     'avg_closeness_centrality':     False,
                     'diameter':                     False}
         
-        basic_metrics_B = basic_metrics_A.copy()
-        option_metrics_B = option_metrics_A.copy()
-    
-        metrics = basic_metrics_A,basic_metrics_B,option_metrics_A,option_metrics_B
+        dependency = {'nodes_removed_from_A':False,
+                      'no_of_nodes_removed_from_A':False,
+                      'nodes_removed_from_B':False,
+                      'no_of_nodes_removed_from_B':False}
+        cascading=None
+        basicB = basicA.copy()
+        optionB = optionA.copy()
+        
+        metrics = basicA,basicB,optionA,optionB,dependency,cascading
         return metrics
 
     def show_visselection(self):
@@ -4596,7 +4557,7 @@ class Window(QMainWindow):
 
         #as default, all are set as false, then changed if requested
         failure = {'stand_alone':False,'dependency':False,'interdependency':False,
-                   'single':False,'sequential':False,'cascading':False,
+                   'single':False,'sequential':False,'cascading':False,'from_list':False,
                    'random':False,'degree':False,'betweenness':False}
         handling_variables = {'remove_subgraphs':False,'remove_isolates':False,'no_isolates':False}
         
