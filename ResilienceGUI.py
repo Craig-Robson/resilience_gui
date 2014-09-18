@@ -373,7 +373,7 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         lblbasic.adjustSize()
         lblbasic.move(12,35)
         
-        self.height = 35
+        height = 35;hoza=210;hozb=230
         networkAbasicgroup = QButtonGroup(self)
         networkAbasicgroup.setExclusive(False)
         networkBbasicgroup = QButtonGroup(self)
@@ -384,457 +384,457 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         networkBoptionalgroup.setExclusive(False)
         
         #----------------------basic metrics----------------------------------
-        self.height += 20        
+        height += 20
         lblnodesremoved_A = QLabel("nodes removed", self)
         lblnodesremoved_A.adjustSize()
-        lblnodesremoved_A.move(12,self.height)       
+        lblnodesremoved_A.move(12,height)       
         self.ckbnodesremoved_A = QCheckBox(self)
-        self.ckbnodesremoved_A.move(180,self.height)
+        self.ckbnodesremoved_A.move(hoza,height)
         networkAbasicgroup.addButton(self.ckbnodesremoved_A) 
         self.ckbnodesremoved_B = QCheckBox(self)
-        self.ckbnodesremoved_B.move(200,self.height)
+        self.ckbnodesremoved_B.move(hozb,height)
         networkBbasicgroup.addButton(self.ckbnodesremoved_B)
         self.ckbnodesremoved_A.setChecked(True)                
         self.ckbnodesremoved_A.setEnabled(False)
         self.ckbnodesremoved_B.setChecked(True)
         self.ckbnodesremoved_B.setEnabled(False)
         
-        self.height += 20
+        height += 20
         lblnodecountremoved_A = QLabel("number of nodes removed", self)
         lblnodecountremoved_A.adjustSize()
-        lblnodecountremoved_A.move(12,self.height)       
+        lblnodecountremoved_A.move(12,height)
         self.ckbnodecountremoved_A = QCheckBox(self)
-        self.ckbnodecountremoved_A.move(180,self.height)
+        self.ckbnodecountremoved_A.move(hoza,height)
         networkAbasicgroup.addButton(self.ckbnodecountremoved_A)
         self.ckbnodecountremoved_B = QCheckBox(self)
-        self.ckbnodecountremoved_B.move(200,self.height)
+        self.ckbnodecountremoved_B.move(hozb,height)
         networkBbasicgroup.addButton(self.ckbnodecountremoved_B)
         self.ckbnodecountremoved_A.setChecked(True)                
         self.ckbnodecountremoved_A.setEnabled(False)
         self.ckbnodecountremoved_B.setChecked(True)
         self.ckbnodecountremoved_B.setEnabled(False)
                 
-        self.height += 20       
+        height += 20
         lblcountnodesleft_A = QLabel("number of nodes", self)
         lblcountnodesleft_A.adjustSize()
-        lblcountnodesleft_A.move(12,self.height)       
+        lblcountnodesleft_A.move(12,height)       
         self.ckbcountnodesleft_A = QCheckBox(self)
-        self.ckbcountnodesleft_A.move(180,self.height)
+        self.ckbcountnodesleft_A.move(hoza,height)
         networkAbasicgroup.addButton(self.ckbcountnodesleft_A)
         self.ckbcountnodesleft_B = QCheckBox(self)
-        self.ckbcountnodesleft_B.move(200,self.height)
+        self.ckbcountnodesleft_B.move(hozb,height)
         networkBbasicgroup.addButton(self.ckbcountnodesleft_B)
         self.ckbcountnodesleft_A.setChecked(True)  
         self.ckbcountnodesleft_A.setEnabled(False)              
         self.ckbcountnodesleft_B.setChecked(True)
         self.ckbcountnodesleft_B.setEnabled(False)
         
-        self.height += 20
+        height += 20
         lblnumberofedges_A = QLabel("number of edges", self)
         lblnumberofedges_A.adjustSize()
-        lblnumberofedges_A.move(12,self.height)       
+        lblnumberofedges_A.move(12,height)       
         self.ckbnumberofedges_A = QCheckBox(self)
-        self.ckbnumberofedges_A.move(180,self.height)
+        self.ckbnumberofedges_A.move(hoza,height)
         networkAbasicgroup.addButton(self.ckbnumberofedges_A)
         self.ckbnumberofedges_B = QCheckBox(self)
-        self.ckbnumberofedges_B.move(200,self.height)
+        self.ckbnumberofedges_B.move(hozb,height)
         networkBbasicgroup.addButton(self.ckbnumberofedges_B)
         self.ckbnumberofedges_A.setChecked(True) 
         self.ckbnumberofedges_A.setEnabled(False)               
         self.ckbnumberofedges_B.setChecked(True)
         self.ckbnumberofedges_B.setEnabled(False)
         
-        self.height += 20
+        height += 20
         lblnumberofcomponents_A = QLabel("number of components", self)
         lblnumberofcomponents_A.adjustSize()
-        lblnumberofcomponents_A.move(12,self.height)       
+        lblnumberofcomponents_A.move(12,height)       
         self.ckbnumberofcomponents_A = QCheckBox(self)
-        self.ckbnumberofcomponents_A.move(180,self.height)    
+        self.ckbnumberofcomponents_A.move(hoza,height)
         networkAbasicgroup.addButton(self.ckbnumberofedges_A)
         self.ckbnumberofcomponents_B = QCheckBox(self)
-        self.ckbnumberofcomponents_B.move(200,self.height)
+        self.ckbnumberofcomponents_B.move(hozb,height)
         networkBbasicgroup.addButton(self.ckbnumberofedges_B)
         self.ckbnumberofcomponents_A.setChecked(True)
         self.ckbnumberofcomponents_A.setEnabled(False)
         self.ckbnumberofcomponents_B.setChecked(True)
         self.ckbnumberofcomponents_B.setEnabled(False)
         
-        self.height += 20
+        height += 20
         lblisolatedncount_A = QLabel("number of isolated nodes", self)
         lblisolatedncount_A.adjustSize()
-        lblisolatedncount_A.move(12,self.height)
+        lblisolatedncount_A.move(12,height)
         self.ckbisolatedncount_A = QCheckBox(self)
-        self.ckbisolatedncount_A.move(180,self.height)
+        self.ckbisolatedncount_A.move(hoza,height)
         networkAbasicgroup.addButton(self.ckbisolatedncount_A)
         self.ckbisolatedncount_B = QCheckBox(self)
-        self.ckbisolatedncount_B.move(200,self.height) 
+        self.ckbisolatedncount_B.move(hozb,height)
         networkBbasicgroup.addButton(self.ckbisolatedncount_B)
         self.ckbisolatedncount_A.setChecked(True)
         self.ckbisolatedncount_A.setEnabled(False)
         self.ckbisolatedncount_B.setChecked(True)
         self.ckbisolatedncount_B.setEnabled(False)
         
-        self.height += 20
+        height += 20
         lblisolatednodesremoved_A = QLabel("isolated nodes removed", self)
         lblisolatednodesremoved_A.adjustSize()
-        lblisolatednodesremoved_A.move(12,self.height)
+        lblisolatednodesremoved_A.move(12,height)
         self.ckbisolatednodesremoved_A = QCheckBox(self)
-        self.ckbisolatednodesremoved_A.move(180,self.height)
+        self.ckbisolatednodesremoved_A.move(hoza,height)
         networkAbasicgroup.addButton(self.ckbisolatednodesremoved_A)
         self.ckbisolatednodesremoved_B = QCheckBox(self)
-        self.ckbisolatednodesremoved_B.move(200,self.height)
+        self.ckbisolatednodesremoved_B.move(hozb,height)
         networkBbasicgroup.addButton(self.ckbisolatednodesremoved_B)
         self.ckbisolatednodesremoved_A.setChecked(True)
         self.ckbisolatednodesremoved_A.setEnabled(False)
         self.ckbisolatednodesremoved_B.setChecked(True)
         self.ckbisolatednodesremoved_B.setEnabled(False)
         
-        self.height += 20
+        height += 20
         lblnodesselectedtofail_A = QLabel("nodes selected to fail", self)
         lblnodesselectedtofail_A.adjustSize()
-        lblnodesselectedtofail_A.move(12,self.height)
+        lblnodesselectedtofail_A.move(12,height)
         ckbnodesselectedtofail_A = QCheckBox(self)
-        ckbnodesselectedtofail_A.move(180,self.height)
+        ckbnodesselectedtofail_A.move(hoza,height)
         networkAoptionalgroup.addButton(ckbnodesselectedtofail_A)        
         ckbnodesselectedtofail_A.setChecked(True)
         ckbnodesselectedtofail_A.setEnabled(False)
         
         #-----------------------basic above, optional below--------------------
-        self.height += 20
+        height += 20
         lblmetrics = QLabel("Optional Metrics", self)
         lblmetrics.setFont(fontbold)
         lblmetrics.adjustSize()
-        lblmetrics.move(12,self.height) 
+        lblmetrics.move(12,height)
   
-        self.height += 20
+        height += 20
         lblsizeofcomponents_A = QLabel("size of components*", self)
         lblsizeofcomponents_A.adjustSize()
-        lblsizeofcomponents_A.move(12,self.height)
+        lblsizeofcomponents_A.move(12,height)
         self.ckbsizeofcomponents_A = QCheckBox(self)
-        self.ckbsizeofcomponents_A.move(180,self.height)
+        self.ckbsizeofcomponents_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbsizeofcomponents_A)                
         self.ckbsizeofcomponents_B = QCheckBox(self)
-        self.ckbsizeofcomponents_B.move(200,self.height)        
+        self.ckbsizeofcomponents_B.move(hozb,height)        
         networkBoptionalgroup.addButton(self.ckbsizeofcomponents_B)
         
-        self.height += 20
+        height += 20
         lblgiantcomponentsize_A = QLabel("giant component size", self)
         lblgiantcomponentsize_A.adjustSize()
-        lblgiantcomponentsize_A.move(12,self.height)
+        lblgiantcomponentsize_A.move(12,height)
         self.ckbgiantcomponentsize_A = QCheckBox(self)
-        self.ckbgiantcomponentsize_A.move(180,self.height)
+        self.ckbgiantcomponentsize_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbgiantcomponentsize_A)
         self.ckbgiantcomponentsize_B = QCheckBox(self)
-        self.ckbgiantcomponentsize_B.move(200,self.height)        
+        self.ckbgiantcomponentsize_B.move(hozb,height)        
         networkBoptionalgroup.addButton(self.ckbgiantcomponentsize_B)
   
-        self.height += 20
+        height += 20
         lblavnodesincomponents_A = QLabel("average size of components", self)
         lblavnodesincomponents_A.adjustSize()
-        lblavnodesincomponents_A.move(12,self.height)
+        lblavnodesincomponents_A.move(12,height)
         self.ckbavnodesincomponents_A = QCheckBox(self)
-        self.ckbavnodesincomponents_A.move(180,self.height)
+        self.ckbavnodesincomponents_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavnodesincomponents_A)
         self.ckbavnodesincomponents_B = QCheckBox(self)
-        self.ckbavnodesincomponents_B.move(200,self.height)  
+        self.ckbavnodesincomponents_B.move(hozb,height)  
         networkBoptionalgroup.addButton(self.ckbavnodesincomponents_B)
   
-        self.height += 20
+        height += 20
         lblisolatednodes_A = QLabel("isolated nodes*", self)
         lblisolatednodes_A.adjustSize()
-        lblisolatednodes_A.move(12,self.height)
+        lblisolatednodes_A.move(12,height)
         self.ckbisolatednodes_A = QCheckBox(self)
-        self.ckbisolatednodes_A.move(180,self.height)
+        self.ckbisolatednodes_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbisolatednodes_A)
         self.ckbisolatednodes_B = QCheckBox(self)
-        self.ckbisolatednodes_B.move(200,self.height)  
+        self.ckbisolatednodes_B.move(hozb,height)  
         networkBoptionalgroup.addButton(self.ckbisolatednodes_B)
   
-        self.height += 20
+        height += 20
         lblisolatedncountremoved_A = QLabel("number of isolated nodes removed", self)
         lblisolatedncountremoved_A.adjustSize()
-        lblisolatedncountremoved_A.move(12,self.height)
+        lblisolatedncountremoved_A.move(12,height)
         self.ckbisolatedncountremoved_A = QCheckBox(self)
-        self.ckbisolatedncountremoved_A.move(180,self.height)
+        self.ckbisolatedncountremoved_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbisolatedncountremoved_A)
         self.ckbisolatedncountremoved_B = QCheckBox(self)
-        self.ckbisolatedncountremoved_B.move(200,self.height) 
+        self.ckbisolatedncountremoved_B.move(hozb,height) 
         networkBoptionalgroup.addButton(self.ckbisolatedncountremoved_B)
   
-        self.height += 20
+        height += 20
         lblsubnodes_A = QLabel("subnodes*", self)
         lblsubnodes_A.adjustSize()
-        lblsubnodes_A.move(12,self.height)
+        lblsubnodes_A.move(12,height)
         self.ckbsubnodes_A = QCheckBox(self)
-        self.ckbsubnodes_A.move(180,self.height)
+        self.ckbsubnodes_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbsubnodes_A)
         self.ckbsubnodes_B = QCheckBox(self)
-        self.ckbsubnodes_B.move(200,self.height) 
+        self.ckbsubnodes_B.move(hozb,height) 
         networkBoptionalgroup.addButton(self.ckbsubnodes_B)
   
-        self.height += 20        
+        height += 20
         lblsubnodescount_A = QLabel("number of subnodes", self)
         lblsubnodescount_A.adjustSize()
-        lblsubnodescount_A.move(12,self.height)
+        lblsubnodescount_A.move(12,height)
         self.ckbsubnodescount_A = QCheckBox(self)
-        self.ckbsubnodescount_A.move(180,self.height)
+        self.ckbsubnodescount_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbsubnodescount_A)
         self.ckbsubnodescount_B = QCheckBox(self)
-        self.ckbsubnodescount_B.move(200,self.height)
+        self.ckbsubnodescount_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbsubnodescount_B)
   
-        self.height += 20
+        height += 20
         lblavpathlength_A = QLabel("average path length", self)
         lblavpathlength_A.adjustSize()
-        lblavpathlength_A.move(12,self.height)
+        lblavpathlength_A.move(12,height)
         self.ckbavpathlength_A = QCheckBox(self)
-        self.ckbavpathlength_A.move(180,self.height)
+        self.ckbavpathlength_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavpathlength_A)
         self.ckbavpathlength_B = QCheckBox(self)
-        self.ckbavpathlength_B.move(200,self.height)
+        self.ckbavpathlength_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbavpathlength_B)  
                                
-        self.height += 20
+        height += 20
         lblavpathlengthcomp_A = QLabel("avg path length components", self)
         lblavpathlengthcomp_A.adjustSize()
-        lblavpathlengthcomp_A.move(12,self.height)
+        lblavpathlengthcomp_A.move(12,height)
         self.ckbavpathlengthcomp_A = QCheckBox(self)
-        self.ckbavpathlengthcomp_A.move(180,self.height)
+        self.ckbavpathlengthcomp_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavpathlengthcomp_A)
         self.ckbavpathlengthcomp_B = QCheckBox(self)
-        self.ckbavpathlengthcomp_B.move(200,self.height)
+        self.ckbavpathlengthcomp_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbavpathlengthcomp_B)
 
-        self.height += 20        
+        height += 20
         lblgiantcompavpathlength_A = QLabel("ag path length of giant component", self)
         lblgiantcompavpathlength_A.adjustSize()
-        lblgiantcompavpathlength_A.move(12,self.height)
+        lblgiantcompavpathlength_A.move(12,height)
         self.ckbgiantcompavpathlength_A = QCheckBox(self)
-        self.ckbgiantcompavpathlength_A.move(180,self.height)
+        self.ckbgiantcompavpathlength_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbgiantcompavpathlength_A)
         self.ckbgiantcompavpathlength_B = QCheckBox(self)
-        self.ckbgiantcompavpathlength_B.move(200,self.height)
+        self.ckbgiantcompavpathlength_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbgiantcompavpathlength_B)
 
-        self.height += 20
+        height += 20
         lblavpathlengthgeo_A = QLabel("avg geographic path length", self)
         lblavpathlengthgeo_A.adjustSize()
-        lblavpathlengthgeo_A.move(12,self.height)
+        lblavpathlengthgeo_A.move(12,height)
         self.ckbavpathlengthgeo_A = QCheckBox(self)
-        self.ckbavpathlengthgeo_A.move(180,self.height)
+        self.ckbavpathlengthgeo_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavpathlengthgeo_A)
         self.ckbavpathlengthgeo_B = QCheckBox(self)
-        self.ckbavpathlengthgeo_B.move(200,self.height) 
+        self.ckbavpathlengthgeo_B.move(hozb,height) 
         networkBoptionalgroup.addButton(self.ckbavpathlengthgeo_B)
 
-        self.height += 20
-        lblavggeocomponentspathlength_A = QLabel("avg geo path of length of components", self)
+        height += 20
+        lblavggeocomponentspathlength_A = QLabel("avg geo path length of components", self)
         lblavggeocomponentspathlength_A.adjustSize()
-        lblavggeocomponentspathlength_A.move(12,self.height)
+        lblavggeocomponentspathlength_A.move(12,height)
         self.ckbavggeopathlengthcomponents_A = QCheckBox(self)
-        self.ckbavggeopathlengthcomponents_A.move(180,self.height)
+        self.ckbavggeopathlengthcomponents_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavggeopathlengthcomponents_A)
         self.ckbavggeopathlengthcomponents_B = QCheckBox(self)
-        self.ckbavggeopathlengthcomponents_B.move(200,self.height) 
+        self.ckbavggeopathlengthcomponents_B.move(hozb,height) 
         networkBoptionalgroup.addButton(self.ckbavggeopathlengthcomponents_B)
 
-        self.height += 20
+        height += 20
         lblavggeopathlengthgiantcomponent_A = QLabel("avg geo path length of giant component", self)
         lblavggeopathlengthgiantcomponent_A.adjustSize()
-        lblavggeopathlengthgiantcomponent_A.move(12,self.height)
+        lblavggeopathlengthgiantcomponent_A.move(12,height)
         self.ckbavggeopathlengthgiantcomponent_A = QCheckBox(self)
-        self.ckbavggeopathlengthgiantcomponent_A.move(180,self.height)
+        self.ckbavggeopathlengthgiantcomponent_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavggeopathlengthgiantcomponent_A)
         self.ckbavggeopathlengthgiantcomponent_B = QCheckBox(self)
-        self.ckbavggeopathlengthgiantcomponent_B.move(200,self.height) 
+        self.ckbavggeopathlengthgiantcomponent_B.move(hozb,height) 
         networkBoptionalgroup.addButton(self.ckbavggeopathlengthgiantcomponent_B)
 
-        self.height += 20
+        height += 20
         lblavdegree_A = QLabel("average degree", self)
         lblavdegree_A.adjustSize()
-        lblavdegree_A.move(12,self.height)
+        lblavdegree_A.move(12,height)
         self.ckbavdegree_A = QCheckBox(self)
-        self.ckbavdegree_A.move(180,self.height)
+        self.ckbavdegree_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavdegree_A)
         self.ckbavdegree_B = QCheckBox(self)
-        self.ckbavdegree_B.move(200,self.height)
+        self.ckbavdegree_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbavdegree_B) 
 
-        self.height += 20
+        height += 20
         lbldensity_A = QLabel("density", self)
         lbldensity_A.adjustSize()
-        lbldensity_A.move(12,self.height)
+        lbldensity_A.move(12,height)
         self.ckbdensity_A = QCheckBox(self)
-        self.ckbdensity_A.move(180,self.height)
+        self.ckbdensity_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbdensity_A)  
         self.ckbdensity_B = QCheckBox(self)
-        self.ckbdensity_B.move(200,self.height)
+        self.ckbdensity_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbdensity_B)
         
-        self.height += 20
+        height += 20
         lblmaxbetweennesscentrality_A = QLabel("maximum betweenness centrality", self)
         lblmaxbetweennesscentrality_A.adjustSize()
-        lblmaxbetweennesscentrality_A.move(12,self.height)
+        lblmaxbetweennesscentrality_A.move(12,height)
         self.ckbmaxbetweennesscentrality_A = QCheckBox(self)
-        self.ckbmaxbetweennesscentrality_A.move(180,self.height)
+        self.ckbmaxbetweennesscentrality_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbmaxbetweennesscentrality_A)  
         self.ckbmaxbetweennesscentrality_B = QCheckBox(self)
-        self.ckbmaxbetweennesscentrality_B.move(200,self.height)
+        self.ckbmaxbetweennesscentrality_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbmaxbetweennesscentrality_B)
         
-        self.height += 20
+        height += 20
         lblavgbetweennesscentrality_A = QLabel("avg betweenness centrality", self)
         lblavgbetweennesscentrality_A.adjustSize()
-        lblavgbetweennesscentrality_A.move(12,self.height)
+        lblavgbetweennesscentrality_A.move(12,height)
         self.ckbavgbetweennesscentrality_A = QCheckBox(self)
-        self.ckbavgbetweennesscentrality_A.move(180,self.height)
+        self.ckbavgbetweennesscentrality_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavgbetweennesscentrality_A)
         self.ckbavgbetweennesscentrality_B = QCheckBox(self)
-        self.ckbavgbetweennesscentrality_B.move(200,self.height)
+        self.ckbavgbetweennesscentrality_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbavgbetweennesscentrality_B)
 
-        self.height += 20
+        height += 20
         lblassortativitycoefficient_A = QLabel("assortativity coefficient", self)
         lblassortativitycoefficient_A.adjustSize()
-        lblassortativitycoefficient_A.move(12,self.height)
+        lblassortativitycoefficient_A.move(12,height)
         self.ckbassortativitycoefficient_A = QCheckBox(self)
-        self.ckbassortativitycoefficient_A.move(180,self.height)
+        self.ckbassortativitycoefficient_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbassortativitycoefficient_A)
         self.ckbassortativitycoefficient_B = QCheckBox(self)
-        self.ckbassortativitycoefficient_B.move(200,self.height)
+        self.ckbassortativitycoefficient_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbassortativitycoefficient_B)
 
-        self.height += 20
+        height += 20
         lblclusteringcoefficient_A = QLabel("clustering coefficient", self)
         lblclusteringcoefficient_A.adjustSize()
-        lblclusteringcoefficient_A.move(12,self.height)
+        lblclusteringcoefficient_A.move(12,height)
         self.ckbclusteringcoefficient_A = QCheckBox(self)
-        self.ckbclusteringcoefficient_A.move(180,self.height)
+        self.ckbclusteringcoefficient_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbclusteringcoefficient_A)
         self.ckbclusteringcoefficient_B = QCheckBox(self)
-        self.ckbclusteringcoefficient_B.move(200,self.height)
+        self.ckbclusteringcoefficient_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbclusteringcoefficient_B)
  
-        self.height += 20
+        height += 20
         lbltransitivity_A = QLabel("transitivity", self)
         lbltransitivity_A.adjustSize()
-        lbltransitivity_A.move(12,self.height)
+        lbltransitivity_A.move(12,height)
         self.ckbtransitivity_A = QCheckBox(self)
-        self.ckbtransitivity_A.move(180,self.height)
+        self.ckbtransitivity_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbtransitivity_A)
         self.ckbtransitivity_B = QCheckBox(self)
-        self.ckbtransitivity_B.move(200,self.height)
+        self.ckbtransitivity_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbtransitivity_B)
  
-        self.height += 20
+        height += 20
         lblsquareclustering_A = QLabel("square clustering", self)
         lblsquareclustering_A.adjustSize()
-        lblsquareclustering_A.move(12,self.height)
+        lblsquareclustering_A.move(12,height)
         self.ckbsquareclustering_A = QCheckBox(self)
-        self.ckbsquareclustering_A.move(180,self.height)
+        self.ckbsquareclustering_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbsquareclustering_A)
         self.ckbsquareclustering_B = QCheckBox(self)
-        self.ckbsquareclustering_B.move(200,self.height)
+        self.ckbsquareclustering_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbsquareclustering_B)
  
-        self.height += 20
+        height += 20
         lblavgneighbordegree_A = QLabel("avg neighbor degree", self)
         lblavgneighbordegree_A.adjustSize()
-        lblavgneighbordegree_A.move(12,self.height)
+        lblavgneighbordegree_A.move(12,height)
         self.ckbavgneighbordegree_A = QCheckBox(self)
-        self.ckbavgneighbordegree_A.move(180,self.height)
+        self.ckbavgneighbordegree_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavgneighbordegree_A)
         self.ckbavgneighbordegree_B = QCheckBox(self)
-        self.ckbavgneighbordegree_B.move(200,self.height)
+        self.ckbavgneighbordegree_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbavgneighbordegree_B)
  
-        self.height += 20
-        lblavgdegreeconnectivity_A = QLabel("avg degree connectivity", self)
+        height += 20
+        lblavgdegreeconnectivity_A = QLabel("avg degree connectivity*", self)
         lblavgdegreeconnectivity_A.adjustSize()
-        lblavgdegreeconnectivity_A.move(12,self.height)
+        lblavgdegreeconnectivity_A.move(12,height)
         self.ckbavgdegreeconnectivity_A = QCheckBox(self)
-        self.ckbavgdegreeconnectivity_A.move(180,self.height)
+        self.ckbavgdegreeconnectivity_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavgdegreeconnectivity_A)
         self.ckbavgdegreeconnectivity_B = QCheckBox(self)
-        self.ckbavgdegreeconnectivity_B.move(200,self.height)
+        self.ckbavgdegreeconnectivity_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbavgdegreeconnectivity_B)
 
-        self.height += 20
+        height += 20
         lblavgdegreecentrality_A = QLabel("avg degree centrality", self)
         lblavgdegreecentrality_A.adjustSize()
-        lblavgdegreecentrality_A.move(12,self.height)
+        lblavgdegreecentrality_A.move(12,height)
         self.ckbavgdegreecentrality_A = QCheckBox(self)
-        self.ckbavgdegreecentrality_A.move(180,self.height)
+        self.ckbavgdegreecentrality_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavgdegreecentrality_A)
         self.ckbavgdegreecentrality_B = QCheckBox(self)
-        self.ckbavgdegreecentrality_B.move(200,self.height)
+        self.ckbavgdegreecentrality_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbavgdegreecentrality_B)
 
-        self.height += 20
+        height += 20
         lblavgclosenesscentrality_A = QLabel("avg closeness centrality", self)
         lblavgclosenesscentrality_A.adjustSize()
-        lblavgclosenesscentrality_A.move(12,self.height)
+        lblavgclosenesscentrality_A.move(12,height)
         self.ckbavgclosenesscentrality_A = QCheckBox(self)
-        self.ckbavgclosenesscentrality_A.move(180,self.height)
+        self.ckbavgclosenesscentrality_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbavgclosenesscentrality_A)
         self.ckbavgclosenesscentrality_B = QCheckBox(self)
-        self.ckbavgclosenesscentrality_B.move(200,self.height)
+        self.ckbavgclosenesscentrality_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbavgclosenesscentrality_B)
 
-        self.height += 20
+        height += 20
         lbldiameter_A = QLabel("diameter", self)
         lbldiameter_A.adjustSize()
-        lbldiameter_A.move(12,self.height)
+        lbldiameter_A.move(12,height)
         self.ckbdiameter_A = QCheckBox(self)
-        self.ckbdiameter_A.move(180,self.height)
+        self.ckbdiameter_A.move(hoza,height)
         networkAoptionalgroup.addButton(self.ckbdiameter_A)
         self.ckbdiameter_B = QCheckBox(self)
-        self.ckbdiameter_B.move(200,self.height)
+        self.ckbdiameter_B.move(hozb,height)
         networkBoptionalgroup.addButton(self.ckbdiameter_B)
         
         self.metrics = window.updatewindow_metrics()
         self.update_ckbs(self.metrics) #updates check boxes
         
-        self.height += 20
+        height += 20
         self.lblastrix = QLabel("*Will not show in metric plots at end of analysis.", self)
         self.lblastrix.adjustSize()
-        self.lblastrix.move(12,self.height)
+        self.lblastrix.move(12,height)
                 
-        self.height += 20
+        height += 20
         closebtn = QPushButton("Close", self)
         closebtn.adjustSize()
-        closebtn.move(170,self.height)
+        closebtn.move(170,height)
         closebtn.clicked.connect(self.closeclick)
         closebtn.setToolTip("Close the window without saving any changes.")
         selectallAbtn = QPushButton('Select all A', self)
         selectallAbtn.setToolTip('Select all check boxes for network A')
-        selectallAbtn.move(10, self.height)
+        selectallAbtn.move(10,height)
         selectallAbtn.clicked.connect(self.selectallA)
         selectallBbtn = QPushButton('Select all B', self)
         selectallBbtn.setToolTip('Select all check boxes for network B')
-        selectallBbtn.move(90, self.height)
+        selectallBbtn.move(90,height)
         selectallBbtn.clicked.connect(self.selectallB)        
         
-        self.height += 30
+        height += 30
         applybtn = QPushButton("Apply", self)
         applybtn.adjustSize()
-        applybtn.move(170,self.height)
+        applybtn.move(170,height)
         applybtn.clicked.connect(self.applyandclose)
         applybtn.setToolTip("Apply any changes and close the window.")     
         unselectallAbtn = QPushButton('Unselect all A', self)
         unselectallAbtn.setToolTip('Unselect all check boxes for network A')
-        unselectallAbtn.move(10, self.height)
+        unselectallAbtn.move(10,height)
         unselectallAbtn.clicked.connect(self.unselectallA)
         unselectallBbtn = QPushButton('Unselect all B', self)
         unselectallBbtn.setToolTip('Unselect all check boxes for network B')
-        unselectallBbtn.move(90, self.height)
+        unselectallBbtn.move(90,height)
         unselectallBbtn.clicked.connect(self.unselectallB)
         
         #if self.basic_metrics_B == None:
         #    selectallBbtn.setEnabled(False)            
         #    unselectallBbtn.setEnabled(False)
 
-        self.setGeometry(300,100,250,self.height+30) #vertical place on screen, hoz place on screen, width of window, height of window
+        self.setGeometry(300,100,250,height+30) #vertical place on screen, hoz place on screen, width of window, height of window
         self.setWindowTitle('Metrics Window') #title of window
         self.setWindowIcon(QIcon('logo.png'))
         self.show()
@@ -1227,7 +1227,9 @@ class MetricsWindow(QWidget): # not sure if I will need this after all
         else: optionA['avg_geo_path_length']=False
         
         if self.ckbavggeopathlengthcomponents_A.isChecked():
+            print "!!!! Here need to open a message box asking for path length attribute, or have a trigger which does when you start the analysis and thus works for db as well??!!!!"
             optionA['avg_geo_path_length_of_components']=True
+            
         else: optionA['avg_geo_path_length_of_components']=False
         
         if self.ckbavggeopathlengthgiantcomponent_A.isChecked():
@@ -1839,11 +1841,10 @@ class ViewGraphs(QDialog):
             
     def index(self,text):
         '''Find the index given the text. Dynamic method.'''
-        #print self.metriclist
+        
         index = 0
         for item in self.metriclist:
             if text == item:
-                #print 'found a match'
                 return index
             index += 1
                         
@@ -1868,7 +1869,6 @@ class ViewGraphs(QDialog):
         if self.net1cbx.currentText() == 'A':
             #if network A selected
             values = self.identifymetric(self.option1cbx.currentText(),self.valuesA)
-            print '1 values is:', values
             pl.plot(values, 'b', linewidth=2, label=self.option1cbx.currentText())
         else:
             #if network B selected
@@ -1878,6 +1878,7 @@ class ViewGraphs(QDialog):
         pl.xlabel('Number of nodes removed')
         pl.ylabel(self.option1cbx.currentText())
         pl.ylim(ymin=0)
+
         if self.net1cbx.currentText() == 'A':
             ymax =max(values)
         else:
@@ -1888,7 +1889,6 @@ class ViewGraphs(QDialog):
         pl.subplot(212);pl.cla()
         if  self.net2cbx.currentText() == 'A':
             values = self.identifymetric(self.option2cbx.currentText(),self.valuesA)
-            print '3 values is:', values
             pl.plot(values, 'b', linewidth=2, label=self.option2cbx.currentText())
         else:
             values = self.identifymetric(self.option2cbx.currentText(),self.valuesB)
@@ -1921,8 +1921,7 @@ class ViewGraphs(QDialog):
     def identifymetric(self, metric,values):
         '''Method to idenitfy the metric requested, and assign the correct 
         value for the position of its data in the lists of lists.'''
-        #print 'IN Identify metric'
-        print 'METRIC IS:', metric
+        
         basic, option = values
         if metric == 'Number of nodes removed':
             metric = basic['no_of_nodes_removed']
@@ -1981,7 +1980,7 @@ class ViewGraphs(QDialog):
             metric = 99
         else:
             QMessageBox.warning(self, 'Error!', "Internal error. Metric value error in identification porcess.")
-            print 'Uncategorised'
+        
         return metric
 
     def makemetriclist(self,basic,option):
@@ -3679,12 +3678,6 @@ class Window(QMainWindow):
     def updatewindow_viewgraphs(self):
         '''Used to transfer the values to the view graphs class. Called on
         first line of class.'''
-        print 'LOOK HERE'
-        print '--------------------------'
-        print self.values
-        print len(self.values)
-        print self.values[0]
-        print '--------------------------'
         return self.values, self.parameters[0]
         
     def closeEvent(self, event):
@@ -4342,7 +4335,6 @@ class Window(QMainWindow):
                 self.graphvis=self.G.copy()
                 for node in self.graphvis.nodes_iter():  
                     self.graphvis.node[node]['state'] = self.active
-                print 'THIS IS WHERE IT CALLS get analysis type'
                 self.parameters = self.get_analysis_type()
 
             if self.G == None: #reset the interface as network could not be built
@@ -4400,8 +4392,6 @@ class Window(QMainWindow):
             #self.metrics = self.sort_metrics(self.parameters)        
         #------------------get file name and handle an error arising here
         if fileName == None and self.saveoutputfile == True:
-            #print 'asks here as well'
-            print fileName
             fileName = self.setfilelocation_save()
             if fileName == '':
                 self.btndraw.setEnabled(True)
@@ -4510,6 +4500,7 @@ class Window(QMainWindow):
         cascading=None
         basicB = basicA.copy()
         optionB = optionA.copy()
+        
         
         metrics = basicA,basicB,optionA,optionB,dependency,cascading
         return metrics
@@ -4635,9 +4626,17 @@ class Window(QMainWindow):
         db_parameters = self.dbconnect
         a_to_b_edges = self.AtoBEdges
         
-        print '!!!!length is undefined - need to be fixed!!!!'
-        length = None
+        basicA, basicB, optionA, optionB, dependency, cascading = self.metrics
+        if optionA['avg_geo_path_length']<>False or optionA['avg_geo_path_length_of_components']<>False or optionA['avg_geo_path_length_of_giant_component']<>False:
+            QMessageBox.information(self, 'Data Required', 'Please enter the attirbute name for the length data for Network A.')
+        if failure['stand_alone']==False:
+            if optionB['avg_geo_path_length']<>False or optionB['avg_geo_path_length_of_components']<>False or optionB['avg_geo_path_length_of_giant_component']<>False:
+                QMessageBox.information(self, 'Data Required', 'Please enter the attribute name for the length data for Network B.')
+        
+        length_att_A = None
+        length_att_B = None
 
+        length = length_att_A,length_att_B
         write_step_to_db = self.write_step_to_db
         write_results_table = self.write_results_table
         store_n_e_atts = self.store_n_e_atts
