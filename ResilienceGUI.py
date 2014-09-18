@@ -4163,13 +4163,10 @@ class Window(QMainWindow):
      
     def step_analysis(self, changedA):
         ''''Perform the resilience analysis through user control for each node
-        removal process.'''
-        print 'Performing STEP analysis'
+        removal process.'''        
         if self.timestep > 1:        
             self.forthread = self.thread.update()
-            self.graphparameters, self.parameters, self.iterate = self.forthread
-        else:
-            pass
+            self.graphparameters, self.parameters, self.metrics, self.iterate = self.forthread
         
         self.btndraw.setEnabled(False)
         self.btnstep.setEnabled(False)
@@ -4178,6 +4175,8 @@ class Window(QMainWindow):
         self.disableallckbx()
         self.iterate = True        
         self.timestep += 1
+        
+        print 'Performing STEP analysis. STEP', self.timestep
         
         param1 = self.txtparamA1.text()
         param2 = self.txtparamA2.text()
@@ -4213,8 +4212,9 @@ class Window(QMainWindow):
                     self.graphvis.node[node]['state'] = self.active      
         if self.parameters == None:
             self.parameters = self.get_analysis_type()
-        metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges = self.parameters
-        if self.GnetB == None and STAND_ALONE == False:
+
+        failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length = self.parameters
+        if self.GnetB == None and failure['stand_alone'] == False:
             param1 = self.txtparamB1.text()
             param2 = self.txtparamB2.text()
             param3 = self.txtparamB3.text()
@@ -4225,12 +4225,13 @@ class Window(QMainWindow):
                 self.ckbxviewnet.setEnabled(True)
                 self.enableallckbx()
                 return
-            if DEPENDENCY == True:
+            if failure['dependency'] == True:
                 a_to_b_edges, changedA, changedB = self.AtoBEdges()
-            if INTERDEPENDENCY == True:
+            if failure['interdependency'] == True:
                 a_to_b_edges, changedA, changedB = self.AtoBEdges()
                 b_to_a_edges, changedA, changedB = self.BtoAEdges()          
-            self.parameters = metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
+            self.parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
+        
         #self.metrics = self.sort_metrics(self.parameters)
         if fileName == None:
             fileName = self.setfilelocation_save()
@@ -4242,8 +4243,9 @@ class Window(QMainWindow):
                 self.timestep = -1
                 self.btnstart.setText('Start')
                 return
-            self.parameters = self.metrics,STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
-        
+            
+        self.parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
+
         if self.ckbxviewnet.isChecked() or self.saveimage == True:
             if self.positions == None:
                 selected = self.show_visselection()
@@ -4270,20 +4272,23 @@ class Window(QMainWindow):
         if self.timestep == 0:
             #temporary until full dependence compatability
             #metrics = self.sort_metrics(self.parameters)
-            self.parameters = self.metrics, STAND_ALONE, DEPENDENCY, INTERDEPENDENCY, SINGLE, SEQUENTIAL, CASCADING, RANDOM, DEGREE, BETWEENNESS, REMOVE_SUBGRAPHS, REMOVE_ISOLATES, NO_ISOLATES, fileName, a_to_b_edges
-            if STAND_ALONE == True:
+            networks,self.metrics,self.graphparameters = res.metrics_initial(self.G,self.GnetB,self.metrics, failure, handling_variables, store_n_e_atts,length, a_to_b_edges)
+            self.parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
+            if failure['stand_alone'] == True:
                 self.GnetB = None 
-            self.graphparameters = res.create_containers(self.G, self.GnetB, self.parameters)
-            self.forthread = self.graphparameters, self.parameters, self.iterate
+            self.forthread = self.graphparameters, self.parameters, self.metrics, self.iterate
+            #self.forthread = self.graphparameters, self.parameters, self.iterate
             self.updateUi()
-        elif self.timestep == 1:            
-            self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
+        elif self.timestep == 1:
+            self.thread.setup(self.G, self.iterate, self.metrics, self.parameters, self.graphparameters)
+            #self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
         elif self.timestep > 1:
-            self.forthread = self.graphparameters, self.parameters, self.iterate
-            networks,i,node_list, to_b_nodes, from_a_nodes, basic_metrics_A,basic_metrics_B,option_metrics_A, option_metrics_B,interdependency_metrics,cascading_metrics = self.graphparameters
+            self.forthread = self.graphparameters, self.parameters, self.metrics, self.iterate
+            networks,i,node_list, to_b_nodes, from_a_nodes = self.graphparameters
             GA,GATemp,GB,GBTemp = networks
-            self.G = GA    
-            self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
+            self.G = GA
+            self.thread.setup(self.G, self.iterate, self.metrics, self.parameters, self.graphparameters)
+            #self.thread.setup(self.G, self.iterate, self.parameters, self.graphparameters)
         else:
             print 'major error'
         self.btnstep.setEnabled(True)
@@ -4448,7 +4453,7 @@ class Window(QMainWindow):
                 self.GnetB = None
             
             #use metrics initial function to set up metric dicts and graph parameters
-            self.metrics,self.graphparameters = res.metrics_initial(self.G,self.GnetB,self.metrics, failure, handling_variables, length, a_to_b_edges)          
+            networks,self.metrics,self.graphparameters = res.metrics_initial(self.G,self.GnetB,self.metrics, failure, handling_variables, store_n_e_atts,length, a_to_b_edges)
             self.parameters = failure,handling_variables,fileName,a_to_b_edges,write_step_to_db,write_results_table,db_parameters,store_n_e_atts,length
             print '!!!!Need to sort out the, to_b_nodes, from_a_nodes!!!!'
           
