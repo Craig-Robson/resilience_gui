@@ -4628,11 +4628,28 @@ class Window(QMainWindow):
         
         basicA, basicB, optionA, optionB, dependency, cascading = self.metrics
         if optionA['avg_geo_path_length']<>False or optionA['avg_geo_path_length_of_components']<>False or optionA['avg_geo_path_length_of_giant_component']<>False:
-            QMessageBox.information(self, 'Data Required', 'Please enter the attirbute name for the length data for Network A.')
+            text, ok = QInputDialog.getText(self, 'Data Input Required', 
+                'Please enter the attirbute name for the length data for Network A.')
+            if ok == True: length_att_A = text
+            elif ok == False: 
+                reply = QMessageBox.question(self, 'Message',
+                    "By continuing with the analysis the geographic apl attributes cannot be computed. Do you want to continue with the analysis?", QMessageBox.Yes | 
+                        QMessageBox.No, QMessageBox.No)
+                if reply == QMessageBox.Yes: length_att_A = None
+                elif reply == QMessageBox.No: return
+                
         if failure['stand_alone']==False:
             if optionB['avg_geo_path_length']<>False or optionB['avg_geo_path_length_of_components']<>False or optionB['avg_geo_path_length_of_giant_component']<>False:
-                QMessageBox.information(self, 'Data Required', 'Please enter the attribute name for the length data for Network B.')
-        
+                text, ok = QInputDialog.getText(self, 'Data Input Required', 
+                    'Please enter the attirbute name for the length data for Network B.')
+                if ok == True: length_att_B = text
+                elif ok == False:
+                    reply = QMessageBox.question(self, 'Message',
+                           "By continuing with the analysis the geographic apl attributes cannot be computed. Do you want to continue with the analysis?", QMessageBox.Yes | 
+                           QMessageBox.No, QMessageBox.No)
+                    if reply == QMessageBox.Yes: length_att_B = None
+                    elif reply == QMessageBox.No: return
+                    
         length_att_A = None
         length_att_B = None
 
