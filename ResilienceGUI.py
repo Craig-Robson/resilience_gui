@@ -2511,13 +2511,17 @@ class Window(QMainWindow):
 
     def try_ia_import(self):
         try:
-            sys.path.append(self.ia_location)
+            sys.path.append(self.ia_location)            
             import interdependency_analysis as ia
             self.can_run_res_analysis = True
+            try:
+                ia_mod_loc = self.ia_location+str("/modules")
+                ia.import_modules(ia_mod_loc)
+            except:
+                QMessageBox.warning(self, 'Import Error!', 'Could not import the resilience modules. This will result in you not being able to run any failure analysis.')
         except:
             self.can_run_res_analysis = False
-            QMessageBox.warning(self, 'Import Error!', 'Could not import the resilience module. This will result in you not being able to run any failure analysis.')       
-
+            QMessageBox.warning(self, 'Import Error!', 'Could not import the resilience module. This will result in you not being able to run any failure analysis.')
                 
     def calcClustering(self, changedA):
         '''Calculates clustering related values for a network. If no network 
