@@ -2051,54 +2051,24 @@ class Window(QMainWindow):
     def __init__(self, parent = None):
     
         QWidget.__init__(self, parent)
-        
-       
+               
         #Check  networkx files can be loaded
         try:
             import networkx as nx
         except:
-            QMessageBox.warning(self, 'Import Error', 'Could not import networkx. The application will now close.')
+            QMessageBox.warning(self, 'Import Error', 'Could not import the python networkx library. The application will now close.')
             qApp.quit
-       
-        #Check the files for the database connection can be loaded.
-        try:
-            import osgeo.ogr as ogr
-        except:
-            QMessageBox.warning(self,'Import Error!', "Could not import the osgeo.ogr library. There will be no database connectivity as a result.")
-        
-        try:
-            try: 
-                sys.path.append('C:/a8243587_DATA/GitRepo/nx_pgnet')
-                import nx_pgnet
-            except:
-                pass
-        except:
-            QMessageBox.warning(self, 'Import Error!', 'Could not import the nx_pgnet or nx_pg modules. This will not allow the database conection to work.')
-        
-        try:
-            try:
-                sys.path.append('C:/a8243587_DATA/GitRepo/resilience')
-                import interdependency_analysis
-            except:
-                pass
-        except:
-            QMessageBox.warning(self, 'Import Error!', 'Could not import the resilience module. This will result in you not being able to run any failure analysis.')
 
-        #set initial location and call the function to import the module        
+        #set initial location and call the function to import the module
+        self.ia_location = 'C:/a8243587_DATA/GitRepo/resilience'
         self.nxpglocation = 'C:/a8243587_DATA/GitRepo/nx_pgnet'
-        #self.try_nxpg_import()
-        can_use_db = True
+        
+        self.try_nxpg_import()
+        self.try_ia_import()
+        
         #initiate thread
         self.thread = Worker()
-        '''
-        #db parameters here to save having to type them in every time at the moment
-        self.DBNAME = 'inter_london'
-        self.HOST = 'localhost'
-        self.PORT = '5433'
-        self.USER = 'postgres'
-        self.PASSWORD = 'aaSD2011'        
-        self.NETNAME = 'power_lines'
-        '''
+        
         self.DBNAME = None
         self.HOST = None
         self.PORT = None
@@ -2372,7 +2342,7 @@ class Window(QMainWindow):
         
         #for network A
         self.graph = 'GNM' #means this is the default, so if menu option not changed/used, will persume GNM graph
-        if can_use_db == True:
+        if self.can_use_db == True:
             inputs = ('Random - GNM', 'Random - Erdos Renyi',
                       'Small-World', 'Scale-free',
                       'Hierarchical Random','Hierarchical Random +',
@@ -2405,7 +2375,7 @@ class Window(QMainWindow):
               
         #for network B
         self.graphB = 'None' #means this is the default, so if menu option not changed/used, will persume GNM graph
-        if can_use_db == True:        
+        if self.can_use_db == True:        
             inputs = ('None','Random - GNM', 'Random - Erdos Renyi',
                       'Small-World', 'Scale-free',
                       'Hierarchical Random','Hierarchical Random +',
@@ -2527,13 +2497,28 @@ class Window(QMainWindow):
         self.connect(self.thread, SIGNAL("finished()"), self.updateUi)
     
     def try_nxpg_import(self):
-        try: 
-            sys.path.append(self.nxpglocation)
-            import nx_pgnet, nx_pg
-            self.can_use_db = True
+        try:
+            import osgeo.ogr as ogr       
+            try: 
+                sys.path.append(self.nxpglocation)
+                import nx_pgnet, nx_pg
+                self.can_use_db = True
+            except:
+                self.can_use_db = False
+                QMessageBox.warning(self, 'Import Error!', 'Could not import the nx_pgnet or osgeo.ogr libraries. This will not allow the database conection to work.')
         except:
-            self.can_use_db = False    
-    
+            pass
+
+    def try_ia_import(self):
+        try:
+            sys.path.append(self.ia_location)
+            import interdependency_analysis as ia
+            self.can_run_res_analysis = True
+        except:
+            self.can_run_res_analysis = False
+            QMessageBox.warning(self, 'Import Error!', 'Could not import the resilience module. This will result in you not being able to run any failure analysis.')       
+
+                
     def calcClustering(self, changedA):
         '''Calculates clustering related values for a network. If no network 
         exists, or the inputs for network A have changed it will build the 
