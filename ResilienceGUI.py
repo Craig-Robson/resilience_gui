@@ -2059,9 +2059,15 @@ class Window(QMainWindow):
             QMessageBox.warning(self, 'Import Error', 'Could not import the python networkx library. The application will now close.')
             qApp.quit
 
-        #set initial location and call the function to import the module
-        self.ia_location = 'C:/a8243587_DATA/GitRepo/resilience'
-        self.nxpglocation = 'C:/a8243587_DATA/GitRepo/nx_pgnet'
+        #read in config file to get file paths
+        f = open("config.txt")
+        for line in f.readlines():
+            if line[0:8]=="nx_pgnet":
+                line = line.split('\t')
+                self.nxpglocation = line[1].strip()
+            elif line[0:10]=="resilience":
+                line = line.split("\t")
+                self.ia_location = line[1].strip()
         
         self.try_nxpg_import()
         self.try_ia_import()
