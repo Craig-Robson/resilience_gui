@@ -2535,10 +2535,6 @@ class Window(QMainWindow):
         network itself. Returns the maximum, minimum, avergae and per node 
         values in a message box.'''
         #calc the normal clustering coefficient
-        #will return the average value
-        #will also return the value per node
-        #return other stats
-        #send calc to code in another script
 
         param1 = self.txtparamA1.text()
         param2 = self.txtparamA2.text()
@@ -2578,10 +2574,7 @@ class Window(QMainWindow):
         the network itself. Returns the maximum, minimum, avergae and per node 
         values in a message box.'''
         #calc the square clustering coefficient
-        #will return the average value
-        #will also return the value per node   
-        #return other stats
-        #send calc to code in another script
+ 
         param1 = self.txtparamA1.text()
         param2 = self.txtparamA2.text()
         param3 = self.txtparamA3.text()
@@ -2601,10 +2594,7 @@ class Window(QMainWindow):
         exists, or the inputs for network A have changed it will build the 
         network itself. Returns the coefficent value in a message box.'''
         #calc the assortativty coefficient
-        #will return the average value
-        #will also return the value per node   
-        #return other stats
-        #send calc to code in another script
+
         param1 = self.txtparamA1.text()
         param2 = self.txtparamA2.text()
         param3 = self.txtparamA3.text()        
@@ -2625,7 +2615,7 @@ class Window(QMainWindow):
         network itself. Returns the maximum, minimum, avergae and per node 
         values in a message box.'''
         #calc the betweenness centrality
-        #send calc to code in another script
+
         param1 = self.txtparamA1.text()
         param2 = self.txtparamA2.text()
         param3 = self.txtparamA3.text()        
@@ -2733,9 +2723,7 @@ class Window(QMainWindow):
         where multiple values possible via a message window. Results will also
         be written to a text file but this has not been added yet.'''
         #will open a new window where user can select the metrics they want to calculate
-        #then calc the metrics
-        #create a text file output
-        #make a summary window appear
+
         param1 = self.txtparamA1.text()
         param2 = self.txtparamA2.text()
         param3 = self.txtparamA3.text()        
