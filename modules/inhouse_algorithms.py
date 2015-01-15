@@ -72,9 +72,10 @@ def ahr(a,b,p, numofedges):
     
     if G.number_of_edges() > numofedges:
         print 'IMPOSSIBLE TO CREATE'
+        print "G edges is: %s/ Edges wanted is: %s" %(G.number_of_edges(), numofedges)
         exit()
     numofedges = numofedges - G.number_of_edges()
-    #add them to a list, identofy them through there predecessor being 0, adn then get the node number from a list of nodes  
+    #add them to a list, identofy them through there predecessor being 0, and then get the node number from a list of nodes  
     gnodes=G.nodes()
     level1=[]
     level0=[0]
